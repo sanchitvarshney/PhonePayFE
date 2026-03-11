@@ -14,6 +14,7 @@ import MasterLocation from "./pages/master/MasterLocation";
 import MasterComponent from "./pages/master/MasterComponent";
 import CreatePO from "./pages/procurement/CreatePO";
 import ManagePO from "./pages/procurement/ManagePO";
+import Custom404Page from "./pages/commonPages/Custom404Page";
 import Protected from "./components/shared/Protected";
 
 export const router = createBrowserRouter([
@@ -118,5 +119,15 @@ export const router = createBrowserRouter([
   {
     element: <RecoveryPassword />,
     path: "/password-recovery",
+  },
+  {
+    path: "*",
+    element: (
+      <Protected authentication>
+        <MainLayout>
+          <Custom404Page />
+        </MainLayout>
+      </Protected>
+    ),
   },
 ]);

@@ -78,44 +78,7 @@ function MainLayout(props: { children: React.ReactNode }) {
           className="z-[7] flex items-center justify-between h-[50px] px-[20px] fixed top-0 left-[50px] w-[calc(100vw-50px)] bg-[#5F259F]"
         >
           <div className="flex gap-[20px] items-center">
-            <FormControl sx={{ width: "200px" }}>
-              <Tooltip title="Session">
-                <Select
-                  value={selectedSession}
-                  className="shadow"
-                  sx={{
-                    background: "white",
-                    border: "none",
-                    "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                    "& .MuiSelect-select": { padding: "8px 12px" },
-                  }}
-                  size="small"
-                  onChange={(e) => handleSessionChange(e.target.value)}
-                >
-                  <MenuItem value="25-26">2025-2026</MenuItem>
-                  <MenuItem value="24-25">2024-2025</MenuItem>
-                </Select>
-              </Tooltip>
-            </FormControl>
-            <FormControl sx={{ width: "200px" }}>
-              <Tooltip title="Company Branch">
-                <Select
-                  value={selectedCompanyBranch}
-                  className="shadow"
-                  sx={{
-                    background: "white",
-                    border: "none",
-                    "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                    "& .MuiSelect-select": { padding: "8px 12px" },
-                  }}
-                  size="small"
-                  onChange={(e) => handleCompanyBranchChange(e.target.value)}
-                >
-                  <MenuItem value="BRMSC031">B88</MenuItem>
-                  <MenuItem value="BRMSC030">Kortek</MenuItem>
-                </Select>
-              </Tooltip>
-            </FormControl>
+            
           </div>
           <div className="flex items-center gap-[20px]">
             <MuiTooltip title={isConnected ? "Socket Connected" : "Socket Disconnected"} placement="left">
@@ -154,7 +117,7 @@ function MainLayout(props: { children: React.ReactNode }) {
               }}
               className="flex items-center justify-center"
             >
-              <img src="/PhonePeIcon.jpg" alt="PhonePe" className="h-9 w-9 object-contain rounded-full" />
+              <img src="/images/PhonePeIcon.jpg" alt="PhonePe" className="h-9 w-9 object-contain rounded-full" />
             </Link>
             <MuiTooltip title="Favorite Pages" placement="right">
               <IconButton
