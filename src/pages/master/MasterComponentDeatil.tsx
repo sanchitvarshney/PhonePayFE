@@ -272,7 +272,7 @@ const MasterComponentDeatil: React.FC = () => {
                           >
                             {label}:
                           </Typography>
-                          <Typography variant="body1" fontWeight={500}>
+                          <Typography variant="body1" fontWeight={500} className="text-slate-800">
                             {value || "N/A"}
                           </Typography>
                         </div>
@@ -338,7 +338,7 @@ const MasterComponentDeatil: React.FC = () => {
                             >
                               {label}:
                             </Typography>
-                            <Typography variant="body1" fontWeight={500}>
+                            <Typography variant="body1" fontWeight={500} className="text-slate-800">
                               {value || "N/A"}
                             </Typography>
                           </div>
@@ -421,7 +421,7 @@ const MasterComponentDeatil: React.FC = () => {
                             >
                               {label}:
                             </Typography>
-                            <Typography variant="body1" fontWeight={500}>
+                            <Typography variant="body1" fontWeight={500} className="text-slate-800">
                               {value || "N/A"}
                             </Typography>
                           </div>
@@ -501,7 +501,7 @@ const MasterComponentDeatil: React.FC = () => {
                             >
                               {label}:
                             </Typography>
-                            <Typography variant="body1" fontWeight={500}>
+                            <Typography variant="body1" fontWeight={500} className="text-slate-800">
                               {value || "N/A"}
                             </Typography>
                           </div>
