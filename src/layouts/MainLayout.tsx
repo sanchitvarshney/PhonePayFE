@@ -152,8 +152,9 @@ function MainLayout(props: { children: React.ReactNode }) {
                 setSheet2Open(false);
                 setSheetOpen(false);
               }}
+              className="flex items-center justify-center"
             >
-              <span className="text-white font-bold text-lg">PP</span>
+              <img src="/PhonePeIcon.jpg" alt="PhonePe" className="h-9 w-9 object-contain rounded-full" />
             </Link>
             <MuiTooltip title="Favorite Pages" placement="right">
               <IconButton
