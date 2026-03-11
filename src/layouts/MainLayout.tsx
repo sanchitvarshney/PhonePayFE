@@ -2,21 +2,19 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
 import { FaCircleUser } from "react-icons/fa6";
-import { FaStar } from "react-icons/fa6";
 import styled from "styled-components";
 import { FavoriteMenuLinkListType, MainUIStateType } from "@/types/MainLayout";
 import SidebarMenues from "@/components/shared/SidebarMenues";
 import FavoriteSidebar from "@/components/shared/FavoriteSidebar";
 import ProfileSidebar from "@/components/shared/ProfileSidebar";
 import MainLayoutPopovers from "@/components/shared/MainLayoutPopovers";
-import { SiSocketdotio } from "react-icons/si";
+// import { SiSocketdotio } from "react-icons/si";
 import { IconButton } from "@mui/material";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import MuiTooltip from "@/components/reusable/MuiTooltip";
-import { useSocketContext } from "@/components/context/SocketContext";
+// import { useSocketContext } from "@/components/context/SocketContext";
 
 function MainLayout(props: { children: React.ReactNode }) {
-  const { isConnected, refreshConnection, isLoading } = useSocketContext();
+  // const { isConnected, refreshConnection, isLoading } = useSocketContext();
   const [sheetOpen, setSheetOpen] = useState<boolean>(false);
   const [sheet2Open, setSheet2Open] = useState<boolean>(false);
   const [favoriteSheet, setFavoriteSheet] = useState<boolean>(false);
@@ -69,13 +67,13 @@ function MainLayout(props: { children: React.ReactNode }) {
             
           </div>
           <div className="flex items-center gap-[20px]">
-            <MuiTooltip title={isConnected ? "Socket Connected" : "Socket Disconnected"} placement="left">
+            {/* <MuiTooltip title={isConnected ? "Socket Connected" : "Socket Disconnected"} placement="left">
               <IconButton onClick={() => refreshConnection()}>
                 <SiSocketdotio
                   className={`h-[25px] w-[25px] ${isConnected ? "text-green-500" : "text-red-500"} ${isLoading ? "animate-spin" : ""}`}
                 />
               </IconButton>
-            </MuiTooltip>
+            </MuiTooltip> */}
             <MuiTooltip title="Account" placement="left">
               <IconButton
                 onClick={() => {
@@ -107,34 +105,6 @@ function MainLayout(props: { children: React.ReactNode }) {
             >
               <img src="/images/PhonePeIcon.jpg" alt="PhonePe" className="h-9 w-9 object-contain rounded-full" />
             </Link>
-            <MuiTooltip title="Favorite Pages" placement="right">
-              <IconButton
-                onClick={() => {
-                  setFavoriteSheet(!favoriteSheet);
-                  setSheet2Open(false);
-                  setSheetOpen(false);
-                }}
-              >
-                <FaStar className="h-[25px] w-[25px] text-white" />
-              </IconButton>
-            </MuiTooltip>
-            <MuiTooltip title="SOP" placement="right">
-              <IconButton
-                onClick={() => {
-                  setSheet2Open(false);
-                  setSheetOpen(false);
-                  setFavoriteSheet(false);
-                }}
-                size="small"
-                sx={{
-                  background: "white",
-                  color: "#5F259F",
-                  "&:hover": { background: "#5F259F", color: "white" },
-                }}
-              >
-                <CreateNewFolderIcon fontSize="medium" />
-              </IconButton>
-            </MuiTooltip>
           </div>
           <div className="flex flex-col gap-[30px]">
             <div className="line" />

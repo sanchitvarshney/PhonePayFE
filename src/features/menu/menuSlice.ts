@@ -3,26 +3,6 @@ import { Menu, MenuState } from "./menuType";
 
 const staticMenu: Menu[] = [
   {
-    menu_key: "home",
-    name: "Home",
-    parent_menu_key: null,
-    url: "/",
-    order: 1,
-    is_active: 1,
-    icon: "home",
-    description: "Home",
-  },
-  {
-    menu_key: "dashboard",
-    name: "Dashboard",
-    parent_menu_key: null,
-    url: "/dashboard",
-    order: 2,
-    is_active: 1,
-    icon: "report",
-    description: "Dashboard",
-  },
-  {
     menu_key: "material-mgmt",
     name: "Material Management",
     parent_menu_key: null,
