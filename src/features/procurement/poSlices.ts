@@ -1,0 +1,243 @@
+import axiosInstance from "@/api/axiosInstance";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { AxiosResponse } from "axios";
+import { PoListResponse, PoStateType } from "./poTypes";
+
+const initialState: PoStateType = {
+  data: [],
+  loading: false,
+  error: null,
+  managePoData: [],
+  dateRange: null,
+  formData: null,
+  printLoading: false,
+  cancelLoading: false,
+  fetchPODataLoading: false,
+  fetchPOData: [],
+  completedPoData: [],
+  submitPOMINLoading: false,
+  uploadMinInvoiceLoading: false,
+};
+
+export const getListofPo = createAsyncThunk<
+  AxiosResponse<PoListResponse>,
+  {
+    wise: "powise" | "datewise" | "vendorwise" | string;
+    data: string;
+    limit: number;
+    page: number;
+  }
+>("po/fetchPendingData4PO", async (payload) => {
+  const response = await axiosInstance.get(
+    payload.wise === "powise"
+      ? `/po/fetchPendingData4PO?wise=powise&data=${payload.data}&limit=${payload.limit}&page=${payload.page}`
+      : `/po/fetchPendingData4PO?wise=datewise&data=${payload.data}&limit=${payload.limit}&page=${payload.page}`
+  );
+  return response;
+});
+
+export const getListofCompletedPo = createAsyncThunk<
+  AxiosResponse<PoListResponse>,
+  {
+    wise: "powise" | "datewise" | "vendorwise" | string;
+    data: string;
+    limit: number;
+    page: number;
+  }
+>("po/fetchCompletedData4PO", async (payload) => {
+  const response = await axiosInstance.get(
+    payload.wise === "powise"
+      ? `/po/fetchCompletePO?wise=powise&data=${payload.data}&limit=${payload.limit}&page=${payload.page}`
+      : `/po/fetchCompletePO?wise=datewise&data=${payload.data}&limit=${payload.limit}&page=${payload.page}`
+  );
+  return response as AxiosResponse<PoListResponse>;
+});
+
+export const createPO = createAsyncThunk<AxiosResponse<unknown>, unknown>(
+  "po/createPO",
+  async (payload) => {
+    const response = await axiosInstance.post("/po/createPO", payload);
+    return response;
+  }
+);
+
+export const updatePO = createAsyncThunk<AxiosResponse<unknown>, unknown>(
+  "po/updatePO",
+  async (payload) => {
+    const response = await axiosInstance.put("/po/updateData4Update", payload);
+    return response;
+  }
+);
+
+export const cancelPO = createAsyncThunk<AxiosResponse<unknown>, unknown>(
+  "po/cancelPO",
+  async (payload) => {
+    const response = await axiosInstance.post("/po/cancelPO", payload);
+    return response;
+  }
+);
+
+export const fetchPOData = createAsyncThunk<
+  AxiosResponse<unknown>,
+  { id: string }
+>("po/fetchPOData", async (payload) => {
+  const response = await axiosInstance.get(
+    `/po/fetchComponentList4PO?poid=${payload.id}`
+  );
+  return response;
+});
+
+export const getPODetail = createAsyncThunk<
+  unknown,
+  { id: string }
+>("po/getPODetail", async (payload) => {
+  const response = await axiosInstance.get(
+    `/po/fetchData4Update?pono=${payload.id}`
+  );
+  return response.data;
+});
+
+export const getPOComponentDetail = createAsyncThunk<
+  AxiosResponse<unknown>,
+  string
+>("po/getPOComponentDetail", async (id) => {
+  const response = await axiosInstance.get(
+    `/po/getComponentDetailsByCode/${id}`
+  );
+  return response;
+});
+
+export const poPrint = createAsyncThunk<
+  unknown,
+  { id: string },
+  { rejectValue: unknown }
+>("/poPrint", async (data, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.get(`/po/printPo?poid=${data.id}`, {
+      responseType: "blob",
+    });
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `PO_${data.id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    return { success: true, data: null, message: "PDF downloaded successfully" };
+  } catch (error: unknown) {
+    return rejectWithValue({
+      success: false,
+      data: null,
+      message: (error as Error)?.message || "Failed to download PDF",
+      error,
+    });
+  }
+});
+
+const procurementPoSlice = createSlice({
+  name: "procurementPo",
+  initialState,
+  reducers: {
+    setDateRange(state, action: { payload: unknown }) {
+      state.dateRange = action.payload;
+    },
+    setFormData(state, action: { payload: unknown }) {
+      state.formData = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(getListofPo.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getListofPo.fulfilled, (state, action) => {
+        state.loading = false;
+        const res = action.payload as AxiosResponse<PoListResponse>;
+        state.managePoData = res?.data ?? action.payload;
+      })
+      .addCase(getListofPo.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(getListofCompletedPo.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getListofCompletedPo.fulfilled, (state, action) => {
+        state.loading = false;
+        const res = action.payload as AxiosResponse<PoListResponse>;
+        state.completedPoData = res?.data ?? action.payload;
+      })
+      .addCase(getListofCompletedPo.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(getPODetail.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getPODetail.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(getPODetail.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(fetchPOData.pending, (state) => {
+        state.fetchPODataLoading = true;
+      })
+      .addCase(fetchPOData.fulfilled, (state, action) => {
+        state.fetchPODataLoading = false;
+        const res = action.payload as AxiosResponse<{ data?: unknown }>;
+        state.fetchPOData = res?.data?.data ?? res?.data ?? action.payload;
+      })
+      .addCase(fetchPOData.rejected, (state, action) => {
+        state.fetchPODataLoading = false;
+        state.error = action.error.message;
+      })
+      .addCase(poPrint.pending, (state) => {
+        state.printLoading = true;
+      })
+      .addCase(poPrint.fulfilled, (state) => {
+        state.printLoading = false;
+      })
+      .addCase(poPrint.rejected, (state, action) => {
+        state.printLoading = false;
+        state.error = action.error.message;
+      })
+      .addCase(cancelPO.pending, (state) => {
+        state.cancelLoading = true;
+      })
+      .addCase(cancelPO.fulfilled, (state) => {
+        state.cancelLoading = false;
+      })
+      .addCase(cancelPO.rejected, (state, action) => {
+        state.cancelLoading = false;
+        state.error = action.error.message;
+      })
+      .addCase(createPO.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(createPO.fulfilled, (state, action) => {
+        state.loading = false;
+        state.managePoData = (action.payload as AxiosResponse<{ data?: unknown }>)?.data ?? action.payload;
+      })
+      .addCase(createPO.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(updatePO.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updatePO.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(updatePO.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      });
+  },
+});
+
+export const { setDateRange, setFormData } = procurementPoSlice.actions;
+export default procurementPoSlice.reducer;

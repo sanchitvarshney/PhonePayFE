@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getToken } from "@/utils/tokenUtills";
+import { showToast } from "@/utils/toasterContext";
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_REACT_APP_API_BASE_URL || "",
@@ -33,7 +34,7 @@ axiosInstance.interceptors.response.use(
       error.response?.data?.message ??
       "An unexpected error occurred";
     if (typeof window !== "undefined" && message) {
-      console.error(message);
+      showToast(message, "error");
     }
     return Promise.reject(error);
   }
