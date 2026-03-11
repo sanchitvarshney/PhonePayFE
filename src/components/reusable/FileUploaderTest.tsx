@@ -66,7 +66,7 @@ const FileUploaderTest: React.FC<Props> = ({
         onValuchange && onValuchange(newFiles);
         setFiles(newFiles);
       }}
-      dropzoneOptions={{ maxFiles, multiple: mulTiple }}
+      dropzoneOptions={{ maxFiles: mulTiple ? (maxFiles ?? 10) : 1 }}
       className={`relative p-2 border-2 border-dashed rounded-lg bg-background border-slate-300 ${className ?? ""}`}
     >
       <FileInput className="outline-dashed outline-1 outline-white" />

@@ -74,8 +74,8 @@ const MsterComponentsMaterialListTable: React.FC<Props> = ({ gridRef }) => {
     };
   }, []);
   return (
-    <div>
-      <div className=" ag-theme-quartz h-[calc(100vh-140px)]">
+    <div className="flex-1 min-h-0 flex flex-col">
+      <div className="ag-theme-quartz flex-1 min-h-0 w-full">
         <AgGridReact
           ref={gridRef}
           loadingOverlayComponent={CustomLoadingOverlay}

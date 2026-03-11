@@ -95,8 +95,8 @@ const MasterComponent: React.FC = () => {
       <MasterComponentsUplaodImageDrawer open={uploadImage} setOpen={setUploadImage} />
       <MasterComponnetsViewImageDrawer open={viewImage} setOpen={setViewImage} />
       {/* drawers */}
-      <div className="h-[calc(100vh-100px)] grid grid-cols-[550px_1fr] bg-white">
-        <div className="h-full overflow-y-auto border-r border-neutral-300 ">
+      <div className="h-[calc(100vh-50px)] grid grid-cols-[550px_minmax(0,1fr)] bg-white min-h-0">
+        <div className="h-full min-h-0 overflow-y-auto border-r border-neutral-300">
           <form onSubmit={handleSubmit(onSubmit)} className="p-[20px]">
             <Typography className="text-slate-600" variant="h1" component={"div"} fontSize={20} fontWeight={500}>
               Add New Component
@@ -213,11 +213,9 @@ const MasterComponent: React.FC = () => {
               </Button>
             </div>
           </form>
-
-          <div className="h-[100px]"></div>
         </div>
-        <div>
-          <div className="h-[40px] flex items-center gap-[20px] justify-end bg-white px-[20px]">
+        <div className="flex flex-col min-h-0 min-w-0">
+          <div className="shrink-0 h-[40px] flex items-center gap-[20px] justify-end bg-white px-[20px]">
             <div className="flex items-center space-x-2">
               <Checkbox id="terms" className="data-[state=checked]:bg-cyan-800 data-[state=checked]:text-[#fff] border-slate-400" disabled />
               <label htmlFor="terms" className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-500">
