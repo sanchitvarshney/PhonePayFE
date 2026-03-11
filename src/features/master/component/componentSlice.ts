@@ -3,11 +3,10 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { AxiosResponse } from "axios";
 import {
   ComponentDetailApiResponse,
-  ComponentDetails,
   ComponentsApiResponse,
   ComponnetState,
   GroupApiResponse,
-  UpdateCompoenntAdvanceDetail,
+  UpdateComponentAdvanceDetail,
   UpdateCompoenntProductionDetailPayload,
   UpdateComponentBasicDetailPayload,
   UpdateTaxDetailPayload,
@@ -70,7 +69,7 @@ export const updateCompoenntBasicDetailAsync = createAsyncThunk<
 });
 export const updateCompoenntAdvanceDetailAsync = createAsyncThunk<
   AxiosResponse<{ success: boolean; message: string }>,
-  UpdateCompoenntAdvanceDetail
+  UpdateComponentAdvanceDetail
 >("group/updateCompoenntAdvanceDetailAsync", async (payload) => {
   const response = await axiosInstance.put(
     `/component/updateComponentAdvanceDetail`,
