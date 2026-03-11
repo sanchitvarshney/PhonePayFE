@@ -15,7 +15,7 @@ axiosInstance.interceptors.request.use((config) => {
   const savedCompanyBranch = localStorage.getItem("companyBranch") || "BRMSC031";
 
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = `${token}`;
     config.headers["session"] = savedSession;
     config.headers["companyBranch"] = savedCompanyBranch;
   }

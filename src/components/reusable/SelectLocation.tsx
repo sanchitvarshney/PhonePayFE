@@ -44,7 +44,7 @@ const SelectLocation: React.FC<Props> = ({
     setLoading(true);
     try {
       const response = await axiosInstance.get(
-        `/backend/search/location/${query ?? ""}`
+        `/backend/search/location/${query ?? null}`
       );
       setLocationList(response.data?.data ?? []);
     } catch {

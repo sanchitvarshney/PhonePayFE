@@ -1,6 +1,8 @@
 import ReactDOM from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import "./index.css";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-quartz.css";
 import { router } from "./route";
 import { Provider } from "react-redux";
 import { store } from "./features/Store";

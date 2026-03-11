@@ -23,7 +23,7 @@ export const getLocationAsync = createAsyncThunk<
   string | null
 >("wearhouse/getLocation", async (params) => {
   const response = await axiosInstance.get(
-    `/backend/search/location/${params}`
+    `/backend/search/location/${params ?? null}`
   );
   return response;
 });
