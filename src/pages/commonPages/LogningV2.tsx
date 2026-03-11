@@ -20,7 +20,6 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import PasswordIcon from "@mui/icons-material/Password";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import PhonelinkLockRoundedIcon from "@mui/icons-material/PhonelinkLockRounded";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { loginUserAsync } from "@/features/authentication/authSlice";
@@ -36,7 +35,7 @@ const LogningV2: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [recaptchaValue, setRecaptchaValue] = useState<string | null>(null);
   const [recaptchaKey, setRecaptchaKey] = useState(Math.random());
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const recaptchaRef = useRef<any>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -84,9 +83,9 @@ const LogningV2: React.FC = () => {
           className="mySwiper"
         >
           <SwiperSlide>
-            <div className="h-[50vh] bg-cyan-800 flex items-center justify-center">
+            <div className="h-[50vh] bg-[#5F259F] flex items-center justify-center">
               <Typography variant="h1" fontSize={50} fontWeight={500} className="text-white">
-                Welcome to PhonePay
+                Welcome to PhonePe
               </Typography>
             </div>
             <div className="h-[50vh] py-[20px] px-[50px] bg-neutral-100">
@@ -113,7 +112,7 @@ const LogningV2: React.FC = () => {
             </div>
           </SwiperSlide>
           <SwiperSlide>
-            <div className="h-[50vh] bg-cyan-800 flex items-center justify-center">
+            <div className="h-[50vh] bg-[#5F259F] flex items-center justify-center">
               <Typography variant="h1" fontSize={50} fontWeight={500} className="text-white">
                 Powering Smarter Operations
               </Typography>
@@ -143,18 +142,20 @@ const LogningV2: React.FC = () => {
           </SwiperSlide>
         </Swiper>
       </div>
-      <div className="relative flex items-center justify-center w-full h-full">
+      <div className="relative flex flex-col items-center justify-center w-full h-full bg-white">
+        <div className="flex justify-center mb-6">
+          <img src="/PhonePeLogo.jpg" alt="PhonePe" className="h-16 object-contain" />
+        </div>
         <Card elevation={4} sx={{ width: "500px", padding: "20px" }}>
           <Typography
             color="primary"
             variant="h1"
             component="div"
             className="flex items-center justify-center text-slate-600 gap-[5px]"
-            fontSize={35}
-            fontWeight={500}
+            fontSize={28}
+            fontWeight={600}
           >
-            <PhonelinkLockRoundedIcon fontSize="large" />
-            Secure Login
+            Sign In
           </Typography>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="mt-[50px] flex flex-col gap-[20px]">
@@ -251,7 +252,7 @@ const LogningV2: React.FC = () => {
         </Card>
         <div className="absolute bottom-0 left-0 flex items-center justify-center w-full text-center py-[10px]">
           <Typography fontSize={13}>
-            &copy; {new Date().getFullYear()} PhonePay. All Rights Reserved
+            &copy; {new Date().getFullYear()} PhonePe. All Rights Reserved
           </Typography>
         </div>
       </div>
