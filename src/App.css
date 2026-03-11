@@ -1,1 +1,9 @@
 /* PhonePeFE app styles */
+
+/* Login page: Swiper pagination dots - active = PhonePe purple */
+.mySwiper .swiper-pagination-bullet {
+  background: #d1d5db;
+}
+.mySwiper .swiper-pagination-bullet-active {
+  background: #5F259F;
+}
