@@ -12,8 +12,11 @@ import { SocketProvider } from "./components/context/SocketContext";
 import { ToasterProvider, ToasterConsumer } from "./utils/toasterContext";
 
 const theme = createTheme({
+  typography: {
+    fontFamily: '"MsCorpres EmberFont", sans-serif',
+  },
   palette: {
-    primary: { main: "#0e7490" },
+    primary: { main: "#5F259F" },
   },
 });
 

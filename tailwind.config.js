@@ -12,6 +12,10 @@ module.exports = {
       screens: { "2xl": "1400px" },
     },
     extend: {
+      fontFamily: {
+        sans: ['"MsCorpres EmberFont"', 'sans-serif'],
+        ember: ['"MsCorpres EmberFont"', 'sans-serif'],
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
