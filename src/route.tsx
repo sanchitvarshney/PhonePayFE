@@ -16,6 +16,7 @@ import CreatePO from "./pages/procurement/CreatePO";
 import ManagePO from "./pages/procurement/ManagePO";
 import Custom404Page from "./pages/commonPages/Custom404Page";
 import Protected from "./components/shared/Protected";
+import MasterComponentDeatil from "@/pages/master/MasterComponentDeatil";
 
 export const router = createBrowserRouter([
   {
@@ -57,6 +58,14 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/master-components",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterComponentDeatil />
+          </MainLayout>
+        ),
+        path: "/master-components/:id",
       },
       {
         element: (
