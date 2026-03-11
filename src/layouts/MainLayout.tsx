@@ -10,7 +10,7 @@ import FavoriteSidebar from "@/components/shared/FavoriteSidebar";
 import ProfileSidebar from "@/components/shared/ProfileSidebar";
 import MainLayoutPopovers from "@/components/shared/MainLayoutPopovers";
 import { SiSocketdotio } from "react-icons/si";
-import { FormControl, IconButton, MenuItem, Select, Tooltip } from "@mui/material";
+import { IconButton } from "@mui/material";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import MuiTooltip from "@/components/reusable/MuiTooltip";
 import { useSocketContext } from "@/components/context/SocketContext";
@@ -18,8 +18,6 @@ import { useSocketContext } from "@/components/context/SocketContext";
 function MainLayout(props: { children: React.ReactNode }) {
   const { isConnected, refreshConnection, isLoading } = useSocketContext();
   const [sheetOpen, setSheetOpen] = useState<boolean>(false);
-  const [selectedSession, setSelectedSession] = useState("25-26");
-  const [selectedCompanyBranch, setSelectedCompanyBranch] = useState("BRMSC031");
   const [sheet2Open, setSheet2Open] = useState<boolean>(false);
   const [favoriteSheet, setFavoriteSheet] = useState<boolean>(false);
   const [logotAlert, setLogotAlert] = useState<boolean>(false);
@@ -50,16 +48,6 @@ function MainLayout(props: { children: React.ReactNode }) {
     setSheetOpen(!sheetOpen);
     setSheet2Open(false);
     setFavoriteSheet(false);
-  };
-
-  const handleSessionChange = (newSession: string) => {
-    setSelectedSession(newSession);
-    localStorage.setItem("session", newSession);
-  };
-
-  const handleCompanyBranchChange = (newCompanyBranch: string) => {
-    setSelectedCompanyBranch(newCompanyBranch);
-    localStorage.setItem("companyBranch", newCompanyBranch);
   };
 
   return (
