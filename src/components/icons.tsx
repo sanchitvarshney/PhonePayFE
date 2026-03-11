@@ -12,6 +12,16 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 import CreateIcon from "@mui/icons-material/Create";
+import AddIcon from "@mui/icons-material/Add";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
+import BusinessIcon from "@mui/icons-material/Business";
+import InsertPageBreakIcon from "@mui/icons-material/InsertPageBreak";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import CachedIcon from "@mui/icons-material/Cached";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 
 export const Icons = {
   home: HomeIcon,
@@ -23,10 +33,20 @@ export const Icons = {
   procurement: FormatListNumberedRtlIcon,
   download: DownloadIcon,
   followLink: LaunchIcon,
-   left: KeyboardArrowLeftIcon,
-   delete: DeleteIcon,
-   close: CloseIcon,
-   save: SaveIcon,
-   edit: CreateIcon,
+  left: KeyboardArrowLeftIcon,
+  delete: DeleteIcon,
+  close: CloseIcon,
+  save: SaveIcon,
+  edit: CreateIcon,
+  add: AddIcon,
+  right: KeyboardArrowRightIcon,
+  user: AccountCircleIcon,
+  shipping: LocalShippingOutlinedIcon,
+  building: BusinessIcon,
+  documentDetail: InsertPageBreakIcon,
+  up: KeyboardArrowUpIcon,
+  refreshv2: CachedIcon,
+  next: NavigateNextIcon,
+  previous: NavigateBeforeIcon,
 };
 

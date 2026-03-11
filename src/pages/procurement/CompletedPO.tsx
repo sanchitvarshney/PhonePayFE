@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import {
   cancelPO,
   fetchPOData,
-  getListofPo,
+  getListofCompletedPo,
   poPrint,
 } from "@/features/procurement/poSlices";
 import CustomPagination from "@/components/reusable/CustomPagination";
@@ -29,17 +29,18 @@ import {
 } from "@mui/material";
 import { showToast } from "@/utils/toasterContext";
 import { Icons } from "@/components/icons";
+import MuiTooltip from "@/components/reusable/MuiTooltip";
 import { rangePresets } from "@/utils/rangePresets";
 import { Button } from "@/components/ui/button";
 import CustomLoadingOverlay from "@/components/reusable/CustomLoadingOverlay";
 import RangeSelect from "@/components/reusable/antSelecters/RangeSelect";
 import { setDateRange } from "@/features/procurement/poSlices";
 import ViewPOModal from "@/pages/procurement/ViewPOModal";
-const ManagePO: React.FC = () => {
+const CompletedPO: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const dispatch = useAppDispatch();
-  const { managePoData, printLoading, dateRange, loading, cancelLoading } =
+  const { completedPoData, printLoading, dateRange, loading, cancelLoading } =
     useAppSelector((state) => state.po);
   const [colapse, setcolapse] = useState<boolean>(false);
   const [type, setType] = useState<string>("datewise");
@@ -52,7 +53,7 @@ const ManagePO: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [openCancelModal, setOpenCancelModal] = useState<boolean>(false);
-  const [cancelReason, setCancelReason] = useState<string>("");
+  const [cancelReason, setCancelReason] = useState("");
   const [openViewPOModal, setOpenViewPOModal] = useState<boolean>(false);
 
   const handleMenuClick = (
@@ -90,7 +91,7 @@ const ManagePO: React.FC = () => {
     },
     {
       headerName: "PO No.",
-      field: "po_transaction",
+      field: "po_transaction_code",
       sortable: true,
       filter: true,
     },
@@ -106,6 +107,15 @@ const ManagePO: React.FC = () => {
       field: "vendor_name",
       sortable: true,
       filter: true,
+    },
+    {
+      headerName: "Status",
+      field: "po_transaction_style",
+      filter: "agTextColumnFilter",
+      cellRenderer: (params: any) => {
+        return <div dangerouslySetInnerHTML={{ __html: params.value }} />;
+      },
+      autoHeight: true,
     },
 
     // {
@@ -137,7 +147,7 @@ const ManagePO: React.FC = () => {
     (page: number) => {
       setCurrentPage(page);
       dispatch(
-        getListofPo({
+        getListofCompletedPo({
           wise: type,
           data: dateRange,
 
@@ -155,7 +165,7 @@ const ManagePO: React.FC = () => {
       setCurrentPage(1); // Reset to first page when changing page size
       if (dateRange) {
         dispatch(
-          getListofPo({
+          getListofCompletedPo({
             wise: type,
             data: dateRange,
             page: currentPage,
@@ -173,19 +183,13 @@ const ManagePO: React.FC = () => {
     setDate(dates);
   };
 
+  const handleExport = () => {
+    console.log("DownloadReport");
+  };
+  console.log("date range", dateRange);
+
   const handlePrintChallan = () => {
-    dispatch(poPrint({ id: selectedRow.po_transaction }));
-    setAnchorEl(null);
-  };
-
-  const handleEditChallan = () => {
-    const id = selectedRow.po_transaction.replaceAll("/", "_");
-    window.open(`/procurement/edit-po/${id}`, "_blank");
-    setAnchorEl(null);
-  };
-
-  const handleCancelPO = () => {
-    setOpenCancelModal(true);
+    dispatch(poPrint({ id: selectedRow.po_transaction_code }));
     setAnchorEl(null);
   };
 
@@ -202,7 +206,7 @@ const ManagePO: React.FC = () => {
 
     try {
       const payload = {
-        purchase_order: selectedRow.po_transaction,
+        purchase_order: selectedRow.po_transaction_code,
         remark: cancelReason.trim(),
       };
       dispatch(cancelPO(payload)).then((res: any) => {
@@ -211,7 +215,7 @@ const ManagePO: React.FC = () => {
           handleCloseCancelModal();
           // Refresh the PO list
           dispatch(
-            getListofPo({
+            getListofCompletedPo({
               wise: type,
               data: dateRange,
               page: currentPage,
@@ -227,10 +231,10 @@ const ManagePO: React.FC = () => {
 
   const handleViewPO = () => {
     setOpenViewPOModal(true);
-    dispatch(fetchPOData({ id: selectedRow.po_transaction }));
+    dispatch(fetchPOData({ id: selectedRow.po_transaction_code }));
     setAnchorEl(null);
   };
-
+  console.log("completedPoData", completedPoData);
   return (
     <div className="flex bg-white h-[calc(100vh-100px)] relative">
       <div
@@ -295,7 +299,7 @@ const ManagePO: React.FC = () => {
                     onClick={() => {
                       if (po) {
                         dispatch(
-                          getListofPo({
+                          getListofCompletedPo({
                             wise: "powise",
                             data: po,
                             limit: pageSize,
@@ -310,6 +314,25 @@ const ManagePO: React.FC = () => {
                   >
                     Search
                   </LoadingButton>
+                  <MuiTooltip title="Download" placement="right">
+                    <LoadingButton
+                      // disabled={!mainR1Report}
+                      variant="contained"
+                      color="primary"
+                      style={{
+                        borderRadius: "50%",
+                        width: 40,
+                        height: 40,
+                        minWidth: 0,
+                        padding: 0,
+                      }}
+                      onClick={handleExport}
+                      size="small"
+                      sx={{ zIndex: 1 }}
+                    >
+                      <Icons.download />
+                    </LoadingButton>
+                  </MuiTooltip>
                 </div>
               </div>
             ) : type === "datewise" ? (
@@ -339,7 +362,7 @@ const ManagePO: React.FC = () => {
                         dispatch(setDateRange(dataString as any));
 
                         dispatch(
-                          getListofPo({
+                          getListofCompletedPo({
                             wise: "datewise",
                             //   from: dayjs(date.from).format("DD-MM-YYYY"),
                             //   to: dayjs(date.to).format("DD-MM-YYYY"),
@@ -372,18 +395,17 @@ const ManagePO: React.FC = () => {
               overlayNoRowsTemplate={OverlayNoRowsTemplate}
               suppressCellFocus={true}
               rowData={
-                Array.isArray(managePoData?.data) ? managePoData.data : []
+                Array.isArray(completedPoData?.data) ? completedPoData.data : []
               }
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
-              enableCellTextSelection={true}
             />
           </div>
           <div className="p-4 border-t">
             <CustomPagination
               currentPage={currentPage}
-              totalPages={managePoData?.pagination?.total_pages}
-              totalRecords={managePoData?.pagination?.total}
+              totalPages={completedPoData?.pagination?.total_pages}
+              totalRecords={completedPoData?.pagination?.total}
               onPageChange={handlePageChange}
               pageSize={pageSize}
               onPageSizeChange={handlePageSizeChange}
@@ -403,10 +425,8 @@ const ManagePO: React.FC = () => {
             horizontal: "right",
           }}
         >
-          <MenuItem onClick={handleEditChallan}>Update PO</MenuItem>
           <MenuItem onClick={handleViewPO}>View</MenuItem>
           <MenuItem onClick={handlePrintChallan}>Download</MenuItem>
-          <MenuItem onClick={handleCancelPO}>Cancel</MenuItem>
         </Menu>
 
         <Dialog
@@ -446,11 +466,11 @@ const ManagePO: React.FC = () => {
         <ViewPOModal
           open={openViewPOModal}
           setOpen={setOpenViewPOModal}
-          poId={selectedRow?.po_transaction}
+          poId={selectedRow?.po_transaction_code}
         />
       </div>
     </div>
   );
 };
 
-export default ManagePO;
+export default CompletedPO;

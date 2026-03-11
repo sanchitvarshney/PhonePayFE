@@ -1,15 +1,15 @@
 export type PoStateType = {
-  data: unknown[];
+  data: any[];
   loading: boolean;
-  error: unknown;
-  managePoData: unknown;
-  dateRange: unknown;
-  formData: unknown;
+  error: any | null;
+  managePoData: any;
+  dateRange: any;
+  formData: any;
   printLoading: boolean;
   cancelLoading: boolean;
   fetchPODataLoading: boolean;
-  fetchPOData: unknown;
-  completedPoData: unknown;
+  fetchPOData: any;
+  completedPoData: any;
   submitPOMINLoading: boolean;
   uploadMinInvoiceLoading: boolean;
 };
@@ -17,5 +17,5 @@ export type PoStateType = {
 export type PoListResponse = {
   status: string;
   success: boolean;
-  data: unknown[];
+  data: any[];
 };
