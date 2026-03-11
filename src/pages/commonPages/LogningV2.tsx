@@ -32,7 +32,6 @@ import ReCAPTCHA from "react-google-recaptcha";
 
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "";
 
-// PhonePe brand purple (only colour change from BharatPay)
 const PHONEPE_PURPLE = "#5F259F";
 
 const LogningV2: React.FC = () => {
