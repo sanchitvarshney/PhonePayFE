@@ -151,12 +151,12 @@ const CreatePO: React.FC = () => {
   });
   const dispatch = useAppDispatch();
   const { VendorBranchData, venderaddressdata } = useAppSelector(
-    (state) => state.divicemin
+    (state) => state.divicemin,
   );
   const { loading } = useAppSelector((state) => state.po);
   const { formData } = useAppSelector((state) => state.po);
   const { dispatchFromDetails, shippingAddress } = useAppSelector(
-    (state) => state.client
+    (state) => state.client,
   ) as any;
   const isEdit = window.location.href.includes("edit-po");
   const id =
@@ -236,7 +236,7 @@ const CreatePO: React.FC = () => {
     if (missingDetails.length > 0) {
       showToast(
         `Some required fields are missing:\n${missingDetails.join("\n")}`,
-        "error"
+        "error",
       );
     }
 
@@ -285,7 +285,7 @@ const CreatePO: React.FC = () => {
       } else {
         if (!checkRequiredFields(rowData)) {
           const component = rowData.map(
-            (item) => item.partComponent?.value || ""
+            (item) => item.partComponent?.value || "",
           );
           const qty = rowData.map((item) => Number(item.qty));
           const rate = rowData.map((item) => Number(item.rate));
@@ -331,7 +331,7 @@ const CreatePO: React.FC = () => {
             vendorMobile: formData.vendorMobile || "",
             updaterow: rowData.map((item) => item.updaterow),
             poid: id,
-            vendor_type: "v01",            
+            vendor_type: "v01",
             poRemarks: watch("remarks") || "",
           };
           if (isEdit) {
@@ -415,11 +415,11 @@ const CreatePO: React.FC = () => {
                 setValue(
                   "vendoraddress",
                   replaceBrWithNewLine(response.payload.data?.data?.address) ||
-                    ""
+                    "",
                 );
                 setValue("gstin", response.payload.data?.data?.gstid);
               }
-            }
+            },
           );
           setValue("vendorMobile", header?.vendorMobile || "");
 
@@ -463,7 +463,7 @@ const CreatePO: React.FC = () => {
               ...formData,
               paymentTerms: header?.paymentterms || "",
               termsOfDelivery: header?.termsOfDelivery || "",
-            })
+            }),
           );
 
           setRowData(
@@ -491,32 +491,32 @@ const CreatePO: React.FC = () => {
               isNew: true,
               excRate: item.header?.exchangerate || 1,
               uom: item.uom,
-            }))
+            })),
           );
           setTotal({
             cgst: Number(
               materials.reduce(
                 (acc: number, item: any) => acc + Number(item.cgst),
-                0
-              )
+                0,
+              ),
             ),
             sgst: Number(
               materials.reduce(
                 (acc: number, item: any) => acc + Number(item.sgst),
-                0
-              )
+                0,
+              ),
             ),
             igst: Number(
               materials.reduce(
                 (acc: number, item: any) => acc + Number(item.igst),
-                0
-              )
+                0,
+              ),
             ),
             taxableValue: Number(
               materials.reduce(
                 (acc: number, item: any) => acc + Number(item.taxablevalue),
-                0
-              )
+                0,
+              ),
             ),
           });
         }
@@ -626,24 +626,24 @@ const CreatePO: React.FC = () => {
                                 setValue(
                                   "vendoraddress",
                                   replaceBrWithNewLine(
-                                    response.payload.data?.data?.address
-                                  ) || ""
+                                    response.payload.data?.data?.address,
+                                  ) || "",
                                 );
                                 setValue(
                                   "gstin",
-                                  response.payload.data?.data?.gstid
+                                  response.payload.data?.data?.gstid,
                                 );
                                 setValue(
                                   "vendorMobile",
-                                  response.payload.data?.data?.phone
+                                  response.payload.data?.data?.phone,
                                 );
                                 setGstTypeStatus(
                                   response.payload.data?.data?.state === "09"
                                     ? "L"
-                                    : "I"
+                                    : "I",
                                 );
                               }
-                            }
+                            },
                           );
                         }}
                       >
@@ -725,7 +725,7 @@ const CreatePO: React.FC = () => {
                     <Autocomplete
                       value={
                         dispatchFromDetails?.data?.find(
-                          (address: any) => address.code === field.value
+                          (address: any) => address.code === field.value,
                         ) || null
                       }
                       onChange={(_, newValue) =>
@@ -869,7 +869,7 @@ const CreatePO: React.FC = () => {
                       // value={field.value}
                       value={
                         shippingAddress?.data?.find(
-                          (address: any) => address.code === field.value
+                          (address: any) => address.code === field.value,
                         ) || null
                       }
                       onChange={(_, newValue) =>
@@ -1085,7 +1085,7 @@ const CreatePO: React.FC = () => {
                               setFormData({
                                 ...formData,
                                 duedate: newValue,
-                              })
+                              }),
                             );
                           }
                         }}
@@ -1111,7 +1111,7 @@ const CreatePO: React.FC = () => {
                       setFormData({
                         ...formData,
                         paymentTerms: e.target.value,
-                      })
+                      }),
                     );
                   }}
                 />
@@ -1130,26 +1130,26 @@ const CreatePO: React.FC = () => {
                       setFormData({
                         ...formData,
                         termsOfDelivery: e.target.value,
-                      })
+                      }),
                     );
                   }}
                 />
               </div>
               <TextField
-                  variant="filled"
-                  sx={{ mb: 1 }}
-                  error={!!errors.remarks}
-                  helperText={errors?.remarks?.message}
-                  focused={!!watch("remarks")}
-                  multiline
-                  rows={3}
-                  fullWidth
-                  label="Remarks"
-                  className="h-[100px] resize-none"
-                  {...register("remarks", {
-                    required: "Remarks is required",
-                  })}
-                />
+                variant="filled"
+                sx={{ mb: 1 }}
+                error={!!errors.remarks}
+                helperText={errors?.remarks?.message}
+                focused={!!watch("remarks")}
+                multiline
+                rows={3}
+                fullWidth
+                label="Remarks"
+                className="h-[100px] resize-none"
+                {...register("remarks", {
+                  required: "Remarks is required",
+                })}
+              />
             </div>
           )}
           {activeStep === 1 && (
