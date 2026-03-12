@@ -15,7 +15,7 @@ import { FormControl, InputAdornment, InputLabel, List, ListItem, ListItemIcon, 
 import MasterVendorDetailTable from "@/table/master/MasterVendorDetailTable";
 import FileUploader from "@/components/reusable/FileUploader";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
-import { createVendor, getVendor, uploadFile } from "@/features/master/vendor/vedorSlice";
+import { createVendor, getVendor, uploadFile } from "@/features/master/vendor/vendorSlice";
 import { LoadingButton } from "@mui/lab";
 import { showToast } from "@/utils/toasterContext";
 import { Controller, useForm } from "react-hook-form";
@@ -58,7 +58,7 @@ type FormDataType = {
   dateOfApplicability: Dayjs | null;
 };
 
-const MasterAddVender: React.FC = () => {
+const MasterAddVendor: React.FC = () => {
   const dispatch = useAppDispatch();
   const { uploadfileloading, createVendorLoading } = useAppSelector((state) => state.vendor);
   const [open, setOpen] = React.useState(false);
@@ -616,4 +616,4 @@ const MasterAddVender: React.FC = () => {
   );
 };
 
-export default MasterAddVender;
+export default MasterAddVendor;

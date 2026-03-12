@@ -10,7 +10,7 @@ import SelectState, { StateData } from "@/components/reusable/SelectState";
 import { Controller, useForm } from "react-hook-form";
 import { AddVendorBranchPayload } from "@/features/master/vendor/vendorType";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
-import { addVendorBranch, getVendorBranch } from "@/features/master/vendor/vedorSlice";
+import { addVendorBranch, getVendorBranch } from "@/features/master/vendor/vendorSlice";
 import { useParams } from "react-router-dom";
 type Props = {
   open: boolean;

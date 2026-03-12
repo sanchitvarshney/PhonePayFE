@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 
-const MasterVenderLayout = (props: { children: React.ReactNode }) => {
+const MasterVendorLayout = (props: { children: React.ReactNode }) => {
   return (
     <div className="h-full flex flex-col min-h-0">
       <div className="flex-shrink-0 w-full bg-white tab h-[50px] shadow z-[5] border-b border-slate-300 relative">
@@ -15,7 +15,7 @@ const MasterVenderLayout = (props: { children: React.ReactNode }) => {
                 } hover:bg-cyan-50`
               }
             >
-              Add Vender
+              Add Vendor
             </NavLink>
           </li>
           <li className="h-[50px]">
@@ -27,7 +27,7 @@ const MasterVenderLayout = (props: { children: React.ReactNode }) => {
                 } hover:bg-cyan-50`
               }
             >
-              Vender Detail
+              Vendor Detail
             </NavLink>
           </li>
         </ul>
@@ -39,4 +39,4 @@ const MasterVenderLayout = (props: { children: React.ReactNode }) => {
   );
 };
 
-export default MasterVenderLayout;
+export default MasterVendorLayout;

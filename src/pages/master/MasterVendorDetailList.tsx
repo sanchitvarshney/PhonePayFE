@@ -3,9 +3,9 @@ import MasterVendorDetailTable from "@/table/master/MasterVendorDetailTable";
 import { Icons } from "@/components/icons";
 import React, { useEffect } from "react";
 import { useAppDispatch } from "@/hooks/useReduxHook";
-import { getVendor } from "@/features/master/vendor/vedorSlice";
+import { getVendor } from "@/features/master/vendor/vendorSlice";
 
-const MsterVendorDetail: React.FC = () => {
+const MasterVendorDetailList: React.FC = () => {
   const dispatch = useAppDispatch();
   useEffect(() => {
     dispatch(getVendor());
@@ -25,4 +25,4 @@ const MsterVendorDetail: React.FC = () => {
   );
 };
 
-export default MsterVendorDetail;
+export default MasterVendorDetailList;

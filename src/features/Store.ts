@@ -10,7 +10,7 @@ import deviceMinReducer from "@/features/wearhouse/Divicemin/devaiceMinSlice";
 import rawminReducer from "@/features/wearhouse/Rawmin/RawMinSlice";
 import materialRequestWithoutBomReducer from "@/features/production/MaterialRequestWithoutBom/MRRequestWithoutBomSlice";
 import procurementReducer from "@/features/procurement/poSlices";
-import vendorReducer from "@/features/master/vendor/vedorSlice";
+import vendorReducer from "@/features/master/vendor/vendorSlice";
 
 export const store = configureStore({
   reducer: {

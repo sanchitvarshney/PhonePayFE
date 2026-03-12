@@ -6,7 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import SelectState, { StateData } from "@/components/reusable/SelectState";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { UpadteVendorBranchPayload } from "@/features/master/vendor/vendorType";
-import { getVendorBranch, updateVendorBranch } from "@/features/master/vendor/vedorSlice";
+import { getVendorBranch, updateVendorBranch } from "@/features/master/vendor/vendorSlice";
 import { useParams } from "react-router-dom";
 import { replaceBrWithNewLine } from "@/utils/replacebrtag";
 

@@ -34,7 +34,7 @@ const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "";
 
 const PHONEPE_PURPLE = "#5F259F";
 
-const LogningV2: React.FC = () => {
+const LoginV2: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [recaptchaValue, setRecaptchaValue] = useState<string | null>(null);
   const [recaptchaKey, setRecaptchaKey] = useState(Math.random());
@@ -348,4 +348,4 @@ const LogningV2: React.FC = () => {
   );
 };
 
-export default LogningV2;
+export default LoginV2;

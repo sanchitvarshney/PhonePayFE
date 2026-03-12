@@ -5,7 +5,7 @@ import React, { useEffect } from "react";
 import Divider from "@mui/material/Divider";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
-import { getVendorBranch } from "@/features/master/vendor/vedorSlice";
+import { getVendorBranch } from "@/features/master/vendor/vendorSlice";
 import { replaceBrWithNewLine } from "@/utils/replacebrtag";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,7 +13,7 @@ import UpdateVendorBranchForm from "@/components/form/UpdateVendorBranchForm";
 import AddVendorBranch from "@/components/featureModels/AddVendorBranch";
 import UpdateVendorBasicDetail from "@/components/form/UpdateVendorBasicDetail";
 
-const MaterVendorDetail: React.FC = () => {
+const MasterVendorDetail: React.FC = () => {
   const [addvendor, setAddVendor] = React.useState<boolean>(false);
   const [updatebasicdetail, setUpdateBasicDetail] = React.useState<boolean>(false);
   const [editbranchid, setEditBranchId] = React.useState<string>("");
@@ -360,4 +360,4 @@ const MaterVendorDetail: React.FC = () => {
   );
 };
 
-export default MaterVendorDetail;
+export default MasterVendorDetail;

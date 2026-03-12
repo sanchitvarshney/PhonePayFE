@@ -4,7 +4,7 @@ import React from "react";
 import { Icons } from "@/components/icons";
 import { Controller, useForm } from "react-hook-form";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
-import { getVendorBranch, updateBasicDetail } from "@/features/master/vendor/vedorSlice";
+import { getVendorBranch, updateBasicDetail } from "@/features/master/vendor/vendorSlice";
 import { useParams } from "react-router-dom";
 import { showToast } from "@/utils/toasterContext";
 
