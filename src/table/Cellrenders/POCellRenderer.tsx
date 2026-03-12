@@ -109,13 +109,14 @@ const POCellRenderer: React.FC<POCellRendererProps> = ({ props, customFunction }
           <Select
             onKeyDown={(e) => e.preventDefault()}
             value={value}
-            className="w-full h-[35px] custom-select"
+            className="w-full custom-input"
             placeholder="Select gst type"
             onChange={(value) => handleChange(value)}
             options={[
               { value: "L", label: "Local" },
               { value: "I", label: "Inter State" },
             ]}
+            
           />
         );
       case "location":
@@ -131,7 +132,14 @@ const POCellRenderer: React.FC<POCellRendererProps> = ({ props, customFunction }
           />
         );
       case "autoConsump":
-        return <Select className="w-full h-[] custom-select" defaultValue="" onChange={(value) => handleChange(value)} options={[{ value: "N", label: "NO" }]} />;
+        return (
+          <Select
+            className="w-full custom-input"
+            defaultValue=""
+            onChange={(value) => handleChange(value)}
+            options={[{ value: "N", label: "NO" }]}
+          />
+        );
       case "currency":
         return (
           <div className="flex items-center gap-[5px]">

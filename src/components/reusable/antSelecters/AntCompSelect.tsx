@@ -20,13 +20,7 @@ type Props = {
   width?: string;
 };
 
-const AntCompSelect: React.FC<Props> = ({
-  value,
-  onChange,
-  label = "Search Item",
-  width = "100%",
-  getUom,
-}) => {
+const AntCompSelect: React.FC<Props> = ({ value, onChange, label = "Search Item", width = "100%", getUom }) => {
   const [inputValue, setInputValue] = useState("");
   const debouncedInputValue = useDebounce(inputValue, 300);
   const [loading, setLoading] = useState<boolean>(false);
@@ -37,7 +31,7 @@ const AntCompSelect: React.FC<Props> = ({
     try {
       const response = await axiosInstance.get(`/backend/search/item/${query}`);
       if (response.data.success) {
-        setItemList(response.data.data || []);
+        setItemList(response.data.data||[]);
       }
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -58,20 +52,23 @@ const AntCompSelect: React.FC<Props> = ({
       filterOption={false}
       showSearch
       loading={loading}
-      className={`w-[${width}] custom-select`}
+      className="custom-input"
+      style={{ width }}
       value={value?.value}
       onSearch={(input) => {
-        if (input) setInputValue(input);
-        else fetchItems(null);
+        if (input) {
+          setInputValue(input);
+        } else {
+          fetchItems(null);
+        }
       }}
       placeholder={label}
       onChange={(selectedValue) => {
         const selectedItem = itemList?.find((item) => item.id === selectedValue);
-        onChange({
-          value: selectedItem!.id,
-          label: `${selectedItem?.part_code} - ${selectedItem?.text}`,
-        });
-        if (getUom) getUom(selectedItem?.unit ?? "");
+        onChange({ value: selectedItem!.id, label: `${selectedItem?.part_code} - ${selectedItem?.text}` });
+        if (getUom) {
+          getUom(selectedItem?.unit ?? "");
+        }
       }}
       options={
         itemList.length > 0

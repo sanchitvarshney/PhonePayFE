@@ -54,7 +54,8 @@ const AntLocationSelectAcordinttoModule: React.FC<Props> = ({
       filterOption={false}
       showSearch
       loading={loading}
-      className={`w-[${width}] custom-select`}
+      className="custom-input"
+      style={{ width }}
       value={value?.value}
       onSearch={(input) => {
         if (input) setInputValue(input);
