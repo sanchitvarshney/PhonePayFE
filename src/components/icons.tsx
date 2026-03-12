@@ -22,6 +22,21 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import CachedIcon from "@mui/icons-material/Cached";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import FileUploadIcon from "@mui/icons-material/UploadFile";
+import StreetviewIcon from "@mui/icons-material/Streetview";
+import ApartmentIcon from "@mui/icons-material/Apartment";
+import ContactEmergencyIcon from "@mui/icons-material/ContactEmergency";
+import TagIcon from "@mui/icons-material/Tag";
+import DateRangeIcon from "@mui/icons-material/DateRange";
+import CallIcon from "@mui/icons-material/Call";
+import EmailIcon from "@mui/icons-material/Email";
+import FaxIcon from "@mui/icons-material/Fax";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import QrCode2Icon from "@mui/icons-material/QrCode2";
+import SearchIcon from "@mui/icons-material/Search";
 
 export const Icons = {
   home: HomeIcon,
@@ -48,5 +63,20 @@ export const Icons = {
   refreshv2: CachedIcon,
   next: NavigateNextIcon,
   previous: NavigateBeforeIcon,
+  outlineinfo: InfoOutlinedIcon,
+  uploadfile: FileUploadIcon,
+  branch: StreetviewIcon,
+  city: ApartmentIcon,
+  idCard: ContactEmergencyIcon,
+  tag: TagIcon,
+  date: DateRangeIcon,
+  call: CallIcon,
+  email: EmailIcon,
+  fax: FaxIcon,
+  attachment: AttachFileIcon,
+  threedotv: MoreVertIcon,
+  down: KeyboardArrowDownIcon,
+  qrcode: QrCode2Icon,
+  search: SearchIcon,
 };
 

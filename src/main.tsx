@@ -3,6 +3,8 @@ import { RouterProvider } from "react-router-dom";
 import "./index.css";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
+import { AllCommunityModule } from "ag-grid-community";
+import { AgGridProvider } from "ag-grid-react";
 import { router } from "./route";
 import { Provider } from "react-redux";
 import { store } from "./features/Store";
@@ -25,7 +27,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ThemeProvider theme={theme}>
       <ToasterProvider>
         <SocketProvider>
-          <RouterProvider router={router} />
+          <AgGridProvider modules={[AllCommunityModule]}>
+            <RouterProvider router={router} />
+          </AgGridProvider>
           <ToasterConsumer />
         </SocketProvider>
       </ToasterProvider>

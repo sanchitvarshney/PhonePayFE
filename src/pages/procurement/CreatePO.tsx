@@ -541,11 +541,11 @@ const CreatePO: React.FC = () => {
           setAlert(false);
         }}
       />
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white ">
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white w-full flex-1 min-h-0 flex flex-col overflow-hidden">
         <MaterialInvardUploadDocumentDrawer open={upload} setOpen={setUpload} />
         {loading && <FullPageLoading />}
-        <div className="h-[calc(100vh-100px)]   ">
-          <div className="h-[50px] flex items-center w-full px-[20px] bg-neutral-50 border-b border-neutral-300">
+        <div className="flex-1 min-h-0 w-full flex flex-col overflow-hidden">
+          <div className="flex-shrink-0 h-[50px] flex items-center w-full px-[20px] bg-neutral-50 border-b border-neutral-300">
             <Stepper activeStep={activeStep} className="w-full">
               {steps.map((label, index) => (
                 <Step key={index}>
@@ -1153,7 +1153,7 @@ const CreatePO: React.FC = () => {
             </div>
           )}
           {activeStep === 1 && (
-            <div className="h-[calc(100vh-200px)] w-full overflow-auto">
+            <div className="flex-1 min-h-0 w-full overflow-auto">
               <AddPOTable
                 rowData={rowData}
                 setRowData={setRowData}

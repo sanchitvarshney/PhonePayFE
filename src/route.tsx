@@ -20,6 +20,10 @@ import Protected from "./components/shared/Protected";
 import MasterComponentDeatil from "@/pages/master/MasterComponentDeatil";
 import Profile from "@/pages/profile/Profile";
 import Settings from "@/pages/profile/Settings";
+import MasterVenderLayout from "@/layouts/MasterVenderLayout";
+import MasterAddVender from "@/pages/master/MasterAddVender";
+import MsterVendorDetail from "@/pages/master/MsterVendorDetail";
+import MaterVendorDetail from "@/pages/master/MaterVendorDetail";
 
 export const router = createBrowserRouter([
   {
@@ -69,6 +73,32 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/master-components/:id",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterAddVender />
+          </MainLayout>
+        ),
+        path: "/master-vendor-add",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MaterVendorDetail />
+          </MainLayout>
+        ),
+        path: "/master-vendor/:id",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterVenderLayout>
+              <MsterVendorDetail />
+            </MasterVenderLayout>
+          </MainLayout>
+        ),
+        path: "/master-vender-detail",
       },
       {
         element: (

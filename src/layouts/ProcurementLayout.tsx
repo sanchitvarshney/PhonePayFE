@@ -67,7 +67,9 @@ const ProcurementLayout: React.FC<Props> = ({ children }) => {
           />
         </Tabs>
       </div>
-      <Box sx={{ height: "calc(100vh - 100px)" }}>{children}</Box>
+      <Box sx={{ height: "calc(100vh - 100px)", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        {children}
+      </Box>
     </div>
   );
 };
