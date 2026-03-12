@@ -1187,7 +1187,7 @@ const CreatePO: React.FC = () => {
                   open ? "h-[290px]" : "h-[50px]"
                 } border-r overflow-hidden`}
               >
-                <div className="h-[50px] bg-cyan-900 flex items-center pe-[20px] gap-[10px]">
+                <div className="h-[50px] bg-[#5F259F] flex items-center pe-[20px] gap-[10px]">
                   <Button
                     type="button"
                     onClick={() => setOpen(!open)}

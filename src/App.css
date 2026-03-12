@@ -1,4 +1,333 @@
-/* PhonePeFE app styles */
+
+.ag-theme-quartz {
+  --ag-header-height: 40px;
+  --ag-header-foreground-color: #475569;
+  --ag-header-background-color: #e4e4e7;
+  border: none;
+}
+.ag-theme-quartz .ag-root-wrapper {
+  border-radius: 0;
+  border: none;
+}
+.ag-theme-quartz .ag-header {
+  font-family: cursive;
+  background-color: #ecfeff;
+}
+.ag-theme-quartz .ag-header-group-cell {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.ag-theme-quartz .ag-header-cell {
+  font-size: 15px;
+}
+
+.ag-theme-quartz .ag-header-cell.ag-header-cell-center .ag-header-cell-label {
+  justify-content: center;
+}
+
+/* Workers report: different color per parent group, same color for children of that group */
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-group-0,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-group-0 {
+  background-color: #0e7490 !important;
+  color: #fff;
+}
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-group-1,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-group-1 {
+  background-color: #155e75 !important;
+  color: #fff;
+}
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-group-2,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-group-2 {
+  background-color: #0f766e !important;
+  color: #fff;
+}
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-group-3,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-group-3 {
+  background-color: #0d9488 !important;
+  color: #fff;
+}
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-group-4,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-group-4 {
+  background-color: #14b8a6 !important;
+  color: #fff;
+}
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-group-5,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-group-5 {
+  background-color: #2dd4bf !important;
+  color: #0f172a;
+}
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-group-6,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-group-6 {
+  background-color: #5eead4 !important;
+  color: #0f172a;
+}
+
+/* Vertical borders: header + data (column separators through full grid) */
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell,
+.ag-theme-quartz.workers-report-grid .ag-header-cell {
+  border-right: 1px solid rgba(15, 23, 42, 0.28);
+}
+.ag-theme-quartz.workers-report-grid .ag-cell {
+  border-right: 1px solid rgba(15, 23, 42, 0.28);
+}
+
+/* Last column of each parent group: right border = same color as parent header (header + body) */
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-last-0,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-last-0,
+.ag-theme-quartz.workers-report-grid .ag-cell.wr-last-0 {
+  border-right: 4px solid #0e7490 !important;
+}
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-last-1,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-last-1,
+.ag-theme-quartz.workers-report-grid .ag-cell.wr-last-1 {
+  border-right: 4px solid #155e75 !important;
+}
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-last-2,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-last-2,
+.ag-theme-quartz.workers-report-grid .ag-cell.wr-last-2 {
+  border-right: 4px solid #0f766e !important;
+}
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-last-3,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-last-3,
+.ag-theme-quartz.workers-report-grid .ag-cell.wr-last-3 {
+  border-right: 4px solid #0d9488 !important;
+}
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-last-4,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-last-4,
+.ag-theme-quartz.workers-report-grid .ag-cell.wr-last-4 {
+  border-right: 4px solid #14b8a6 !important;
+}
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-last-5,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-last-5,
+.ag-theme-quartz.workers-report-grid .ag-cell.wr-last-5 {
+  border-right: 4px solid #2dd4bf !important;
+}
+.ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-last-6,
+.ag-theme-quartz.workers-report-grid .ag-header-cell.wr-last-6,
+.ag-theme-quartz.workers-report-grid .ag-cell.wr-last-6 {
+  border-right: 4px solid #5eead4 !important;
+}
+
+/* Pinned Total row at bottom */
+.ag-theme-quartz.workers-report-grid .ag-row.wr-total-row .ag-cell {
+  font-weight: 700;
+  background-color: #f0fdfa !important;
+  border-top: 2px solid #0e7490;
+}
+
+/* Bottom border under child header row when fixed */
+
+.ag-theme-quartz .ag-root-wrapper {
+  border-radius: 0;
+}
+/* Applies a thin scrollbar */
+.ag-theme-quartz .ag-root-wrapper::-webkit-scrollbar {
+  width: 6px; /* For vertical scrollbars */
+  height: 6px; /* For horizontal scrollbars */
+}
+
+/* Applies the thumb color */
+.ag-theme-quartz .ag-body-horizontal-scroll-container::-webkit-scrollbar-thumb {
+  background-color: #155e75; 
+}
+
+.ag-theme-quartz .ag-row {
+  background-color: #fff;
+  height: 60px;
+}
+.ag-theme-quartz .ag-row:hover {
+  background-color: #fff;
+}
+.ag-theme-quartz .ag-cell {
+  outline: none;
+  border: none;
+  padding: 0;
+  padding: 0 5px;
+}
+.ag-theme-quartz .ag-cell:focus {
+  outline: none;
+  border: none;
+}
+/* Change hover color */
+.ant-picker-cell:hover .ant-picker-cell-inner {
+  background-color: #e0f2f1 !important; /* Change this to your desired hover color */
+}
+
+/* Change selected range highlight background color */
+.ant-picker-cell-in-view.ant-picker-cell-range-start .ant-picker-cell-inner,
+.ant-picker-cell-in-view.ant-picker-cell-range-end .ant-picker-cell-inner,
+.ant-picker-cell-in-view.ant-picker-cell-in-range .ant-picker-cell-inner {
+  background-color: #0891b2 !important; /* Change this to your desired selected range background color */
+  color: #fff;
+}
+
+/* Change the selected date's background color */
+.ant-picker-cell-selected .ant-picker-cell-inner {
+  background-color: #0891b2 !important; /* Change this to your desired selected date background color */
+  color: #fff;
+}
+.ant-picker-cell .ant-picker-cell-range-start .ant-picker-cell-in-view {
+  background-color: #e0f2f1 !important;
+}
+
+/* Make the background of autofilled input fields transparent */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px transparent inset; /* Set background to transparent */
+  box-shadow: 0 0 0 1000px transparent inset;
+  -webkit-text-fill-color: inherit; /* Maintain text color */
+}
+
+/* Ensure other styles remain consistent */
+input:-webkit-autofill {
+  -webkit-transition: background-color 5000s ease-in-out 0s;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.emptyInboxRotation {
+  animation: rotation 2s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ag-theme-quartz .ag-details-grid {
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+  background-color: white;
+}
+
+.ag-theme-quartz .ag-row-hover {
+  background-color: transparent !important; /* Prevents default hover color */
+}
+.ag-theme-quartz .ag-watermark {
+  display: none !important;
+}
+.ag-watermark {
+  display: none;
+}
+.ag-theme-quartz .ag-watermark::before {
+  display: none !important;
+}
+.ag-watermark::before {
+  display: none;
+}
+.ag-theme-quartz .ag-watermark-text {
+  display: none;
+}
+
+/* Global scrollbar customization for Material-UI Autocomplete dropdown */
+.MuiAutocomplete-listbox::-webkit-scrollbar {
+  width: 8px; /* Adjust the scrollbar width */
+}
+
+.MuiAutocomplete-listbox::-webkit-scrollbar-thumb {
+  background-color: #a3a3a3; /* Customize the scrollbar color */
+  border-radius: 4px; /* Add rounded corners */
+}
+
+.MuiAutocomplete-listbox::-webkit-scrollbar-thumb:hover {
+  background-color: #8b8b8b; /* Change color on hover */
+}
+
+.MuiAutocomplete-listbox::-webkit-scrollbar-track {
+  background: #f0f0f0; /* Optional: Customize the track background */
+}
+.ag-ltr .ag-cell-focus:not(.ag-cell-range-selected):focus-within {
+  border: none !important;
+  background: #fffbeb;
+}
+
+.custom-step-icon {
+  background-color: #0e7490; /* Green background for step numbers */
+  color: white; /* White text color */
+  font-size: 14px;
+  font-weight: bold;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-select .ant-select-selector {
+  border: none !important;
+  border-bottom: 2px solid #a3a3a3 !important; /* Customize the color as needed */
+  border-radius: 0 !important; /* Remove rounded corners */
+  box-shadow: none !important; /* Remove any shadow effects */
+  background-color: transparent !important;
+}
+
+.custom-select .ant-select-selector:focus,
+.custom-select .ant-select-selector:hover {
+  border-color: #155e75 !important; /* Adjust focus/hover color */
+  background-color: transparent !important;
+}
+.custom-input {
+  border: none;
+  border-bottom: 2px solid #a3a3a3; /* Bottom border */
+  border-radius: 0;
+  box-shadow: none; /* No shadow */
+  padding: 5px 12px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+  background-color: transparent !important;
+}
+
+.custom-input:focus,
+.custom-input:hover {
+  border-color: #155e75; /* Focus color */
+  outline: none;
+  box-shadow: none; /* No outline shadow */
+  background-color: transparent !important;
+}
+
+.ant-select-dropdown {
+  border-radius: 0 !important;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar {
+  /* Set scrollbar width */
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: #4e6e88 #f0f0f0; /* For Firefox: thumb color and track color */
+
+  /* Webkit browsers */
+  -webkit-scrollbar {
+    width: 8px;
+  }
+
+  -webkit-scrollbar-track {
+    background-color: #f0f0f0;
+  }
+
+  -webkit-scrollbar-thumb {
+    background-color: #74828e;
+    border-radius: 4px;
+  }
+  -webkit-scrollbar-thumb:hover {
+    background-color: #3c4d60; 
+  }
+}
+
+.custom-steps .ant-steps-item-title {
+  font-size: 15px; 
+  font-weight: bold; 
+}
+
+.custom-steps .ant-steps-item-description {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #666;
+}
+
+
 
 /* Login page: Swiper pagination dots - active = PhonePe purple */
 .mySwiper .swiper-pagination-bullet {

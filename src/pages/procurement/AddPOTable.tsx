@@ -229,14 +229,7 @@ const AddPOTable: React.FC<Props> = ({ rowData, setRowData, setTotal, exchange, 
   ];
 
   return (
-    <div
-      className="ag-theme-quartz w-full"
-      style={{
-        width: "100%",
-        height: "450px",
-        minHeight: "450px",
-      }}
-    >
+    <div className=" ag-theme-quartz h-[calc(100vh-200px)]">
       <AgGridReact
         suppressCellFocus={false}
         ref={gridRef}
@@ -263,6 +256,7 @@ const AddPOTable: React.FC<Props> = ({ rowData, setRowData, setTotal, exchange, 
         overlayNoRowsTemplate={OverlayNoRowsTemplate}
         defaultColDef={{
           resizable: true,
+          suppressCellFlash: true,
           editable: false,
         }}
       />
