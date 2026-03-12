@@ -233,6 +233,9 @@ const AddPOTable: React.FC<Props> = ({ rowData, setRowData, setTotal, exchange, 
       <AgGridReact
         suppressCellFocus={false}
         ref={gridRef}
+        headerHeight={36}
+        floatingFiltersHeight={36}
+        getRowHeight={() => 52}
         onCellFocused={(event: any) => {
           const { rowIndex, column } = event;
           const focusedCell = document.querySelector(`.ag-row[row-index="${rowIndex}"] .ag-cell[col-id="${column.colId}"] input `) as HTMLInputElement;
