@@ -2,7 +2,7 @@ import React from "react";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Props } from "@/types/MainLayout";
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 import { Link } from "react-router-dom";
@@ -43,6 +43,14 @@ const ProfileSidebar: React.FC<Props> = ({ uiState }) => {
           >
             <Icons.person fontSize="small" />
             <span className="text-[13px]">Profile</span>
+          </Link>
+          <Link
+            to="/profile/settings"
+            onClick={() => setSheet2Open(false)}
+            className="flex items-center gap-[10px] py-[8px] px-[10px] hover:bg-white/10 rounded text-slate-300"
+          >
+            <Settings className="h-[18px] w-[18px]" />
+            <span className="text-[13px]">Settings</span>
           </Link>
         </div>
         <div className="absolute bottom-0 left-0 p-[10px] w-full flex justify-center items-center">

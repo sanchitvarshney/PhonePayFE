@@ -19,6 +19,8 @@ import Custom404Page from "./pages/commonPages/Custom404Page";
 import Protected from "./components/shared/Protected";
 import MasterComponentDeatil from "@/pages/master/MasterComponentDeatil";
 import MINFromPOLayout from "@/layouts/MINFromPOLayout";
+import Profile from "@/pages/profile/Profile";
+import Settings from "@/pages/profile/Settings";
 
 export const router = createBrowserRouter([
   {
@@ -98,6 +100,22 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/material-in/from-po",
+      },
+      {
+        element: (
+          <MainLayout>
+            <Profile />
+          </MainLayout>
+        ),
+        path: "/profile",
+      },
+      {
+        element: (
+          <MainLayout>
+            <Settings />
+          </MainLayout>
+        ),
+        path: "/profile/settings",
       },
     ],
   },

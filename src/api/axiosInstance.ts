@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getToken } from "@/utils/tokenUtills";
+import { getApiBaseUrl } from "@/utils/apiSettings";
 import { showToast } from "@/utils/toasterContext";
 
 const axiosInstance = axios.create({
@@ -10,6 +11,8 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((config) => {
+  // Use user-configured API base URL from Settings when set
+  config.baseURL = getApiBaseUrl();
   const token = getToken();
   const savedSession = localStorage.getItem("session") || "25-26";
   const savedCompanyBranch = localStorage.getItem("companyBranch") || "BRMSC031";
