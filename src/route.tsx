@@ -128,7 +128,7 @@ export const router = createBrowserRouter([
             </ProcurementLayout>
           </MainLayout>
         ),
-        path: "/material-in/from-po",
+        path: "/procurement/min-from-po",
       },
       {
         element: (

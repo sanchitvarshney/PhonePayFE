@@ -15,7 +15,7 @@ type Props = {
 const ProcurementLayout: React.FC<Props> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const tabRoutes = ["/procurement/create", "/procurement/manage", "/material-in/from-po"];
+  const tabRoutes = ["/procurement/create", "/procurement/manage", "/procurement/min-from-po"];
   const currentTabIndex = tabRoutes.indexOf(location.pathname);
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
