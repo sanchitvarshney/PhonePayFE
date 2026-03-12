@@ -78,6 +78,8 @@ const MasterVendorDetailTable: React.FC<Props> = () => {
           rowData={rowData}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
+          headerHeight={40}
+          floatingFiltersHeight={40}
           getRowHeight={() => 60}
           pagination={true}
           paginationPageSizeSelector={[10, 25, 50]}
