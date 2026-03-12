@@ -88,6 +88,28 @@ const staticMenu: Menu[] = [
           },
         ],
       },
+      {
+        menu_key: "material-in",
+        name: "Material In",
+        parent_menu_key: "warehouse",
+        url: null,
+        order: 2,
+        is_active: 1,
+        icon: "report",
+        description: "Material In",
+        children: [
+          {
+            menu_key: "material-in-from-po",
+            name: "From PO",
+            parent_menu_key: "material-in",
+            url: "/material-in/from-po",
+            order: 1,
+            is_active: 1,
+            icon: "report",
+            description: "From PO",
+          },
+        ],
+      },
     ],
   },
 ];

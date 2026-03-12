@@ -107,6 +107,34 @@ export const getPOComponentDetail = createAsyncThunk<
   return response;
 });
 
+export const fetchDataForMIN = createAsyncThunk<
+  AxiosResponse<unknown>,
+  string
+>("po/fetchDataForMIN", async (id) => {
+  const response = await axiosInstance.get(`/po/fetchData4MIN?pono=${id}`);
+  return response;
+});
+
+export const submitPOMIN = createAsyncThunk<
+  AxiosResponse<unknown>,
+  unknown
+>("po/submitPOMIN", async (payload) => {
+  const response = await axiosInstance.post("/po/poMIN", payload);
+  return response;
+});
+
+export const uploadMinInvoice = createAsyncThunk<
+  unknown,
+  { files: File }
+>("/po/uploadInvoice", async ({ files }) => {
+  const formData = new FormData();
+  formData.append("files", files);
+  const response = await axiosInstance.post("/po/uploadInvoice", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+});
+
 export const poPrint = createAsyncThunk<
   unknown,
   { id: string },
@@ -234,6 +262,36 @@ const procurementPoSlice = createSlice({
       })
       .addCase(updatePO.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(fetchDataForMIN.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchDataForMIN.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(fetchDataForMIN.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(submitPOMIN.pending, (state) => {
+        state.submitPOMINLoading = true;
+      })
+      .addCase(submitPOMIN.fulfilled, (state) => {
+        state.submitPOMINLoading = false;
+      })
+      .addCase(submitPOMIN.rejected, (state, action) => {
+        state.submitPOMINLoading = false;
+        state.error = action.error.message;
+      })
+      .addCase(uploadMinInvoice.pending, (state) => {
+        state.uploadMinInvoiceLoading = true;
+      })
+      .addCase(uploadMinInvoice.fulfilled, (state) => {
+        state.uploadMinInvoiceLoading = false;
+      })
+      .addCase(uploadMinInvoice.rejected, (state, action) => {
+        state.uploadMinInvoiceLoading = false;
         state.error = action.error.message;
       });
   },

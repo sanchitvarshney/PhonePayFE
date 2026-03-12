@@ -14,9 +14,11 @@ import MasterLocation from "./pages/master/MasterLocation";
 import MasterComponent from "./pages/master/MasterComponent";
 import CreatePO from "./pages/procurement/CreatePO";
 import ManagePO from "./pages/procurement/ManagePO";
+import MINFromPO from "./pages/min/MINFromPO";
 import Custom404Page from "./pages/commonPages/Custom404Page";
 import Protected from "./components/shared/Protected";
 import MasterComponentDeatil from "@/pages/master/MasterComponentDeatil";
+import MINFromPOLayout from "@/layouts/MINFromPOLayout";
 
 export const router = createBrowserRouter([
   {
@@ -86,6 +88,16 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/procurement/manage",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MINFromPOLayout>
+              <MINFromPO />
+            </MINFromPOLayout>
+          </MainLayout>
+        ),
+        path: "/material-in/from-po",
       },
     ],
   },

@@ -32,7 +32,7 @@ const HomePage = () => {
           </div>
           <div className="flex  items-center mt-[30px] gap-[20px]">
             <Card
-              sx={{ background: "#ecfeff" }}
+              sx={{ background: "#ecf5ff" }}
               elevation={2}
               className="h-[150px] w-[250px] flex items-center justify-center flex-col "
             >
@@ -42,12 +42,12 @@ const HomePage = () => {
                 className="h-[100px] w-[100px]"
               />
               <Link to={"/"} className="flex items-center gap-[5px]">
-                <p className="text-cyan-800 font-[600]">Production</p>
-                <BiLinkExternal className="text-cyan-800" />
+                <p className="text-purple-800 font-[600]">Production</p>
+                <BiLinkExternal className="text-purple-800" />
               </Link>
             </Card>
             <Card
-              sx={{ background: "#ecfeff" }}
+              sx={{ background: "#ecf5ff" }}
               elevation={2}
               className="h-[150px] w-[250px] flex items-center justify-center flex-col"
             >
@@ -57,12 +57,12 @@ const HomePage = () => {
                 className="h-[100px] w-[100px]"
               />
               <Link to={"/"} className="flex items-center gap-[5px]">
-                <p className="text-cyan-800 font-[600]">Warehouse</p>
-                <BiLinkExternal className="text-cyan-800" />
+                <p className="text-purple-800 font-[600]">Warehouse</p>
+                <BiLinkExternal className="text-purple-800" />
               </Link>
             </Card>
             <Card
-              sx={{ background: "#ecfeff" }}
+              sx={{ background: "#ecf5ff" }}
               elevation={2}
               className="h-[150px] w-[250px] flex items-center justify-center flex-col"
             >
@@ -72,8 +72,8 @@ const HomePage = () => {
                 className="h-[100px] w-[100px]"
               />
               <Link to={"/"} className="flex items-center gap-[5px]">
-                <p className="text-cyan-800 font-[600]">Reports</p>
-                <BiLinkExternal className="text-cyan-800" />
+                <p className="text-purple-800 font-[600]">Reports</p>
+                <BiLinkExternal className="text-purple-800" />
               </Link>
             </Card>
           </div>
