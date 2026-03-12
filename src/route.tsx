@@ -1,39 +1,31 @@
-import React, { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
 import MainLayout from "./layouts/MainLayout";
 import ProcurementLayout from "./layouts/ProcurementLayout";
 import MasterVendorLayout from "./layouts/MasterVendorLayout";
 import Protected from "./components/shared/Protected";
-import FullPageLoading from "./components/shared/FullPageLoading";
 
-// Lazy-loaded page components
-const HomePage = lazy(() => import("./pages/HomePage"));
-const DashBoard = lazy(() => import("./pages/DashBoard"));
-const LoginV2 = lazy(() => import("./pages/commonPages/LoginV2"));
-const MailVerifyPage = lazy(() => import("./pages/commonPages/MailVerifyPage"));
-const ChangePassword = lazy(() => import("./pages/commonPages/ChangePassword"));
-const OtpPage = lazy(() => import("./pages/commonPages/OtpPage"));
-const ForgotPassword = lazy(() => import("./pages/authentication/ForgotPassword"));
-const RecoveryPassword = lazy(() => import("./pages/authentication/RecoveryPassword"));
-const MasterLocation = lazy(() => import("./pages/master/MasterLocation"));
-const MasterComponent = lazy(() => import("./pages/master/MasterComponent"));
-const MasterComponentDeatil = lazy(() => import("./pages/master/MasterComponentDeatil"));
-const MasterAddVendor = lazy(() => import("./pages/master/MasterAddVendor"));
-const MasterVendorDetail = lazy(() => import("./pages/master/MasterVendorDetail"));
-const MasterVendorDetailList = lazy(() => import("./pages/master/MasterVendorDetailList"));
-const CreatePO = lazy(() => import("./pages/procurement/CreatePO"));
-const ManagePO = lazy(() => import("./pages/procurement/ManagePO"));
-const MINFromPO = lazy(() => import("./pages/min/MINFromPO"));
-const Custom404Page = lazy(() => import("./pages/commonPages/Custom404Page"));
-const Profile = lazy(() => import("./pages/profile/Profile"));
-const Settings = lazy(() => import("./pages/profile/Settings"));
-
-const withSuspense = (Component: React.LazyExoticComponent<React.ComponentType<any>>) => (
-  <Suspense fallback={<FullPageLoading />}>
-    <Component />
-  </Suspense>
-);
+// Static imports – no lazy loading; use FullPageLoading elsewhere when needed (e.g. auth/data loading)
+import HomePage from "./pages/HomePage";
+import DashBoard from "./pages/DashBoard";
+import LoginV2 from "./pages/commonPages/LoginV2";
+import MailVerifyPage from "./pages/commonPages/MailVerifyPage";
+import ChangePassword from "./pages/commonPages/ChangePassword";
+import OtpPage from "./pages/commonPages/OtpPage";
+import ForgotPassword from "./pages/authentication/ForgotPassword";
+import RecoveryPassword from "./pages/authentication/RecoveryPassword";
+import MasterLocation from "./pages/master/MasterLocation";
+import MasterComponent from "./pages/master/MasterComponent";
+import MasterComponentDeatil from "./pages/master/MasterComponentDeatil";
+import MasterAddVendor from "./pages/master/MasterAddVendor";
+import MasterVendorDetail from "./pages/master/MasterVendorDetail";
+import MasterVendorDetailList from "./pages/master/MasterVendorDetailList";
+import CreatePO from "./pages/procurement/CreatePO";
+import ManagePO from "./pages/procurement/ManagePO";
+import MINFromPO from "./pages/min/MINFromPO";
+import Custom404Page from "./pages/commonPages/Custom404Page";
+import Profile from "./pages/profile/Profile";
+import Settings from "./pages/profile/Settings";
 
 export const router = createBrowserRouter([
   {
@@ -47,7 +39,7 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
-            {withSuspense(HomePage)}
+            <HomePage />
           </MainLayout>
         ),
         path: "/",
@@ -55,7 +47,7 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
-            {withSuspense(DashBoard)}
+            <DashBoard />
           </MainLayout>
         ),
         path: "/dashboard",
@@ -63,7 +55,7 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
-            {withSuspense(MasterLocation)}
+            <MasterLocation />
           </MainLayout>
         ),
         path: "/master-location",
@@ -71,7 +63,7 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
-            {withSuspense(MasterComponent)}
+            <MasterComponent />
           </MainLayout>
         ),
         path: "/master-components",
@@ -79,7 +71,7 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
-            {withSuspense(MasterComponentDeatil)}
+            <MasterComponentDeatil />
           </MainLayout>
         ),
         path: "/master-components/:id",
@@ -87,7 +79,7 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
-            {withSuspense(MasterAddVendor)}
+            <MasterAddVendor />
           </MainLayout>
         ),
         path: "/master-vendor-add",
@@ -95,7 +87,7 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
-            {withSuspense(MasterVendorDetail)}
+            <MasterVendorDetail />
           </MainLayout>
         ),
         path: "/master-vendor/:id",
@@ -104,7 +96,7 @@ export const router = createBrowserRouter([
         element: (
           <MainLayout>
             <MasterVendorLayout>
-              {withSuspense(MasterVendorDetailList)}
+              <MasterVendorDetailList />
             </MasterVendorLayout>
           </MainLayout>
         ),
@@ -114,7 +106,7 @@ export const router = createBrowserRouter([
         element: (
           <MainLayout>
             <ProcurementLayout>
-              {withSuspense(CreatePO)}
+              <CreatePO />
             </ProcurementLayout>
           </MainLayout>
         ),
@@ -124,7 +116,7 @@ export const router = createBrowserRouter([
         element: (
           <MainLayout>
             <ProcurementLayout>
-              {withSuspense(ManagePO)}
+              <ManagePO />
             </ProcurementLayout>
           </MainLayout>
         ),
@@ -134,7 +126,7 @@ export const router = createBrowserRouter([
         element: (
           <MainLayout>
             <ProcurementLayout>
-              {withSuspense(MINFromPO)}
+              <MINFromPO />
             </ProcurementLayout>
           </MainLayout>
         ),
@@ -143,7 +135,7 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
-            {withSuspense(Profile)}
+            <Profile />
           </MainLayout>
         ),
         path: "/profile",
@@ -151,7 +143,7 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
-            {withSuspense(Settings)}
+            <Settings />
           </MainLayout>
         ),
         path: "/profile/settings",
@@ -161,7 +153,7 @@ export const router = createBrowserRouter([
   {
     element: (
       <Protected authentication={false}>
-        {withSuspense(LoginV2)}
+        <LoginV2 />
       </Protected>
     ),
     path: "/login",
@@ -169,7 +161,7 @@ export const router = createBrowserRouter([
   {
     element: (
       <Protected authentication>
-        {withSuspense(MailVerifyPage)}
+        <MailVerifyPage />
       </Protected>
     ),
     path: "/verify-mail",
@@ -177,7 +169,7 @@ export const router = createBrowserRouter([
   {
     element: (
       <Protected authentication>
-        {withSuspense(OtpPage)}
+        <OtpPage />
       </Protected>
     ),
     path: "/verify-otp",
@@ -185,17 +177,17 @@ export const router = createBrowserRouter([
   {
     element: (
       <Protected authentication>
-        {withSuspense(ChangePassword)}
+        <ChangePassword />
       </Protected>
     ),
     path: "/change-password",
   },
   {
-    element: withSuspense(ForgotPassword),
+    element: <ForgotPassword />,
     path: "/forgot-password",
   },
   {
-    element: withSuspense(RecoveryPassword),
+    element: <RecoveryPassword />,
     path: "/password-recovery",
   },
   {
@@ -203,7 +195,7 @@ export const router = createBrowserRouter([
     element: (
       <Protected authentication>
         <MainLayout>
-          {withSuspense(Custom404Page)}
+          <Custom404Page />
         </MainLayout>
       </Protected>
     ),
