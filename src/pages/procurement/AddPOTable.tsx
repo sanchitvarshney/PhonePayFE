@@ -256,7 +256,6 @@ const AddPOTable: React.FC<Props> = ({ rowData, setRowData, setTotal, exchange, 
         overlayNoRowsTemplate={OverlayNoRowsTemplate}
         defaultColDef={{
           resizable: true,
-          suppressCellFlash: true,
           editable: false,
         }}
       />
