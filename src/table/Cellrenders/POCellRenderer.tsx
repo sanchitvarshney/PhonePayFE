@@ -270,9 +270,17 @@ const POCellRenderer: React.FC<POCellRendererProps> = ({ props, customFunction }
         );
 
       case "taxableValue":
-        return <span>{value % 1 == 0 ? value : value?.toFixed(2) ?? "0.00"}</span>;
+        return (
+          <div className="flex items-center h-full w-full min-h-[40px]">
+            <span>{value % 1 == 0 ? value : value?.toFixed(2) ?? "0.00"}</span>
+          </div>
+        );
       case "foreignValue":
-        return <span>{value % 1 == 0 ? value : value?.toFixed(2) ?? "0.00"}</span>;
+        return (
+          <div className="flex items-center h-full w-full min-h-[40px]">
+            <span>{value % 1 == 0 ? value : value?.toFixed(2) ?? "0.00"}</span>
+          </div>
+        );
       case "hsnCode":
         return <Input onChange={handleInputChange} value={value} type="text" placeholder={colDef.headerName} className="w-[100%] custom-input" />;
       case "gstRate":
@@ -291,11 +299,23 @@ const POCellRenderer: React.FC<POCellRendererProps> = ({ props, customFunction }
           />
         );
       case "cgst":
-        return <span>{value % 1 == 0 ? value : value?.toFixed(2) ?? "0.00"}</span>;
+        return (
+          <div className="flex items-center h-full w-full min-h-[40px]">
+            <span>{value % 1 == 0 ? value : value?.toFixed(2) ?? "0.00"}</span>
+          </div>
+        );
       case "sgst":
-        return <span>{value % 1 == 0 ? value : value?.toFixed(2) ?? "0.00"}</span>;
+        return (
+          <div className="flex items-center h-full w-full min-h-[40px]">
+            <span>{value % 1 == 0 ? value : value?.toFixed(2) ?? "0.00"}</span>
+          </div>
+        );
       case "igst":
-        return <span>{value % 1 == 0 ? value : value?.toFixed(2) ?? "0.00"}</span>;
+        return (
+          <div className="flex items-center h-full w-full min-h-[40px]">
+            <span>{value % 1 == 0 ? value : value?.toFixed(2) ?? "0.00"}</span>
+          </div>
+        );
       case "remarks":
         return <Input onChange={handleInputChange} value={value} type="text" placeholder={colDef.headerName} className="w-[100%] custom-input" />;
     }
