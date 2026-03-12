@@ -255,9 +255,13 @@ const MINFromPO = () => {
       if (files && files.length > 0) {
         dispatch(uploadMinInvoice({ files: files[0] }))
           .then((res) => {
-            if (res.payload?.success) {
-              setUrl(res.payload?.data[0]?.url);
-              showToast(res.payload.message, "success");
+            const payload = res.payload as
+              | { success?: boolean; data?: { url?: string }[]; message?: string }
+              | undefined;
+            if (payload?.success) {
+              const uploadedUrl = payload.data?.[0]?.url;
+              if (uploadedUrl) setUrl(uploadedUrl);
+              if (payload.message) showToast(payload.message, "success");
               setSheetOpen(false);
             }
           })

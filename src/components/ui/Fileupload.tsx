@@ -27,7 +27,12 @@ type FileUploaderProps = {
   value: File[] | null;
   onValueChange: (value: File[] | null) => void;
   onFileUpload?: (file: File) => void;
-  dropzoneOptions?: { maxFiles?: number };
+  dropzoneOptions?: {
+    maxFiles?: number;
+    accept?: Record<string, string[]>;
+    maxSize?: number;
+    multiple?: boolean;
+  };
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export const FileUploader = forwardRef<HTMLDivElement, FileUploaderProps>(
