@@ -1153,7 +1153,7 @@ const CreatePO: React.FC = () => {
             </div>
           )}
           {activeStep === 1 && (
-            <div className="h-[calc(100vh-200px)]   ">
+            <div className="h-[calc(100vh-200px)] w-full overflow-auto">
               <AddPOTable
                 rowData={rowData}
                 setRowData={setRowData}
