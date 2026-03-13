@@ -70,9 +70,9 @@ const MasterCostCenter: React.FC = () => {
               </div>
               <div>
                 <TextField
+                  fullWidth
                   label="Code"
                   placeholder="e.g. FIN001"
-                  sx={{ maxWidth: 280 }}
                   {...register("description", {
                     required: "Code is required",
                   })}
