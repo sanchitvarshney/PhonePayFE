@@ -15,6 +15,7 @@ import OtpPage from "./pages/commonPages/OtpPage";
 import ForgotPassword from "./pages/authentication/ForgotPassword";
 import RecoveryPassword from "./pages/authentication/RecoveryPassword";
 import MasterLocation from "./pages/master/MasterLocation";
+import MasterCostCenter from "./pages/master/MasterCostCenter";
 import MasterComponent from "./pages/master/MasterComponent";
 import MasterComponentDeatil from "./pages/master/MasterComponentDeatil";
 import MasterAddVendor from "./pages/master/MasterAddVendor";
@@ -59,6 +60,14 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/master-location",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterCostCenter />
+          </MainLayout>
+        ),
+        path: "/master-cost-center",
       },
       {
         element: (
