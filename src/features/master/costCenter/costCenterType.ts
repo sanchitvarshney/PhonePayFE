@@ -1,22 +1,17 @@
 export type CostCenter = {
-  costCenter: string;
-  description: string;
+  costCenter: string; // form field: display name
+  description: string; // form field: code or internal description
 };
 
-type CostCenterData = {
-  ID: number;
-  units_type: string;
-  units_name: string;
-  units_details: string;
-  insert_date: string;
-  update_date: string;
-  inserted_by: string;
-  updated_by: string;
-  units_id: string;
+export type CostCenterData = {
+  name: string;
+  code: string;
+  insertDt: string;
 };
 
 export type CostCenterApiResponse = {
   success: boolean;
+  message: string;
   data: CostCenterData[];
 };
 

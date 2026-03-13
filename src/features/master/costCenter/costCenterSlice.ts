@@ -26,8 +26,8 @@ export const createCostCenterAsync = createAsyncThunk<
   CostCenter
 >("master/createCostCenter", async (payload) => {
   const response = await axiosInstance.post("/costCentre/create", {
-    uom: payload.costCenter,
-    description: payload.description,
+    cost_centre_name: payload.costCenter,
+    cost_centre_code: payload.description,
   });
   return response;
 });

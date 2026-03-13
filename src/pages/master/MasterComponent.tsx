@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { createComponentAsync, getComponentsAsync, getGroupsAsync } from "@/features/master/component/componentSlice";
 import { getUOMAsync } from "@/features/master/UOM/UOMSlice";
+import { getCostCenterAsync } from "@/features/master/costCenter/costCenterSlice";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { Autocomplete, Button, TextField, Typography } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
@@ -53,11 +54,12 @@ const MasterComponent: React.FC = () => {
     },
   });
 
-  const moduleOptions = [
-    { id: "BPE", text: "BPe" },
-    { id: "MSC", text: "MSc" },
-  ]
-  
+  const { costCenter, getCostCenterLoading } = useAppSelector((state) => state.costCenter);
+  const costCenterOptions: OptionType[] = (costCenter ?? []).map((item) => ({
+    id: item.code,
+    text: item.name,
+  }));
+
   const { UOM, getUOMloading } = useAppSelector((state) => state.uom);
   const { createComponentLoading, component } = useAppSelector((state) => state.component);
 
@@ -86,7 +88,8 @@ const MasterComponent: React.FC = () => {
     dispatch(getComponentsAsync());
     dispatch(getUOMAsync());
     dispatch(getGroupsAsync());
-  }, []);
+    dispatch(getCostCenterAsync());
+  }, [dispatch]);
 
   return (
     <>
@@ -106,14 +109,14 @@ const MasterComponent: React.FC = () => {
                 <Controller
                   name="module"
                   control={control}
-                  rules={{ required: "You must select a module" }}
+                  rules={{ required: "You must select a cost center" }}
                   render={({ field }) => (
                     <Autocomplete
-                      // loading={getUOMloading}
+                      loading={getCostCenterLoading}
                       value={field.value}
-                      options={moduleOptions}
+                      options={costCenterOptions}
                       getOptionLabel={(option) => option.text}
-                      renderInput={(params) => <TextField {...params} label={"Select Module"} variant="outlined" />}
+                      renderInput={(params) => <TextField {...params} label="Select Cost Center" variant="outlined" />}
                       onChange={(_, value) => field.onChange(value)}
                       isOptionEqualToValue={(option, value) => option.id === value.id}
                     />

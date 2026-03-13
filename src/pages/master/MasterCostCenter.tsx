@@ -68,23 +68,20 @@ const MasterCostCenter: React.FC = () => {
                   </span>
                 )}
               </div>
-              <div className="flex flex-col gap-[10px]">
-                <div>
-                  <TextField
-                    multiline
-                    rows={4}
-                    fullWidth
-                    label="Specification"
-                    {...register("description", {
-                      required: "Specification is required",
-                    })}
-                  />
-                  {errors.description && (
-                    <span className=" text-[12px] text-red-500">
-                      {errors.description.message}
-                    </span>
-                  )}
-                </div>
+              <div>
+                <TextField
+                  label="Code"
+                  placeholder="e.g. FIN001"
+                  sx={{ maxWidth: 280 }}
+                  {...register("description", {
+                    required: "Code is required",
+                  })}
+                />
+                {errors.description && (
+                  <span className=" text-[12px] text-red-500">
+                    {errors.description.message}
+                  </span>
+                )}
               </div>
             </div>
             <div className="h-[50px] p-0 flex items-center px-[20px] gap-[10px] justify-end">
