@@ -1,6 +1,8 @@
 
+/* Compact AG-Grid: control header + row height so tables don't look overly tall */
 .ag-theme-quartz {
   --ag-header-height: 40px;
+  --ag-row-height: 40px;
   --ag-header-foreground-color: #475569;
   --ag-header-background-color: #e4e4e7;
   border: none;
@@ -134,7 +136,7 @@
 
 .ag-theme-quartz .ag-row {
   background-color: #fff;
-  height: 60px;
+  height: 40px; /* compact row height; override per grid with rowHeight prop if needed */
 }
 .ag-theme-quartz .ag-row:hover {
   background-color: #fff;

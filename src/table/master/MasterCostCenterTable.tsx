@@ -61,6 +61,9 @@ const MasterCostCenterTable: React.FC = () => {
           loading={getCostCenterLoading}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
+          headerHeight={40}
+          floatingFiltersHeight={36}
+          rowHeight={40}
           pagination={true}
           paginationPageSize={50}
           components={{
