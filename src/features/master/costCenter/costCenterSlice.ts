@@ -17,7 +17,7 @@ const initialState: CostCenterState = {
 export const getCostCenterAsync = createAsyncThunk<
   AxiosResponse<CostCenterApiResponse>
 >("master/getCostCenter", async () => {
-  const response = await axiosInstance.get("/costCenter");
+  const response = await axiosInstance.get("/costCentre/fetch");
   return response;
 });
 
@@ -25,7 +25,7 @@ export const createCostCenterAsync = createAsyncThunk<
   AxiosResponse<CostCenterCreateApiResponse>,
   CostCenter
 >("master/createCostCenter", async (payload) => {
-  const response = await axiosInstance.post("/costcenter/insert", {
+  const response = await axiosInstance.post("/costCentre/create", {
     uom: payload.costCenter,
     description: payload.description,
   });
