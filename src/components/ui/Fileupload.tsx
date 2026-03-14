@@ -116,7 +116,7 @@ type FileInputProps = {
 } & React.InputHTMLAttributes<HTMLInputElement>;
 
 export const FileInput = forwardRef<HTMLDivElement, FileInputProps>(
-  ({ className, loading, ...props }, ref) => {
+  ({ className, loading, children, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement | null>(null);
     const { files } = useFileUpload();
 
@@ -141,6 +141,8 @@ export const FileInput = forwardRef<HTMLDivElement, FileInputProps>(
           <span className="text-sm text-slate-600">
             {files.map((f) => f.name).join(", ")}
           </span>
+        ) : children != null ? (
+          children
         ) : (
           <span className="text-sm text-slate-500">
             Click to upload or drag and drop
