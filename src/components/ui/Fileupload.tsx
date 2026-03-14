@@ -13,9 +13,24 @@ import { cn } from "@/lib/utils";
 type FileUploaderContextType = {
   files: File[] | null;
   setFiles: Dispatch<SetStateAction<File[] | null>>;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  accept?: string;
+  multiple: boolean;
 };
 
 const FileUploaderContext = createContext<FileUploaderContextType | null>(null);
+
+function buildAcceptString(accept?: Record<string, string[]>): string | undefined {
+  if (!accept) return undefined;
+  const parts: string[] = [];
+  Object.entries(accept).forEach(([mime, exts]) => {
+    parts.push(mime);
+    exts.forEach((ext) => {
+      if (ext && !parts.includes(ext)) parts.push(ext);
+    });
+  });
+  return parts.length ? parts.join(",") : undefined;
+}
 
 const useFileUpload = () => {
   const ctx = useContext(FileUploaderContext);
@@ -51,26 +66,28 @@ export const FileUploader = forwardRef<HTMLDivElement, FileUploaderProps>(
         setFiles(newFiles);
         onValueChange(newFiles);
         if (newFiles[0] && onFileUpload) onFileUpload(newFiles[0]);
+        event.target.value = "";
       },
       [dropzoneOptions, onFileUpload, onValueChange]
     );
 
+    const accept = buildAcceptString(dropzoneOptions?.accept);
+    const multiple = dropzoneOptions?.multiple ?? false;
+
+    React.useEffect(() => {
+      setFiles(value ?? null);
+    }, [value]);
+
     return (
-      <FileUploaderContext.Provider value={{ files, setFiles }}>
+      <FileUploaderContext.Provider
+        value={{ files, setFiles, onChange: handleChange, accept, multiple }}
+      >
         <div
           ref={ref}
           className={cn("grid w-full overflow-hidden", className)}
           {...props}
         >
-          {React.Children.map(children, (child) => {
-            if (
-              React.isValidElement(child) &&
-              (child as any).type?.displayName === "FileInput"
-            ) {
-              return React.cloneElement(child as any, { onChange: handleChange });
-            }
-            return child;
-          })}
+          {children}
         </div>
       </FileUploaderContext.Provider>
     );
@@ -118,24 +135,54 @@ type FileInputProps = {
 export const FileInput = forwardRef<HTMLDivElement, FileInputProps>(
   ({ className, loading, children, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement | null>(null);
-    const { files } = useFileUpload();
+    const { files, onChange, accept, multiple } = useFileUpload();
+
+    const handleDrop = useCallback(
+      (e: React.DragEvent) => {
+        e.preventDefault();
+        if (loading) return;
+        const items = e.dataTransfer?.files;
+        if (!items?.length) return;
+        const dt = new DataTransfer();
+        const maxFiles = 5;
+        for (let i = 0; i < Math.min(items.length, maxFiles); i++) {
+          dt.items.add(items[i]);
+        }
+        const fakeEvent = {
+          target: { files: dt.files },
+        } as unknown as React.ChangeEvent<HTMLInputElement>;
+        onChange(fakeEvent);
+      },
+      [onChange, loading]
+    );
+
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    }, []);
 
     return (
       <div
         ref={ref}
+        role="button"
+        tabIndex={0}
         className={cn(
-          "relative w-full cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-background p-4 text-center",
+          "relative w-full cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-background p-4 text-center transition-colors hover:border-gray-400 hover:bg-gray-50/50",
           loading ? "opacity-50 cursor-not-allowed" : "",
           className
         )}
         onClick={() => !loading && inputRef.current?.click()}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
       >
         <input
           type="file"
           ref={inputRef}
           className="hidden"
+          accept={accept}
+          multiple={multiple}
+          onChange={onChange}
           {...props}
-          multiple={false}
         />
         {files && files.length > 0 ? (
           <span className="text-sm text-slate-600">

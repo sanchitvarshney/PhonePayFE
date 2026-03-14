@@ -247,30 +247,29 @@ const MINFromPO = () => {
   };
 
   const uploadDocs = async () => {
-    if (!files && files === null) {
+    if (!files || files.length === 0) {
       showToast("Please upload a file", "error");
+      return;
     }
 
     try {
-      if (files && files.length > 0) {
-        dispatch(uploadMinInvoice({ files: files[0] }))
-          .then((res) => {
-            const payload = res.payload as
-              | { success?: boolean; data?: { url?: string }[]; message?: string }
-              | undefined;
-            if (payload?.success) {
-              const uploadedUrl = payload.data?.[0]?.url;
-              if (uploadedUrl) setUrl(uploadedUrl);
-              if (payload.message) showToast(payload.message, "success");
-              setSheetOpen(false);
-            }
-          })
-          .catch((error) => {
-            console.error("Error uploading docs:", error);
+      dispatch(uploadMinInvoice({ files: files[0] }))
+        .then((res) => {
+          const payload = res.payload as
+            | { success?: boolean; data?: { url?: string }[]; message?: string }
+            | undefined;
+          if (payload?.success) {
+            const uploadedUrl = payload.data?.[0]?.url;
+            if (uploadedUrl) setUrl(uploadedUrl);
+            if (payload.message) showToast(payload.message, "success");
             setSheetOpen(false);
-            setFiles([]);
-          });
-      }
+          }
+        })
+        .catch((error) => {
+          console.error("Error uploading docs:", error);
+          setSheetOpen(false);
+          setFiles([]);
+        });
     } catch (error) {
       console.error("Error uploading docs:", error);
     }
@@ -645,61 +644,59 @@ const MINFromPO = () => {
             </div>
           </div>
 
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <Sheet
+            open={sheetOpen}
+            onOpenChange={(open) => {
+              setSheetOpen(open);
+              if (!open) setFiles(null);
+            }}
+          >
             <SheetContent
-              className="min-w-[35%] p-0"
+              className="min-w-[400px] max-w-[480px] p-0 flex flex-col"
               onInteractOutside={(e: any) => {
                 e.preventDefault();
               }}
             >
-              <SheetHeader className="h-[50px] p-0 flex flex-col justify-center px-[20px] bg-zinc-200 gap-0 border-b border-zinc-400">
-                <SheetTitle className="text-slate-600">
+              <SheetHeader className="shrink-0 h-14 px-5 flex flex-col justify-center bg-zinc-200 border-b border-zinc-400">
+                <SheetTitle className="text-slate-600 font-semibold">
                   Upload Docs here
                 </SheetTitle>
               </SheetHeader>
-              <div className="ag-theme-quartz h-[calc(100vh-100px)] w-full">
+              <div className="flex-1 overflow-auto p-5 flex flex-col gap-4">
                 <FileUploader
                   value={files}
                   onValueChange={handleFileChange}
                   dropzoneOptions={{
                     accept: {
-                      "image/*": [".jpg", ".jpeg", ".png", ".gif", ".pdf"],
+                      "image/*": [".jpg", ".jpeg", ".png", ".gif"],
+                      "application/pdf": [".pdf"],
                     },
                     maxFiles: 5,
                     maxSize: 4 * 1024 * 1024,
                     multiple: true,
                   }}
                 >
-                  <div className="bg-white border border-gray-300 rounded-lg shadow-lg h-[120px] p-[20px] m-[20px]">
-                    <h2 className="text-xl font-semibold text-center mb-4">
-                      <div className="text-center w-full justify-center flex">
-                        <div>Upload Your Files</div>
-                        <div>
-                          <IoCloudUpload
-                            className="text-cyan-700 ml-5 h-[20]"
-                            size={"1.5rem"}
-                          />
-                        </div>
-                      </div>
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+                    <h2 className="text-base font-semibold text-slate-700 mb-3 flex items-center justify-center gap-2">
+                      <IoCloudUpload className="text-cyan-600" size={22} />
+                      Upload Your Files
                     </h2>
                     <FileInput>
-                      <span className="text-slate-500 text-sm text-center w-full justify-center flex">
+                      <span className="text-slate-500 text-sm">
                         Drag and drop files here, or click to select files
                       </span>
                     </FileInput>
                   </div>
-                  <div className="m-[20px]">
-                    <FileUploaderContent>
-                      {files?.map((file, index) => (
-                        <FileUploaderItem key={index} index={index}>
-                          <span>{file.name}</span>
-                        </FileUploaderItem>
-                      ))}
-                    </FileUploaderContent>
-                  </div>
+                  <FileUploaderContent>
+                    {files?.map((file, index) => (
+                      <FileUploaderItem key={index} index={index}>
+                        <span className="truncate">{file.name}</span>
+                      </FileUploaderItem>
+                    ))}
+                  </FileUploaderContent>
                 </FileUploader>
               </div>
-              <div className="bg-white border-t shadow border-slate-300 h-[50px] flex items-center justify-end gap-[20px] px-[20px]">
+              <div className="shrink-0 border-t border-slate-200 bg-white py-4 px-5 flex items-center justify-end gap-3">
                 <Button
                   className="rounded-md shadow bg-cyan-700 hover:bg-cyan-600 shadow-slate-500 max-w-max px-[30px]"
                   onClick={() => setSheetOpen(false)}
