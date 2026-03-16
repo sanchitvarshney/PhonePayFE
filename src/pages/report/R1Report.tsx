@@ -298,7 +298,7 @@ const R1Report: React.FC = () => {
       </div>
       <div className="w-full">
         <R1ReportTable
-          gridRef={gridRef as React.RefObject<AgGridReact<any>>}
+          gridRef={gridRef as any}
           handlePageChange={handlePageChange}
           handlePageSizeChange={handlePageSizeChange}
           pageSize={pageSize}
