@@ -12,6 +12,7 @@ import rawminReducer from "@/features/wearhouse/Rawmin/RawMinSlice";
 import materialRequestWithoutBomReducer from "@/features/production/MaterialRequestWithoutBom/MRRequestWithoutBomSlice";
 import procurementReducer from "@/features/procurement/poSlices";
 import vendorReducer from "@/features/master/vendor/vendorSlice";
+import reportReducer from "@/features/report/report/reportSlice";
 
 export const store = configureStore({
   reducer: {
@@ -28,6 +29,7 @@ export const store = configureStore({
     materialRequestWithoutBom: materialRequestWithoutBomReducer,
     po: procurementReducer,
     vendor: vendorReducer,
+    report: reportReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

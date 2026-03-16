@@ -186,7 +186,6 @@ const CompletedPO: React.FC = () => {
   const handleExport = () => {
     console.log("DownloadReport");
   };
-  console.log("date range", dateRange);
 
   const handlePrintChallan = () => {
     dispatch(poPrint({ id: selectedRow.po_transaction_code }));
@@ -234,7 +233,6 @@ const CompletedPO: React.FC = () => {
     dispatch(fetchPOData({ id: selectedRow.po_transaction_code }));
     setAnchorEl(null);
   };
-  console.log("completedPoData", completedPoData);
   return (
     <div className="flex bg-white h-[calc(100vh-100px)] relative">
       <div

@@ -25,6 +25,8 @@ import CreatePO from "./pages/procurement/CreatePO";
 import ManagePO from "./pages/procurement/ManagePO";
 import MINFromPO from "./pages/min/MINFromPO";
 import Custom404Page from "./pages/commonPages/Custom404Page";
+import Report from "./pages/report/Report";
+import ReportLayout from "./layouts/ReportLayout";
 import Profile from "./pages/profile/Profile";
 import Settings from "./pages/profile/Settings";
 
@@ -140,6 +142,16 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/procurement/min-from-po",
+      },
+      {
+        element: (
+          <MainLayout>
+            <ReportLayout>
+              <Report />
+            </ReportLayout>
+          </MainLayout>
+        ),
+        path: "/report/:id",
       },
       {
         element: (
