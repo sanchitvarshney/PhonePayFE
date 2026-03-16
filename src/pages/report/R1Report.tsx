@@ -14,7 +14,7 @@ import R1ReportTable from "@/table/report/R1ReportTable";
 import { rangePresets } from "@/utils/rangePresets";
 import { Button } from "@/components/ui/button";
 import { useSocketContext } from "@/components/context/SocketContext";
-import { getr6Report } from "@/features/report/report/reportSlice";
+import { getR1Report } from "@/features/report/report/reportSlice";
 
 const R1Report: React.FC = () => {
   const [colapse, setcolapse] = useState<boolean>(false);
@@ -28,7 +28,7 @@ const R1Report: React.FC = () => {
   const [pageSize, setPageSize] = useState<number>(20);
   const dispatch = useAppDispatch();
   dayjs.extend(customParseFormat);
-  const { r6ReportLoading, r6Report } = useAppSelector((state) => state.report);
+  const { r1ReportLoading, r1Report } = useAppSelector((state) => state.report);
   const gridRef = useRef<AgGridReact<any>>(null);
   const { RangePicker } = DatePicker;
   const { emitR6DispatchReport, isConnected } = useSocketContext();
@@ -53,7 +53,7 @@ const R1Report: React.FC = () => {
   const handlePageChange = (page: number) => {
     if (type === "date") {
       dispatch(
-        getr6Report({
+        getR1Report({
           type: "DATE",
           from: dayjs(date.from).format("DD-MM-YYYY"),
           to: dayjs(date.to).format("DD-MM-YYYY"),
@@ -65,7 +65,7 @@ const R1Report: React.FC = () => {
       );
     } else {
       dispatch(
-        getr6Report({
+        getR1Report({
           type: "MINNO",
           data: min,
           from: "",
@@ -82,7 +82,7 @@ const R1Report: React.FC = () => {
     setPageSize(newPageSize);
     if (type === "date") {
       dispatch(
-        getr6Report({
+        getR1Report({
           type: "DATE",
           from: dayjs(date.from).format("DD-MM-YYYY"),
           to: dayjs(date.to).format("DD-MM-YYYY"),
@@ -94,7 +94,7 @@ const R1Report: React.FC = () => {
       );
     } else {
       dispatch(
-        getr6Report({
+        getR1Report({
           type: "MINNO",
           data: min,
           from: "",
@@ -195,7 +195,7 @@ const R1Report: React.FC = () => {
                         showToast("Please select date range", "error");
                       } else {
                         dispatch(
-                          getr6Report({
+                          getR1Report({
                             type: "DATE",
                             from: dayjs(date.from).format("DD-MM-YYYY"),
                             to: dayjs(date.to).format("DD-MM-YYYY"),
@@ -208,8 +208,8 @@ const R1Report: React.FC = () => {
                       }
                     }}
                     variant="contained"
-                    loading={r6ReportLoading}
-                    disabled={!date || r6ReportLoading}
+                    loading={r1ReportLoading}
+                    disabled={!date || r1ReportLoading}
                     startIcon={<SearchIcon fontSize="small" />}
                   >
                     Search
@@ -249,11 +249,11 @@ const R1Report: React.FC = () => {
                   <LoadingButton
                     className="max-w-max"
                     variant="contained"
-                    loading={r6ReportLoading}
+                    loading={r1ReportLoading}
                     onClick={() => {
                       if (min) {
                         dispatch(
-                          getr6Report({
+                          getR1Report({
                             type: "MINNO",
                             data: min,
                             from: "",
@@ -273,7 +273,7 @@ const R1Report: React.FC = () => {
                   </LoadingButton>
                   <MuiTooltip title="Download" placement="right">
                     <LoadingButton
-                      disabled={!r6Report}
+                      disabled={!r1Report}
                       variant="contained"
                       color="primary"
                       style={{

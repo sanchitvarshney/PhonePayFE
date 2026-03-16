@@ -1,14 +1,14 @@
 import axiosInstance from "@/api/axiosInstance";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AxiosResponse } from "axios";
-import type { R1ApiResponse, ReportStateType, r6reportApiResponse } from "./reportType";
+import type { R1ApiResponse, ReportStateType, R1ReportApiResponse } from "./reportType";
 
 const initialState: ReportStateType = {
   r1Data: null,
   getR1DataLoading: false,
-  r6Report: null,
+  r1Report: null,
   wrongDeviceReport: null,
-  r6ReportLoading: false,
+  r1ReportLoading: false,
   wrongDeviceReportLoading: false,
 };
 
@@ -20,8 +20,8 @@ export const getR1Data = createAsyncThunk<
   return response;
 });
 
-export const getr6Report = createAsyncThunk<
-  AxiosResponse<r6reportApiResponse>,
+export const getR1Report = createAsyncThunk<
+  AxiosResponse<R1ReportApiResponse>,
   {
     type: "MINNO" | "DATE";
     data: string;
@@ -31,17 +31,17 @@ export const getr6Report = createAsyncThunk<
     limit: number;
     module: string;
   }
->("report/getr6Report", async (payload) => {
+>("report/getR1Report", async (payload) => {
   const response = await axiosInstance.get(
     payload.type === "MINNO"
-      ? `/report/r6/MINNO?data=${payload.data}&module=${payload.module}&page=${payload.page}&limit=${payload.limit}`
-      : `/report/r6/DATE?startDate=${payload.from}&endDate=${payload.to}&module=${payload.module}&page=${payload.page}&limit=${payload.limit}`
+      ? `/report/r1/MINNO?data=${payload.data}&module=${payload.module}&page=${payload.page}&limit=${payload.limit}`
+      : `/report/r1/DATE?startDate=${payload.from}&endDate=${payload.to}&module=${payload.module}&page=${payload.page}&limit=${payload.limit}`
   );
   return response;
 });
 
 export const getWrongDeviceReport = createAsyncThunk<
-  AxiosResponse<r6reportApiResponse>,
+  AxiosResponse<R1ReportApiResponse>,
   { type: string; from: string; to: string; limit: number; page: number }
 >("report/getWrongDeviceReport", async (payload) => {
   const response = await axiosInstance.get(
@@ -57,8 +57,8 @@ const reportSlice = createSlice({
     clearR1data(state) {
       state.r1Data = null;
     },
-    clearR6data(state) {
-      state.r6Report = null;
+    clearR1Report(state) {
+      state.r1Report = null;
     },
   },
   extraReducers: (builder) => {
@@ -75,17 +75,17 @@ const reportSlice = createSlice({
       .addCase(getR1Data.rejected, (state) => {
         state.getR1DataLoading = false;
       })
-      .addCase(getr6Report.pending, (state) => {
-        state.r6ReportLoading = true;
+      .addCase(getR1Report.pending, (state) => {
+        state.r1ReportLoading = true;
       })
-      .addCase(getr6Report.fulfilled, (state, action) => {
-        state.r6ReportLoading = false;
+      .addCase(getR1Report.fulfilled, (state, action) => {
+        state.r1ReportLoading = false;
         if (action.payload.data.success) {
-          state.r6Report = action.payload.data;
+          state.r1Report = action.payload.data;
         }
       })
-      .addCase(getr6Report.rejected, (state) => {
-        state.r6ReportLoading = false;
+      .addCase(getR1Report.rejected, (state) => {
+        state.r1ReportLoading = false;
       })
       .addCase(getWrongDeviceReport.pending, (state) => {
         state.wrongDeviceReportLoading = true;
@@ -102,7 +102,6 @@ const reportSlice = createSlice({
   },
 });
 
-export const { clearR1data, clearR6data } = reportSlice.actions;
+export const { clearR1data, clearR1Report } = reportSlice.actions;
 
 export default reportSlice.reducer;
-

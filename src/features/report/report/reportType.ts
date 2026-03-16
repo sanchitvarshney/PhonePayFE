@@ -48,7 +48,7 @@ export type R1ApiResponse = {
   data: DocumentData;
 };
 
-export type r6report = {
+export type R1ReportRow = {
   txnId: string;
   partCode: string;
   componentName: string;
@@ -66,11 +66,11 @@ export type r6report = {
   category: string;
 };
 
-export type r6reportApiResponse = {
+export type R1ReportApiResponse = {
   success: boolean;
   data: {
     data: {
-      records: r6report[];
+      records: R1ReportRow[];
       pagination: {
         currentPage: number;
         totalPages: number;
@@ -83,9 +83,9 @@ export type r6reportApiResponse = {
 export type ReportStateType = {
   r1Data: DocumentData | null;
   getR1DataLoading: boolean;
-  r6Report: any;
+  r1Report: any;
   wrongDeviceReport: any;
-  r6ReportLoading: boolean;
+  r1ReportLoading: boolean;
   wrongDeviceReportLoading: boolean;
 };
 

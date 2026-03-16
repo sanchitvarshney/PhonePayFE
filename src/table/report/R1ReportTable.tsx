@@ -10,7 +10,7 @@ import MuiTooltip from "@/components/reusable/MuiTooltip";
 import axiosInstance from "@/api/axiosInstance";
 import { showToast } from "@/utils/toasterContext";
 import FullPageLoading from "@/components/shared/FullPageLoading";
-import { clearR6data } from "@/features/report/report/reportSlice";
+import { clearR1Report } from "@/features/report/report/reportSlice";
 import { formatNumber } from "@/utils/numberFormatUtils";
 import CustomPagination from "@/components/reusable/CustomPagination";
 import { VisibilityOutlined } from "@mui/icons-material";
@@ -28,7 +28,7 @@ const R1ReportTable: React.FC<Props> = ({ gridRef, handlePageChange, handlePageS
   const [current, setCurrent] = React.useState<string>("");
   const [rowData, setRowData] = useState<any[]>([]);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
-  const { r6Report, r6ReportLoading, wrongDeviceReportLoading } = useAppSelector((state) => state.report);
+  const { r1Report, r1ReportLoading, wrongDeviceReportLoading } = useAppSelector((state) => state.report);
 
   const generateprint = async (min: string) => {
     setLoading(true);
@@ -69,9 +69,9 @@ const R1ReportTable: React.FC<Props> = ({ gridRef, handlePageChange, handlePageS
   useEffect(() => {
     const fetchGridData = async () => {
       setLoading(true);
-      const r6Data: any = r6Report;
-      const header = r6Data?.data?.header;
-      const data = r6Data?.data?.data;
+      const reportData: any = r1Report;
+      const header = reportData?.data?.header;
+      const data = reportData?.data?.data;
       const filteredHeader = header?.filter((col: string) => col !== "Print" && col !== "Transaction ID");
 
       const dynamicColumnDefs: ColDef[] =
@@ -133,10 +133,10 @@ const R1ReportTable: React.FC<Props> = ({ gridRef, handlePageChange, handlePageS
     };
 
     fetchGridData();
-  }, [r6Report?.data]);
+  }, [r1Report?.data]);
 
   useEffect(() => {
-    dispatch(clearR6data());
+    dispatch(clearR1Report());
   }, [dispatch]);
 
   return (
@@ -146,7 +146,7 @@ const R1ReportTable: React.FC<Props> = ({ gridRef, handlePageChange, handlePageS
         <AgGridReact
           loadingOverlayComponent={CustomLoadingOverlay}
           ref={gridRef}
-          loading={r6ReportLoading || wrongDeviceReportLoading}
+          loading={r1ReportLoading || wrongDeviceReportLoading}
           overlayNoRowsTemplate={OverlayNoRowsTemplate}
           suppressCellFocus={true}
           rowData={rowData}
@@ -159,9 +159,9 @@ const R1ReportTable: React.FC<Props> = ({ gridRef, handlePageChange, handlePageS
       </div>
       {rowData && (
         <CustomPagination
-          currentPage={r6Report?.pagination?.currentPage as any}
-          totalPages={r6Report?.pagination?.totalPages as any}
-          totalRecords={r6Report?.pagination?.totalRecords as any}
+          currentPage={r1Report?.pagination?.currentPage as any}
+          totalPages={r1Report?.pagination?.totalPages as any}
+          totalRecords={r1Report?.pagination?.totalRecords as any}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
           pageSize={pageSize}
