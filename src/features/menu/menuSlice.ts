@@ -130,6 +130,16 @@ const staticMenu: Menu[] = [
     icon: "report",
     description: "Report",
   },
+  {
+    menu_key: "query",
+    name: "Query",
+    parent_menu_key: null,
+    url: "/queries/Q1",
+    order: 6,
+    is_active: 1,
+    icon: "report",
+    description: "Query",
+  },
 ];
 
 export const getMenuData = createAsyncThunk("menu/getMenuData", async () => {

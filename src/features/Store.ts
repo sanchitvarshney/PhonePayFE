@@ -13,6 +13,7 @@ import materialRequestWithoutBomReducer from "@/features/production/MaterialRequ
 import procurementReducer from "@/features/procurement/poSlices";
 import vendorReducer from "@/features/master/vendor/vendorSlice";
 import reportReducer from "@/features/report/report/reportSlice";
+import queryReducer from "@/features/query/query/querySlice";
 
 export const store = configureStore({
   reducer: {
@@ -30,6 +31,7 @@ export const store = configureStore({
     po: procurementReducer,
     vendor: vendorReducer,
     report: reportReducer,
+    query: queryReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

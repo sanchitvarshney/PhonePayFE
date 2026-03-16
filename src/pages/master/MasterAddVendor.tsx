@@ -403,6 +403,7 @@ const MasterAddVendor: React.FC = () => {
                     render={({ field }) => (
                       <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <DatePicker
+                          enableAccessibleFieldDOMStructure={false}
                           format="DD-MM-YYYY"
                           slots={{
                             textField: TextField,
