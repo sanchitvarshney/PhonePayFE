@@ -124,7 +124,7 @@ const staticMenu: Menu[] = [
     menu_key: "report",
     name: "Report",
     parent_menu_key: null,
-    url: "/master-report",
+    url: "/report/R1",
     order: 5,
     is_active: 1,
     icon: "report",
