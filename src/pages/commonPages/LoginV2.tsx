@@ -9,7 +9,7 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -28,26 +28,26 @@ import type { LoginCredentials } from "@/features/authentication/authType";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { showToast } from "@/utils/toasterContext";
 import { useNavigate } from "react-router-dom";
-import ReCAPTCHA from "react-google-recaptcha";
-
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "";
+import ImageCaptcha from "@/components/ImageCaptcha/ImageCaptcha";
 
 const PHONEPE_PURPLE = "#5F259F";
 
 const LoginV2: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [recaptchaValue, setRecaptchaValue] = useState<string | null>(null);
-  const [recaptchaKey, setRecaptchaKey] = useState(Math.random());
-  const recaptchaRef = useRef<any>(null);
+  const [captchaInput, setCaptchaInput] = useState("");
+  const [expectedCaptchaCode, setExpectedCaptchaCode] = useState("");
+  const [captchaKey, setCaptchaKey] = useState(() => Math.random());
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginCredentials>();
   const { loading } = useAppSelector((state) => state.auth);
 
+  const isCaptchaValid = () => (captchaInput?.trim() ?? "") === expectedCaptchaCode;
+
   const onSubmit: SubmitHandler<LoginCredentials> = (data) => {
-    if (RECAPTCHA_SITE_KEY && !recaptchaValue) {
-      showToast("Please verify the reCAPTCHA", "error");
+    if (!isCaptchaValid()) {
+      showToast("Please enter the captcha correctly", "error");
       return;
     }
 
@@ -60,15 +60,10 @@ const LoginV2: React.FC = () => {
       } else {
         const errorMessage = body?.message ?? (a?.payload as { message?: string })?.message;
         if (errorMessage) showToast(errorMessage, "error");
-        if (recaptchaRef.current) recaptchaRef.current.reset();
-        setRecaptchaValue(null);
-        setRecaptchaKey(Math.random());
+        setCaptchaInput("");
+        setCaptchaKey(Math.random());
       }
     });
-  };
-
-  const handleRecaptchaChange = (value: string | null) => {
-    setRecaptchaValue(value);
   };
 
   return (
@@ -282,17 +277,15 @@ const LoginV2: React.FC = () => {
                   </Link>
                 </div>
               </div>
-              <div className=" flex justify-center">
-                {RECAPTCHA_SITE_KEY ? (
-                  <ReCAPTCHA
-                    sitekey={RECAPTCHA_SITE_KEY}
-                    onChange={handleRecaptchaChange}
-                    key={recaptchaKey}
-                    ref={recaptchaRef}
-                  />
-                ) : (
-                  <div style={{ minHeight: 78 }} />
-                )}
+              <div className="flex justify-center">
+                <ImageCaptcha
+                  key={captchaKey}
+                  value={captchaInput}
+                  onChange={(e) => setCaptchaInput(e.target.value)}
+                  onCodeChange={setExpectedCaptchaCode}
+                  onRefresh={() => setCaptchaInput("")}
+                  placeholder="Enter text shown above"
+                />
               </div>
               <LoadingButton
                 loading={loading}
@@ -308,27 +301,13 @@ const LoginV2: React.FC = () => {
               >
                 LOGIN
               </LoadingButton>
-              {!loading && (
-                <Typography textAlign={"center"} variant="subtitle2" sx={{ color: PHONEPE_PURPLE }}>
-                  OR
-                </Typography>
-              )}
               <div className="flex justify-center w-full items-center ">
                 {!loading && <div style={{ minHeight: 40 }} />}
               </div>
             </div>
             <div className="mt-[30px]">
               <Typography fontSize={12} className="text-center">
-                This site is protected by reCAPTCHA and the Google Privacy
-                Policy and Terms of Service apply. For more info, please visit
-                <Link
-                  sx={{ ml: "4px", color: PHONEPE_PURPLE }}
-                  href="https://www.phonepe.com"
-                  target="_blank"
-                >
-                  www.phonepe.com
-                </Link>
-                .
+                Enter the characters shown in the image to verify you are not a robot.
               </Typography>
             </div>
           </form>
