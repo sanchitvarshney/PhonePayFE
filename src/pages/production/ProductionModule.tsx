@@ -30,20 +30,12 @@ type ProductionEntry = {
   value: string;
 };
 
-const TIME_SLOTS = [
-  "8 TO 9",
-  "9 TO 10",
-  "10 TO 11",
-  "11 TO 12",
-  "12 TO 1",
-  "1 TO 2",
-  "2 TO 3",
-  "3 TO 4",
-  "4 TO 5",
-  "5 TO 6",
-  "6 TO 7",
-  "7 TO 8",
-];
+const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => {
+  const start = String(i).padStart(2, "0");
+  const endNum = i + 1;
+  const end = endNum === 24 ? "24" : String(endNum).padStart(2, "0");
+  return `${start} TO ${end}`;
+});
 
 const STAGE_CONFIG: StageConfig[] = [
   { stage: "CHARGING", manpower: 2, details: ["Charging Ok", "Charging Defect"] },
