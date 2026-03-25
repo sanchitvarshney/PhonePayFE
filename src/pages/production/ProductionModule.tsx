@@ -54,7 +54,6 @@ const STAGE_CONFIG: StageConfig[] = [
 type FetchPayload = {
   startDate: string; // DD-MM-YYYY
   endDate: string; // DD-MM-YYYY
-  module?: string;
   page?: number;
   limit?: number;
 };
@@ -76,14 +75,13 @@ const toTrimmedString = (value: unknown): string => {
   return "";
 };
 
-const fetchProductionR4EntriesByDate = async (payload: FetchPayload): Promise<ProductionEntry[]> => {
-  const module = payload.module ?? "PRODUCTION";
+const fetchProductionEntriesByDate = async (payload: FetchPayload): Promise<ProductionEntry[]> => {
   const page = payload.page ?? 1;
   const limit = payload.limit ?? 10000;
 
   // Mirrors the R1 report convention: /report/r1/DATE?startDate=&endDate=&module=&page=&limit=
   const response = await axiosInstance.get(
-    `/report/r4/DATE?startDate=${payload.startDate}&endDate=${payload.endDate}&module=${module}&page=${page}&limit=${limit}`,
+    `/report/fetchProductionData/DATE?startDate=${payload.startDate}&endDate=${payload.endDate}&page=${page}&limit=${limit}`,
   );
 
   const records = extractRecords(response.data?.data ?? response.data);
@@ -192,10 +190,9 @@ const ProductionModule: React.FC = () => {
     setLoadingSearch(true);
     try {
       const formatted = dayjs(date).format("DD-MM-YYYY");
-      const data = await fetchProductionR4EntriesByDate({
+      const data = await fetchProductionEntriesByDate({
         startDate: formatted,
         endDate: formatted,
-        module: "PRODUCTION",
         page: 1,
         limit: 10000,
       });

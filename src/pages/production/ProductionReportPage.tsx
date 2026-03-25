@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { fetchProductionR4EntriesByDate, buildProductionReportRows, type ProductionEntry } from "./productionService";
+import { fetchProductionEntriesByDate, buildProductionReportRows, type ProductionEntry } from "./productionService";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import ProductionReportTab from "./ProductionReportTab";
@@ -21,10 +21,9 @@ const ProductionReportPage: React.FC = () => {
     setLoadingSearch(true);
     try {
       const formatted = dayjs(date).format("DD-MM-YYYY");
-      const data = await fetchProductionR4EntriesByDate({
+      const data = await fetchProductionEntriesByDate({
         startDate: formatted,
         endDate: formatted,
-        module: "PRODUCTION",
         page: 1,
         limit: 10000,
       });

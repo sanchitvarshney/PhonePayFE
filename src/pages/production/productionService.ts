@@ -40,7 +40,6 @@ export const STAGE_CONFIG: StageConfig[] = [
 type FetchPayload = {
   startDate: string; // DD-MM-YYYY
   endDate: string; // DD-MM-YYYY
-  module?: string;
   page?: number;
   limit?: number;
 };
@@ -67,13 +66,12 @@ const getManpower = (r: any, stage: string): number => {
   return STAGE_CONFIG.find((x) => x.stage === stage)?.manpower ?? 0;
 };
 
-export const fetchProductionR4EntriesByDate = async (payload: FetchPayload): Promise<ProductionEntry[]> => {
-  const module = payload.module ?? "PRODUCTION";
+export const fetchProductionEntriesByDate = async (payload: FetchPayload): Promise<ProductionEntry[]> => {
   const page = payload.page ?? 1;
   const limit = payload.limit ?? 10000;
 
   const response = await axiosInstance.get(
-    `/report/r4/DATE?startDate=${payload.startDate}&endDate=${payload.endDate}&module=${module}&page=${page}&limit=${limit}`,
+    `/report/fetchProductionData/DATE?startDate=${payload.startDate}&endDate=${payload.endDate}&page=${page}&limit=${limit}`,
   );
 
   const records = extractRecords(response.data?.data ?? response.data);
