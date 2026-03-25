@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { Navigate, createBrowserRouter } from "react-router-dom";
 import App from "./App";
 import MainLayout from "./layouts/MainLayout";
 import ProcurementLayout from "./layouts/ProcurementLayout";
@@ -31,6 +31,9 @@ import Query from "./pages/queries/Query";
 import Profile from "./pages/profile/Profile";
 import Settings from "./pages/profile/Settings";
 import QueryLayout from "@/layouts/QueryLayout";
+import ProductionModuleLayout from "./layouts/ProductionModuleLayout";
+import ProductionAddDataPage from "./pages/production/ProductionAddDataPage";
+import ProductionReportPage from "./pages/production/ProductionReportPage";
 
 export const router = createBrowserRouter([
   {
@@ -162,6 +165,28 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/queries/:id",
+      },
+      {
+        element: (
+          <MainLayout>
+            <ProductionModuleLayout />
+          </MainLayout>
+        ),
+        path: "/production-module",
+        children: [
+          {
+            index: true,
+            element: <Navigate to="add" replace />,
+          },
+          {
+            path: "add",
+            element: <ProductionAddDataPage />,
+          },
+          {
+            path: "report",
+            element: <ProductionReportPage />,
+          },
+        ],
       },
       {
         element: (

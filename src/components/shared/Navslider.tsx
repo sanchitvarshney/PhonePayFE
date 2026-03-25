@@ -67,7 +67,7 @@ const NavSlider: React.FC = () => {
 
   // Determine the current tab index based on the current route
   const currentTabIndex = navSliderData.findIndex(
-    (tab) => tab.path === location.pathname
+    (tab) => tab.path === location.pathname,
   );
 
   // Handle tab change
