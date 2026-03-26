@@ -3,6 +3,16 @@ import { getToken } from "@/utils/tokenUtills";
 import { getApiBaseUrl } from "@/utils/apiSettings";
 import { showToast } from "@/utils/toasterContext";
 
+/** India FY is Apr 1 – Mar 31. Short label matches backend, e.g. "25-26" for FY 2025–26. */
+function getIndianFinancialYearSession(now = new Date()): string {
+  const y = now.getFullYear();
+  const m = now.getMonth() + 1; // 1–12
+  const startYear = m >= 4 ? y : y - 1;
+  const endYear = startYear + 1;
+  const two = (n: number) => String(n).slice(-2);
+  return `${two(startYear)}-${two(endYear)}`;
+}
+
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_REACT_APP_API_BASE_URL || "",
   headers: {
@@ -14,7 +24,9 @@ axiosInstance.interceptors.request.use((config) => {
   // Use user-configured API base URL from Settings when set
   config.baseURL = getApiBaseUrl();
   const token = getToken();
-  const savedSession = localStorage.getItem("session") || "25-26";
+  const savedSession =
+    localStorage.getItem("session")?.trim() ||
+    getIndianFinancialYearSession();
   const savedCompanyBranch = localStorage.getItem("companyBranch") || "BRMSC031";
 
   if (token) {
