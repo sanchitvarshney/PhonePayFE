@@ -129,6 +129,16 @@ const staticMenu: Menu[] = [
         ],
       },
       {
+        menu_key: "warehouse-consumption",
+        name: "Consumption",
+        parent_menu_key: "warehouse",
+        url: "/warehouse/consumption",
+        order: 2,
+        is_active: 1,
+        icon: "material",
+        description: "Consumption",
+      },
+      {
         menu_key: "bulk-device-inward",
         name: "Bulk Device Inward",
         parent_menu_key: "procurement",
