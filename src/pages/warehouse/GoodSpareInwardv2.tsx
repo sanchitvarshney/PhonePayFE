@@ -608,13 +608,13 @@ const GoodSpareInwardv2: React.FC = () => {
                   </div>
                   <div>
                     <FileUploader
-                      acceptedFileTypes={{
-                        "application/pdf": [],
-                        "text/plain": [],
-                        "text/csv": [],
-                        "application/vnd.ms-excel": [],
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [],
-                      }}
+                      // acceptedFileTypes={{
+                      //   "application/pdf": [],
+                      //   "text/plain": [],
+                      //   "text/csv": [],
+                      //   "application/vnd.ms-excel": [],
+                      //   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [],
+                      // }}
                       label="Upload Document"
                       value={file}
                       onFileChange={setfile}
