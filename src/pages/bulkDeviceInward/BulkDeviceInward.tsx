@@ -12,7 +12,6 @@ import {
 import {
   Autocomplete,
   Divider,
-  IconButton,
   Step,
   StepLabel,
   Stepper,
@@ -33,10 +32,9 @@ import {
   getDispatchFromDetail,
   getShippingAddress,
 } from "@/features/master/client/clientSlice";
-import { inrRupeesInWordsUpper } from "@/utils/inrAmountWords";
 // import AddPOTable from "./AddPOTable";
 import {
-  createPO,
+  createBulkDeviceInward,
   getPODetail,
   setFormData,
   updatePO,
@@ -45,16 +43,19 @@ import { useNavigate } from "react-router-dom";
 import FullPageLoading from "@/components/shared/FullPageLoading";
 import SerialNumberUpload from "@/components/procurement/SerialNumberUpload";
 
-interface RowData {
+interface SingleRowData {
   id: string;
-  partComponent: { label: string; value: string; hsn?: string } | null;
+  partComponent: { label: string; value: string; id: string } | null;
   hsnCode: string;
   qty: number;
   rate: number;
-  amount: number;
-  isNew?: boolean;
   updaterow?: string;
-  poid?: string;
+}
+
+function newSingleRowId(): string {
+  return typeof crypto !== "undefined" && (crypto as any).randomUUID
+    ? (crypto as any).randomUUID()
+    : `${Date.now()}_${Math.random()}`;
 }
 
 interface BillAddress {
@@ -112,10 +113,16 @@ const BulkDeviceInward: React.FC = () => {
   const [alert, setAlert] = useState<boolean>(false);
   const [minNo, setMinno] = useState<string>("");
   const [upload, setUpload] = useState<boolean>(false);
-  const [rowData, setRowData] = useState<RowData[]>([]);
+  const [singleRow, setSingleRow] = useState<SingleRowData>({
+    id: newSingleRowId(),
+    partComponent: null,
+    hsnCode: "",
+    qty: 0,
+    rate: 0,
+  });
   const [serialNumbers, setSerialNumbers] = useState<string[]>([]);
-  const [productOptions, setProductOptions] = useState<
-    Array<{ label: string; value: string; hsn?: string }>
+  const [skuOptions, setSkuOptions] = useState<
+    Array<{ label: string; value: string; id: string }>
   >([]);
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.po);
@@ -180,37 +187,14 @@ const BulkDeviceInward: React.FC = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
 
-  const checkRequiredFields = (data: RowData[]) => {
-    let hasErrors = false;
-    const missingDetails: string[] = [];
-
-    data.forEach((item, index) => {
-      const missingFields: string[] = [];
-
-      if (!item.partComponent?.value) missingFields.push("Goods/Product");
-      if (!item.hsnCode) missingFields.push("HSN/SAC");
-      if (!item.qty || item.qty < 1) missingFields.push("Qty");
-      if (item.rate === undefined || item.rate === null || item.rate <= 0)
-        missingFields.push("Rate");
-
-      if (missingFields.length > 0) {
-        missingDetails.push(`Row ${index + 1}: ${missingFields.join(", ")}`);
-        hasErrors = true;
-      }
-    });
-
-    if (missingDetails.length > 0) {
-      showToast(
-        `Some required fields are missing:\n${missingDetails.join("\n")}`,
-        "error",
-      );
-    }
-
-    return hasErrors;
-  };
-
   const resetall = () => {
-    setRowData([]);
+    setSingleRow({
+      id: newSingleRowId(),
+      partComponent: null,
+      hsnCode: "",
+      qty: 0,
+      rate: 0,
+    });
     setSerialNumbers([]);
     reset();
     dispatch(resetDocumentFile());
@@ -237,99 +221,116 @@ const BulkDeviceInward: React.FC = () => {
   };
   const finalSubmit = () => {
     if (formData) {
-      if (rowData.length === 0) {
-        showToast("Please Add Material Details", "error");
-      } else {
-        if (!checkRequiredFields(rowData)) {
-          const component = rowData.map(
-            (item) => item.partComponent?.value || "",
-          );
-          const qty = rowData.map((item) => Number(item.qty));
-          const rate = rowData.map((item) => Number(item.rate));
-          const hsncode = rowData.map((item) => item.hsnCode || "");
+      if (!singleRow.partComponent) {
+        showToast("Please select a product", "error");
+        return;
+      }
+      if (!singleRow.qty || singleRow.qty <= 0) {
+        showToast("Please enter valid quantity", "error");
+        return;
+      }
+      if (!singleRow.rate || singleRow.rate <= 0) {
+        showToast("Please enter valid rate", "error");
+        return;
+      }
 
-          const challanDate = formData.challanDate;
-          let formattedChallanDate = "";
-          if (challanDate) {
-            const date = dayjs(challanDate);
-            if (date.isValid()) {
-              formattedChallanDate = date.format("DD-MM-YYYY");
-            }
-          }
+      const component = [singleRow.partComponent?.value];
+      const qty = [singleRow.qty];
+      const rate = [singleRow.rate];
+      const hsncode = [singleRow.hsnCode];
 
-          const payload: any = {
-            component,
-            qty,
-            rate,
-            hsncode,
-            serialno: serialNumbers,
-            placeOfSupply: formData.placeOfSupply,
-            stateCode: formData.stateCode,
-            challanNo: formData.challanNo,
-            challanDate: formattedChallanDate,
-            boxNo: formData.boxNo,
-            ewayBillNo: formData.ewayBillNo,
-            vehicleNo: formData.vehicleNo,
-            billFrom: formData.billFrom,
-            shipFrom: formData.shipFrom,
-            billaddressid: formData.billaddressid,
-            billaddress: formData.billaddress,
-            shipaddressid: formData.shipaddressid,
-            shipaddress: formData.shipaddress,
-            updaterow: rowData.map((item) => item.updaterow),
-            poid: id,
-            vendor_type: "v01",
-          };
-          if (isEdit) {
-            dispatch(updatePO(payload)).then((response: any) => {
-              if (response.payload.data.success) {
-                showToast(response.payload?.data?.message, "success");
-                resetall();
-                handleNext();
-                dispatch(resetFormData());
-                navigate("/procurement/manage");
-              }
-            });
-          } else {
-            dispatch(createPO(payload)).then((response: any) => {
-              if (response.payload.data.success) {
-                showToast(response.payload?.data?.message, "success");
-                resetall();
-                handleNext();
-                dispatch(resetFormData());
-                setMinno(response.payload?.data?.data.po_id);
-              }
-            });
-          }
+      const challanDate = formData.challanDate;
+      let formattedChallanDate = "";
+      if (challanDate) {
+        const date = dayjs(challanDate);
+        if (date.isValid()) {
+          formattedChallanDate = date.format("DD-MM-YYYY");
         }
+      }
+
+      const payload: any = {
+        component,
+        qty,
+        rate,
+        hsncode,
+        serialno: serialNumbers,
+        placeOfSupply: formData.placeOfSupply,
+        stateCode: formData.stateCode,
+        challanNo: formData.challanNo,
+        challanDate: formattedChallanDate,
+        boxNo: formData.boxNo,
+        ewayBillNo: formData.ewayBillNo,
+        vehicleNo: formData.vehicleNo,
+        billFrom: formData.billFrom,
+        shipFrom: formData.shipFrom,
+        billaddressid: formData.billaddressid,
+        billaddress: formData.billaddress,
+        shipaddressid: formData.shipaddressid,
+        shipaddress: formData.shipaddress,
+        updaterow:
+          singleRow.updaterow !== undefined && singleRow.updaterow !== null
+            ? [singleRow.updaterow]
+            : [],
+        poid: id,
+        vendor_type: "v01",
+      };
+      if (isEdit) {
+        dispatch(updatePO(payload)).then((response: any) => {
+          if (response.payload.data.success) {
+            showToast(response.payload?.data?.message, "success");
+            resetall();
+            handleNext();
+            dispatch(resetFormData());
+            navigate("/procurement/manage");
+          }
+        });
+      } else {
+        dispatch(createBulkDeviceInward(payload)).then((response: any) => {
+          const body = response.payload?.data;
+          if (body?.success) {
+            showToast(body?.message, "success");
+            resetall();
+            handleNext();
+            dispatch(resetFormData());
+            const ref =
+              body?.data?.po_id ??
+              body?.data?.id ??
+              body?.data?.dc_id ??
+              body?.data?.challan_no ??
+              "";
+            setMinno(ref ? String(ref) : "");
+          }
+        });
       }
     }
   };
   useEffect(() => {
     dispatch(getDispatchFromDetail());
     dispatch(getShippingAddress());
+  }, []);
 
-    axiosInstance
-      .get("/product/bySku/null?type=soundBox")
-      .then((response: any) => {
-        const raw = response?.data?.data ?? response?.data ?? [];
-        const mapped = Array.isArray(raw)
-          ? raw.map((item: any) => ({
-              label: item.name,
-              value: item.sku,
-              hsn: item.hsn,
-            }))
-          : [];
-        setProductOptions(mapped);
-      })
-      .catch(() => {
-        // axiosInstance interceptor already toasts errors
-      });
+  useEffect(() => {
+    const fetchSkuOptions = async () => {
+      try {
+        const response = await axiosInstance.get(
+          "/product/bySku/null?type=soundBox",
+        );
+        const options =
+          response.data.data?.map((item: any) => ({
+            label: item.text,
+            value: item.sku,
+            id: item.id,
+          })) ?? [];
+        setSkuOptions(options);
+      } catch (error) {
+        console.error("Failed to fetch SKU options", error);
+      }
+    };
+    fetchSkuOptions();
   }, []);
 
   const handleBillAddressChange = (value: any) => {
     if (value) {
-      setValue("billaddressid", value.code);
       setValue("billaddress.label", value.label);
       setValue("billaddress.addressLine1", value.addressLine1);
       setValue("billaddress.addressLine2", value.addressLine2);
@@ -339,7 +340,6 @@ const BulkDeviceInward: React.FC = () => {
   };
   const handleShipAddressChange = (value: any) => {
     if (value) {
-      setValue("shipaddressid", value.code);
       setValue("shipaddress.label", value.label);
       setValue("shipaddress.addressLine1", value.addressLine1);
       setValue("shipaddress.addressLine2", value.addressLine2);
@@ -347,8 +347,37 @@ const BulkDeviceInward: React.FC = () => {
       setValue("shipaddress.pin", value.pin);
     }
   };
-  const billLabel = watch("billaddress.label");
-  const shipLabel = watch("shipaddress.label");
+
+  const handleBillFromAddressFill = (value: any) => {
+    if (value) {
+      setValue(
+        "billFrom.addressLine1",
+        value.addressLine1 || "",
+      );
+      setValue(
+        "billFrom.addressLine2",
+        value.addressLine2 || "",
+      );
+      setValue("billFrom.city", value.city || "");
+      setValue("billFrom.pin", value.pin || "");
+      setValue("billFrom.gstin", value.gst || "");
+    }
+  };
+  const handleShipFromAddressFill = (value: any) => {
+    if (value) {
+      setValue(
+        "shipFrom.addressLine1",
+        value.addressLine1 || "",
+      );
+      setValue(
+        "shipFrom.addressLine2",
+        value.addressLine2 || "",
+      );
+      setValue("shipFrom.city", value.city || "");
+      setValue("shipFrom.pin", value.pin || "");
+      setValue("shipFrom.gstin", value.gst || "");
+    }
+  };
   useEffect(() => {
     if (isEdit) {
       dispatch(getPODetail({ id: id })).then((response: any) => {
@@ -376,22 +405,23 @@ const BulkDeviceInward: React.FC = () => {
             }
           }
 
-          setRowData(
-            materials.map((item: any) => ({
-              id: String(item.updateid ?? ""),
-              partComponent: {
-                label: item.component_short,
-                value: item.componentKey,
-                hsn: item.hsncode,
-              },
-              hsnCode: item.hsncode || "",
-              qty: Number(item.orderqty) || 0,
-              rate: Number(item.rate) || 0,
-              amount: (Number(item.orderqty) || 0) * (Number(item.rate) || 0),
-              isNew: true,
-              updaterow: item.updateid,
-            })),
-          );
+          const first = materials[0];
+          if (first) {
+            setSingleRow({
+              id: String(first.updateid ?? newSingleRowId()),
+              partComponent: first.componentKey
+                ? {
+                    label: first.component_short || "",
+                    value: first.componentKey,
+                    id: String(first.componentKey),
+                  }
+                : null,
+              hsnCode: first.hsncode || "",
+              qty: Number(first.orderqty) || 0,
+              rate: Number(first.rate) || 0,
+              updaterow: first.updateid,
+            });
+          }
         }
       });
     }
@@ -451,28 +481,30 @@ const BulkDeviceInward: React.FC = () => {
                   rules={{ required: "Bill From Address is required" }}
                   render={({ field }) => (
                     <Autocomplete
+                      options={
+                        dispatchFromDetails?.data ||
+                        dispatchFromDetails ||
+                        []
+                      }
+                      getOptionLabel={(option: any) => option.label || ""}
+                      isOptionEqualToValue={(option: any, value: any) =>
+                        !!value && option.code === value.code
+                      }
                       value={
-                        dispatchFromDetails?.data?.find(
-                          (address: any) => address.code === field.value,
-                        ) || null
+                        (
+                          dispatchFromDetails?.data ||
+                          dispatchFromDetails ||
+                          []
+                        ).find(
+                          (item: any) => item.code === field.value,
+                        ) ?? null
                       }
                       onChange={(_, newValue) => {
-                        field.onChange(newValue?.code || "");
-                        setValue(
-                          "billFrom.addressLine1",
-                          newValue?.addressLine1 || "",
-                        );
-                        setValue(
-                          "billFrom.addressLine2",
-                          newValue?.addressLine2 || "",
-                        );
-                        setValue("billFrom.city", newValue?.city || "");
-                        setValue("billFrom.pin", newValue?.pin || "");
-                        setValue("billFrom.gstin", newValue?.gst || "");
+                        field.onChange(newValue?.code ?? "");
+                        handleBillFromAddressFill(newValue);
                       }}
                       disablePortal
                       id="bill-from-address"
-                      options={dispatchFromDetails || []}
                       renderInput={(params) => (
                         <TextField
                           {...params}
@@ -561,28 +593,28 @@ const BulkDeviceInward: React.FC = () => {
                   rules={{ required: "Ship From Address is required" }}
                   render={({ field }) => (
                     <Autocomplete
+                      options={
+                        shippingAddress?.data || shippingAddress || []
+                      }
+                      getOptionLabel={(option: any) => option.label || ""}
+                      isOptionEqualToValue={(option: any, value: any) =>
+                        !!value && option.code === value.code
+                      }
                       value={
-                        shippingAddress?.data?.find(
-                          (address: any) => address.code === field.value,
-                        ) || null
+                        (
+                          shippingAddress?.data ||
+                          shippingAddress ||
+                          []
+                        ).find(
+                          (item: any) => item.code === field.value,
+                        ) ?? null
                       }
                       onChange={(_, newValue) => {
-                        field.onChange(newValue?.code || "");
-                        setValue(
-                          "shipFrom.addressLine1",
-                          newValue?.addressLine1 || "",
-                        );
-                        setValue(
-                          "shipFrom.addressLine2",
-                          newValue?.addressLine2 || "",
-                        );
-                        setValue("shipFrom.city", newValue?.city || "");
-                        setValue("shipFrom.pin", newValue?.pin || "");
-                        setValue("shipFrom.gstin", newValue?.gst || "");
+                        field.onChange(newValue?.code ?? "");
+                        handleShipFromAddressFill(newValue);
                       }}
                       disablePortal
                       id="ship-from-address"
-                      options={shippingAddress || []}
                       renderInput={(params) => (
                         <TextField
                           {...params}
@@ -676,21 +708,34 @@ const BulkDeviceInward: React.FC = () => {
                   control={control}
                   render={({ field }) => (
                     <Autocomplete
+                      options={
+                        dispatchFromDetails?.data ||
+                        dispatchFromDetails ||
+                        []
+                      }
+                      getOptionLabel={(option: any) => option.label || ""}
+                      isOptionEqualToValue={(option: any, value: any) =>
+                        !!value && option.code === value.code
+                      }
                       value={
-                        dispatchFromDetails?.data?.find(
-                          (address: any) => address.code === field.value,
-                        ) || null
+                        (
+                          dispatchFromDetails?.data ||
+                          dispatchFromDetails ||
+                          []
+                        ).find(
+                          (item: any) => item.code === field.value,
+                        ) ?? null
                       }
-                      onChange={(_, newValue) =>
-                        handleBillAddressChange(newValue)
-                      }
+                      onChange={(_, newValue) => {
+                        field.onChange(newValue?.code ?? "");
+                        handleBillAddressChange(newValue);
+                      }}
                       disablePortal
-                      id="combo-box-demo"
-                      options={dispatchFromDetails || []}
+                      id="combo-box-bill-to"
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label={(billLabel || "Bill Address") as any}
+                          label="Bill To Address"
                           error={!!errors.billaddressid}
                           helperText={(errors as any).billaddressid?.message}
                           variant="filled"
@@ -769,21 +814,32 @@ const BulkDeviceInward: React.FC = () => {
                   control={control}
                   render={({ field }) => (
                     <Autocomplete
+                      options={
+                        shippingAddress?.data || shippingAddress || []
+                      }
+                      getOptionLabel={(option: any) => option.label || ""}
+                      isOptionEqualToValue={(option: any, value: any) =>
+                        !!value && option.code === value.code
+                      }
                       value={
-                        shippingAddress?.data?.find(
-                          (address: any) => address.code === field.value,
-                        ) || null
+                        (
+                          shippingAddress?.data ||
+                          shippingAddress ||
+                          []
+                        ).find(
+                          (item: any) => item.code === field.value,
+                        ) ?? null
                       }
-                      onChange={(_, newValue) =>
-                        handleShipAddressChange(newValue)
-                      }
+                      onChange={(_, newValue) => {
+                        field.onChange(newValue?.code ?? "");
+                        handleShipAddressChange(newValue);
+                      }}
                       disablePortal
-                      id="combo-box-demo"
-                      options={shippingAddress || []}
+                      id="combo-box-ship-to"
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label={(shipLabel || "Ship Address") as any}
+                          label="Ship To Address"
                           error={!!errors.shipaddressid}
                           helperText={(errors as any).shipaddressid?.message}
                           variant="filled"
@@ -959,221 +1015,80 @@ const BulkDeviceInward: React.FC = () => {
                   {...register("vehicleNo")}
                 />
               </div>
-
-              {/* GOODS SECTION moved to form page */}
-              <div className="flex items-center w-full gap-3">
-                <div className="flex items-center gap-[5px]">
-                  <Icons.documentDetail />
-                  <h2 className="text-lg font-semibold">Goods Details</h2>
-                </div>
-                <Divider
-                  sx={{
-                    borderBottomWidth: 2,
-                    borderColor: "#f59e0b",
-                    flexGrow: 1,
-                  }}
-                />
-              </div>
-              <div className="p-[20px] flex flex-col gap-[15px]">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr>
-                        <th className="px-[10px] py-[8px] font-[500]">S.No</th>
-                        <th className="px-[10px] py-[8px] font-[500]">
-                          Description of Goods (SKU)
-                        </th>
-                        <th className="px-[10px] py-[8px] font-[500]">
-                          HSN/SAC
-                        </th>
-                        <th className="px-[10px] py-[8px] font-[500]">
-                          Quantity
-                        </th>
-                        <th className="px-[10px] py-[8px] font-[500]">Rate</th>
-                        <th className="px-[10px] py-[8px] font-[500]">
-                          Amount
-                        </th>
-                        <th className="px-[10px] py-[8px] font-[500]">
-                          Delete
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rowData.map((row, idx) => (
-                        <tr key={row.id}>
-                          <td className="px-[10px] py-[8px] w-[60px]">
-                            {idx + 1}
-                          </td>
-                          <td className="px-[10px] py-[8px] min-w-[280px]">
-                            <Autocomplete
-                              value={row.partComponent}
-                              onChange={(_, newValue) => {
-                                setRowData((prev) =>
-                                  prev.map((r) => {
-                                    if (r.id !== row.id) return r;
-                                    const nextHsn = newValue?.hsn || r.hsnCode;
-                                    const nextAmount =
-                                      (r.qty || 0) * (r.rate || 0);
-                                    return {
-                                      ...r,
-                                      partComponent: newValue,
-                                      hsnCode: nextHsn || "",
-                                      amount: nextAmount,
-                                    };
-                                  }),
-                                );
-                              }}
-                              disablePortal
-                              id={`sku-autocomplete-${row.id}`}
-                              options={productOptions}
-                              getOptionLabel={(opt) => opt?.label || ""}
-                              renderInput={(params) => (
-                                <TextField {...params} variant="filled" />
-                              )}
-                            />
-                          </td>
-                          <td className="px-[10px] py-[8px] w-[160px]">
-                            <TextField
-                              variant="filled"
-                              value={row.hsnCode || ""}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                setRowData((prev) =>
-                                  prev.map((r) =>
-                                    r.id === row.id ? { ...r, hsnCode: v } : r,
-                                  ),
-                                );
-                              }}
-                            />
-                          </td>
-                          <td className="px-[10px] py-[8px] w-[130px]">
-                            <TextField
-                              variant="filled"
-                              type="number"
-                              required
-                              inputProps={{ min: 1 }}
-                              value={row.qty === 0 ? "" : row.qty}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                setRowData((prev) =>
-                                  prev.map((r) => {
-                                    if (r.id !== row.id) return r;
-                                    const nextQty = v === "" ? 0 : Number(v);
-                                    return {
-                                      ...r,
-                                      qty: nextQty,
-                                      amount: nextQty * (r.rate || 0),
-                                    };
-                                  }),
-                                );
-                              }}
-                            />
-                          </td>
-                          <td className="px-[10px] py-[8px] w-[130px]">
-                            <TextField
-                              variant="filled"
-                              type="number"
-                              required
-                              value={row.rate === 0 ? "" : row.rate}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                setRowData((prev) =>
-                                  prev.map((r) => {
-                                    if (r.id !== row.id) return r;
-                                    const nextRate = v === "" ? 0 : Number(v);
-                                    return {
-                                      ...r,
-                                      rate: nextRate,
-                                      amount: (r.qty || 0) * nextRate,
-                                    };
-                                  }),
-                                );
-                              }}
-                            />
-                          </td>
-                          <td className="px-[10px] py-[8px] w-[140px]">
-                            {(row.amount || 0).toFixed(2)}
-                          </td>
-                          <td className="px-[10px] py-[8px] w-[70px]">
-                            <IconButton
-                              size="small"
-                              onClick={() => {
-                                setRowData((prev) =>
-                                  prev.filter((r) => r.id !== row.id),
-                                );
-                              }}
-                            >
-                              <Icons.delete />
-                            </IconButton>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td className="px-[10px] py-[8px]" colSpan={3}>
-                          <strong>Total</strong>
-                        </td>
-                        <td className="px-[10px] py-[8px]">
-                          <strong>
-                            {rowData.reduce((acc, r) => acc + (r.qty || 0), 0)}
-                          </strong>
-                        </td>
-                        <td className="px-[10px] py-[8px]" />
-                        <td className="px-[10px] py-[8px]">
-                          <strong>
-                            {rowData
-                              .reduce((acc, r) => acc + (r.amount || 0), 0)
-                              .toFixed(2)}
-                          </strong>
-                        </td>
-                        <td className="px-[10px] py-[8px]" />
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-
-                <div className="text-slate-700">
-                  <p className="font-[500]">Amount Chargeable (in Words)</p>
-                  <p className="text-[14px]">
-                    {inrRupeesInWordsUpper(
-                      rowData.reduce((acc, r) => acc + (r.amount || 0), 0),
-                    )}
-                  </p>
-                </div>
-
-                <LoadingButton
-                  variant="contained"
-                  sx={{ width: "fit-content" }}
-                  startIcon={<Icons.add />}
-                  onClick={() => {
-                    const newId =
-                      typeof crypto !== "undefined" &&
-                      (crypto as any).randomUUID
-                        ? (crypto as any).randomUUID()
-                        : `${Date.now()}_${Math.random()}`;
-                    setRowData((prev) => [
-                      ...prev,
-                      {
-                        id: newId,
-                        partComponent: null,
-                        hsnCode: "",
-                        qty: 0,
-                        rate: 0,
-                        amount: 0,
-                        isNew: true,
-                      },
-                    ]);
-                  }}
-                >
-                  Add Row
-                </LoadingButton>
-              </div>
             </div>
           )}
           {activeStep === 1 && (
             <div className="flex-1 min-h-0 w-full overflow-auto">
-              <div className="px-[20px] py-[20px]">
+              <div className="px-[20px] py-[20px] flex flex-col gap-[20px]">
+                <div className="grid grid-cols-3 gap-[30px]">
+                  <Autocomplete
+                    value={singleRow.partComponent}
+                    onChange={(_, newValue) =>
+                      setSingleRow((prev) => ({
+                        ...prev,
+                        partComponent: newValue,
+                      }))
+                    }
+                    disablePortal
+                    options={skuOptions}
+                    getOptionLabel={(option) => option.label || ""}
+                    isOptionEqualToValue={(option, value) =>
+                      !!value && option.value === value.value
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Description of Goods (SKU)"
+                        variant="filled"
+                      />
+                    )}
+                  />
+                  <TextField
+                    variant="filled"
+                    label="HSN/SAC Code"
+                    value={singleRow.hsnCode}
+                    onChange={(e) =>
+                      setSingleRow((prev) => ({
+                        ...prev,
+                        hsnCode: e.target.value,
+                      }))
+                    }
+                    fullWidth
+                  />
+                  <TextField
+                    variant="filled"
+                    type="number"
+                    label="Quantity"
+                    value={singleRow.qty === 0 ? "" : singleRow.qty}
+                    onChange={(e) =>
+                      setSingleRow((prev) => ({
+                        ...prev,
+                        qty: Number(e.target.value),
+                      }))
+                    }
+                    fullWidth
+                  />
+                  <TextField
+                    variant="filled"
+                    type="number"
+                    label="Rate"
+                    value={singleRow.rate === 0 ? "" : singleRow.rate}
+                    onChange={(e) =>
+                      setSingleRow((prev) => ({
+                        ...prev,
+                        rate: Number(e.target.value),
+                      }))
+                    }
+                    fullWidth
+                  />
+                  <TextField
+                    variant="filled"
+                    label="Amount"
+                    value={(singleRow.qty * singleRow.rate).toFixed(2)}
+                    InputProps={{ readOnly: true }}
+                    fullWidth
+                  />
+                </div>
                 <SerialNumberUpload
                   onSerialNumbersChange={(serials: string[]) =>
                     setSerialNumbers(serials)
