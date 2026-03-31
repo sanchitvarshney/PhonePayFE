@@ -4,6 +4,8 @@ import { AxiosResponse } from "axios";
 import {
   DeviceMinSate,
   LocationApiresponse,
+  UploadInvoiceFileApiResponse,
+  UploadSerialFileApiResponse,
   VendorAddressApiResponse,
 } from "./DeviceMinType";
 
@@ -16,45 +18,63 @@ const initialState: DeviceMinSate = {
   VendorBranchData: null,
   venderaddressloading: false,
   venderaddressdata: null,
+  uploadSerialFileLoading: false,
+  serialFiledata: null,
+  uploadInvoiceFileLoading: false,
+  invociceFiledata: null,
 };
 
-export const getLocationAsync = createAsyncThunk<
-  AxiosResponse<LocationApiresponse>,
-  string | null
->("wearhouse/getLocation", async (params) => {
-  const response = await axiosInstance.get(
-    `/backend/search/location/${params ?? null}`
-  );
-  return response;
-});
+export const getLocationAsync = createAsyncThunk<AxiosResponse<LocationApiresponse>, string | null>(
+  "wearhouse/getLocation",
+  async (params) => {
+    const response = await axiosInstance.get(`/backend/search/location/${params ?? null}`);
+    return response;
+  }
+);
 
-export const getVendorAsync = createAsyncThunk<
-  AxiosResponse<LocationApiresponse>,
-  string | null
->("wearhouse/getVendor", async (params) => {
-  const response = await axiosInstance.get(
-    `/vendor/vendorOptions/${params}`
-  );
-  return response;
-});
-export const getVendorBranchAsync = createAsyncThunk<
-  AxiosResponse<LocationApiresponse>,
-  string
->("wearhouse/getVendorBranch", async (params) => {
-  const response = await axiosInstance.get(
-    `/vendor/vendorBranchList?vendorcode=${params}`
-  );
-  return response;
-});
-export const getVendorAddress = createAsyncThunk<
-  AxiosResponse<VendorAddressApiResponse>,
-  string
->("wearhouse/getVendoraddress", async (params) => {
-  const response = await axiosInstance.get(
-    `/vendor/vendorAddress?branchcode=${params}`
-  );
-  return response;
-});
+export const getVendorAsync = createAsyncThunk<AxiosResponse<LocationApiresponse>, string | null>(
+  "wearhouse/getVendor",
+  async (params) => {
+    const response = await axiosInstance.get(`/vendor/vendorOptions/${params}`);
+    return response;
+  }
+);
+
+export const getVendorBranchAsync = createAsyncThunk<AxiosResponse<LocationApiresponse>, string>(
+  "wearhouse/getVendorBranch",
+  async (params) => {
+    const response = await axiosInstance.get(`/vendor/vendorBranchList?vendorcode=${params}`);
+    return response;
+  }
+);
+
+export const getVendorAddress = createAsyncThunk<AxiosResponse<VendorAddressApiResponse>, string>(
+  "wearhouse/getVendoraddress",
+  async (params) => {
+    const response = await axiosInstance.get(`/vendor/vendorAddress?branchcode=${params}`);
+    return response;
+  }
+);
+
+export const uploadSerialFile = createAsyncThunk<AxiosResponse<UploadSerialFileApiResponse>, FormData>(
+  "wearhouse/deviceMin/uploadSerial",
+  async (params) => {
+    const response = await axiosInstance.post(`/deviceMin/uploadSerial`, params, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response;
+  }
+);
+
+export const uploadInvoiceFile = createAsyncThunk<AxiosResponse<UploadInvoiceFileApiResponse>, FormData>(
+  "wearhouse/deviceMin/upload-invoice",
+  async (params) => {
+    const response = await axiosInstance.post(`/deviceMin/upload-invoice`, params, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response;
+  }
+);
 
 const deviceMinSlice = createSlice({
   name: "deviceMin",
@@ -114,6 +134,30 @@ const deviceMinSlice = createSlice({
       })
       .addCase(getVendorAddress.rejected, (state) => {
         state.venderaddressloading = false;
+      })
+      .addCase(uploadSerialFile.pending, (state) => {
+        state.uploadSerialFileLoading = true;
+      })
+      .addCase(uploadSerialFile.fulfilled, (state, action) => {
+        state.uploadSerialFileLoading = false;
+        if (action.payload.data.success) {
+          state.serialFiledata = action.payload.data.data;
+        }
+      })
+      .addCase(uploadSerialFile.rejected, (state) => {
+        state.uploadSerialFileLoading = false;
+      })
+      .addCase(uploadInvoiceFile.pending, (state) => {
+        state.uploadInvoiceFileLoading = true;
+      })
+      .addCase(uploadInvoiceFile.fulfilled, (state, action) => {
+        state.uploadInvoiceFileLoading = false;
+        if (action.payload.data.success) {
+          state.invociceFiledata = action.payload.data.data;
+        }
+      })
+      .addCase(uploadInvoiceFile.rejected, (state) => {
+        state.uploadInvoiceFileLoading = false;
       });
   },
 });

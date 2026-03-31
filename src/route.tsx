@@ -37,6 +37,7 @@ import ProductionReportPage from "./pages/production/ProductionReportPage";
 import BulkDeviceInwardLayout from "@/layouts/BulkDeviceInwardLayout";
 import BulkDeviceInward from "@/pages/bulkDeviceInward/BulkDeviceInward";
 import Consumption from "@/pages/warehouse/Consumption";
+import GoodSpareInwardv2 from "@/pages/warehouse/GoodSpareInwardv2";
 
 export const router = createBrowserRouter([
   {
@@ -218,6 +219,14 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/warehouse/consumption",
+      },
+      {
+        element: (
+          <MainLayout>
+            <GoodSpareInwardv2 />
+          </MainLayout>
+        ),
+        path: "/warehouse/good-spare-inward",
       },
       {
         element: (
