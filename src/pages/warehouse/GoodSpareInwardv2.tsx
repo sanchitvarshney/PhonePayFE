@@ -433,10 +433,10 @@ const GoodSpareInwardv2: React.FC = () => {
           setAlert(false);
         }}
       />
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white ">
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white h-full">
         <MaterialInvardUploadDocumentDrawer open={upload} setOpen={setUpload} />
 
-        <div className="h-[calc(100vh-100px)]   ">
+        <div className="h-full flex flex-col min-h-0">
           <div className="h-[50px] flex items-center w-full px-[20px] bg-neutral-50 border-b border-neutral-300">
             <Stepper activeStep={activeStep} className="w-full">
               {steps.map((label, index) => (
@@ -448,7 +448,7 @@ const GoodSpareInwardv2: React.FC = () => {
           </div>
 
           {activeStep === 0 && (
-            <div className="h-[calc(100vh-200px)] py-[20px] sm:px-[10px] md:px-[30px] lg:px-[50px] flex flex-col gap-[20px] overflow-y-auto">
+            <div className="flex-1 min-h-0 pt-[20px] pb-[8px] sm:px-[10px] md:px-[30px] lg:px-[50px] flex flex-col gap-[20px] overflow-y-auto">
               <div id="primary-item-details" className="flex items-center w-full gap-3">
                 <div className="flex items-center gap-[5px]">
                   <Icons.user />
@@ -665,7 +665,7 @@ const GoodSpareInwardv2: React.FC = () => {
           )}
 
           {activeStep === 1 && (
-            <div className="h-[calc(100vh-200px)] py-[20px] sm:px-[10px] md:px-[30px] lg:px-[50px] flex flex-col gap-[20px] overflow-y-auto">
+            <div className="flex-1 min-h-0 pt-[20px] pb-[8px] sm:px-[10px] md:px-[30px] lg:px-[50px] flex flex-col gap-[20px] overflow-y-auto">
               <div className="flex items-center w-full gap-3">
                 <div className="flex items-center gap-[5px]">
                   <Icons.documentDetail />
@@ -785,7 +785,7 @@ const GoodSpareInwardv2: React.FC = () => {
           )}
 
           {activeStep === 2 && (
-            <div className="h-[calc(100vh-200px)] flex items-center justify-center">
+            <div className="flex-1 min-h-0 flex items-center justify-center">
               <div className="flex flex-col justify-center gap-[10px]">
                 <Success />
                 <Typography variant="inherit" fontWeight={500}>
@@ -798,7 +798,7 @@ const GoodSpareInwardv2: React.FC = () => {
             </div>
           )}
 
-          <div className="h-[50px] border-t border-neutral-300 flex items-center justify-end px-[20px] bg-neutral-50 gap-[10px] relative">
+          <div className="h-[50px] sticky bottom-0 z-20 mt-auto shrink-0 border-t border-neutral-300 flex items-center justify-end px-[20px] bg-neutral-50 gap-[10px] relative">
             {activeStep === 0 && (
               <>
                 <LoadingButton
