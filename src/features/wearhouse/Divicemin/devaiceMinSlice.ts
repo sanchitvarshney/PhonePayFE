@@ -5,7 +5,7 @@ import {
   DeviceMinSate,
   LocationApiresponse,
   UploadInvoiceFileApiResponse,
-  UploadSerialFileApiResponse,
+  UploadSerialFileResponse,
   VendorAddressApiResponse,
 } from "./DeviceMinType";
 
@@ -56,7 +56,7 @@ export const getVendorAddress = createAsyncThunk<AxiosResponse<VendorAddressApiR
   }
 );
 
-export const uploadSerialFile = createAsyncThunk<AxiosResponse<UploadSerialFileApiResponse>, FormData>(
+export const uploadSerialFile = createAsyncThunk<AxiosResponse<UploadSerialFileResponse>, FormData>(
   "wearhouse/deviceMin/uploadSerial",
   async (params) => {
     const response = await axiosInstance.post(`/deviceMin/uploadSerial`, params, {

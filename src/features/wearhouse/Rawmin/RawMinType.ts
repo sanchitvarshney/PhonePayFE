@@ -17,11 +17,6 @@ export type CreateRawMinPayloadType = {
   component: string[];
   qty: number[];
   rate: number[];
-  currency: string[];
-  gsttype: string[];
-  gstrate: number[];
-  location: string[];
-  hsnCode: string[];
   remarks: string[];
   cc: string;
   deliveryAddress: string;

@@ -49,7 +49,6 @@ import FileUploadIcon from "@mui/icons-material/FileUpload";
 import { Icons } from "@/components/icons";
 import { showToast } from "@/utils/toasterContext";
 import ConfirmationModel from "@/components/reusable/ConfirmationModel";
-import { Button } from "@/components/ui/button";
 import Success from "@/components/reusable/Success";
 import * as XLSX from "xlsx";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
@@ -62,10 +61,6 @@ type FormData = {
   gstin: string;
   doucmentDate: Dayjs | null;
   documentId: string;
-};
-
-type ExcelRow = {
-  [key: string]: string | number;
 };
 
 type ExcelGridRow = {
@@ -364,7 +359,7 @@ const GoodSpareInwardv2: React.FC = () => {
       doc_date: dayjs(formdata.doucmentDate).format("DD-MM-YYYY") || "",
       vendortype: formdata.vendorType || "",
       invoiceAttachment: documnetFileData || [],
-      cc: formdata?.cc?.id || "",
+      cc: "",
       deliveryAddress: `MsCorpres Manufacturer and Refurbisher Pvt. Ltd.
                             2nd & 3rd Floor, B-88,Sec-83,
                             Noida Gautam Buddha Nagar, UP-201305`,
