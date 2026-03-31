@@ -1,37 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import MaterialInvardUploadDocumentDrawer from "@/components/Drawers/wearhouse/MaterialInvardUploadDocumentDrawer";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import {
   clearaddressdetail,
-  getLocationAsync,
-  getVendorAddress,
-  getVendorAsync,
-  getVendorBranchAsync,
 } from "@/features/wearhouse/Divicemin/devaiceMinSlice";
 import {
   resetDocumentFile,
   resetFormData,
 } from "@/features/wearhouse/Rawmin/RawMinSlice";
-import { getPertCodesync } from "@/features/production/MaterialRequestWithoutBom/MRRequestWithoutBomSlice";
-import { getCurrency } from "@/features/common/commonSlice";
 import {
   Autocomplete,
   Divider,
-  FormControl,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
+  IconButton,
   Step,
   StepLabel,
   Stepper,
   TextField,
   Typography,
 } from "@mui/material";
-import SelectVendor from "@/components/reusable/SelectVendor";
-import { replaceBrWithNewLine } from "@/utils/replacebrtag";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -40,13 +27,13 @@ import { LoadingButton } from "@mui/lab";
 import { Icons } from "@/components/icons";
 import { showToast } from "@/utils/toasterContext";
 import ConfirmationModel from "@/components/reusable/ConfirmationModel";
-import { Button } from "@/components/ui/button";
 import Success from "@/components/reusable/Success";
+import axiosInstance from "@/api/axiosInstance";
 import {
   getDispatchFromDetail,
   getShippingAddress,
 } from "@/features/master/client/clientSlice";
-import { transformSkuCode } from "@/utils/transformUtills";
+import { inrRupeesInWordsUpper } from "@/utils/inrAmountWords";
 // import AddPOTable from "./AddPOTable";
 import {
   createPO,
@@ -56,44 +43,24 @@ import {
 } from "@/features/procurement/poSlices";
 import { useNavigate } from "react-router-dom";
 import FullPageLoading from "@/components/shared/FullPageLoading";
+import SerialNumberUpload from "@/components/procurement/SerialNumberUpload";
 
 interface RowData {
-  partComponent: { lable: string; value: string } | null;
-  qty: number;
-  rate: string;
-  taxableValue: number;
-  foreignValue: number;
-  hsnCode: string;
-  gstType: string;
-  gstRate: number;
-  cgst: number;
-  sgst: number;
-  igst: number;
-  location: { lable: string; value: string } | null;
-  autoConsump: string;
-  remarks: string;
   id: string;
-  currency: string;
+  partComponent: { label: string; value: string; hsn?: string } | null;
+  hsnCode: string;
+  qty: number;
+  rate: number;
+  amount: number;
   isNew?: boolean;
-  excRate: number;
-  uom: string;
   updaterow?: string;
   poid?: string;
 }
 
-interface Totals {
-  cgst: number;
-  sgst: number;
-  igst: number;
-  taxableValue: number;
-}
-
 interface BillAddress {
   id: number;
-  mobileNo: string;
   gst: string;
   pin: string;
-  pan: string;
   addressLine1: string;
   addressLine2: string;
   label: string;
@@ -102,57 +69,55 @@ interface BillAddress {
 interface ShippingAddress {
   id: number;
   pin: string;
-  gst: string;
-  pan: string;
   city: string;
   addressLine1: string;
   addressLine2: string;
   label: string;
 }
-interface VendorFormData {
-  id: string;
-  text: string;
+
+interface BillFromAddress {
+  companyName: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  pin: string;
+  gstin: string;
 }
 
-interface FormData {
-  currency: { value: string; label: string };
-  invoice: string;
-  location: string;
-  vendorname: VendorFormData | null;
-  vendorbranch: string;
-  vendoraddress: string;
-  duedate: string | dayjs.Dayjs;
-  billaddressid: 0;
-  billaddress: BillAddress;
-  shipaddressid: 0;
-  shipaddress: ShippingAddress;
-  exchange: 0;
-  vendor: string | null;
+interface ShipFromAddress {
+  companyName: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  pin: string;
   gstin: string;
-  vendorMobile: string;
-  paymentTerms: string;
-  termsOfDelivery: string;
-  remarks: string;
+}
+interface FormData {
+  billaddressid: any;
+  billaddress: BillAddress;
+  shipaddressid: any;
+  shipaddress: ShippingAddress;
+  billFrom: BillFromAddress;
+  shipFrom: ShipFromAddress;
+  placeOfSupply: string;
+  stateCode: string;
+  ewayBillNo?: string;
+  vehicleNo?: string;
+  boxNo: string;
+  challanNo: string;
+  challanDate: string | dayjs.Dayjs;
 }
 const BulkDeviceInward: React.FC = () => {
   const navigate = useNavigate();
   const [alert, setAlert] = useState<boolean>(false);
-  const [isNext, setIsNext] = useState<boolean>(true);
   const [minNo, setMinno] = useState<string>("");
-  const [open, setOpen] = useState<boolean>(false);
   const [upload, setUpload] = useState<boolean>(false);
   const [rowData, setRowData] = useState<RowData[]>([]);
-  const [gstTypeStatus, setGstTypeStatus] = useState<string>("L");
-  const [total, setTotal] = useState<Totals>({
-    cgst: 0,
-    sgst: 0,
-    igst: 0,
-    taxableValue: 0,
-  });
+  const [serialNumbers, setSerialNumbers] = useState<string[]>([]);
+  const [productOptions, setProductOptions] = useState<
+    Array<{ label: string; value: string; hsn?: string }>
+  >([]);
   const dispatch = useAppDispatch();
-  const { VendorBranchData, venderaddressdata } = useAppSelector(
-    (state) => state.divicemin,
-  );
   const { loading } = useAppSelector((state) => state.po);
   const { formData } = useAppSelector((state) => state.po);
   const { dispatchFromDetails, shippingAddress } = useAppSelector(
@@ -161,8 +126,6 @@ const BulkDeviceInward: React.FC = () => {
   const isEdit = window.location.href.includes("edit-po");
   const id =
     window.location.href.split("edit-po/")[1]?.replace(/_/g, "/") || "";
-
-  const { currencyData } = useAppSelector((state) => state.common);
 
   const {
     register,
@@ -174,12 +137,29 @@ const BulkDeviceInward: React.FC = () => {
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
-      vendor: null,
-      vendorbranch: "",
-      vendoraddress: "",
-      gstin: "",
-      vendorMobile: "",
-      remarks: "",
+      billFrom: {
+        companyName: "",
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
+        pin: "",
+        gstin: "",
+      },
+      shipFrom: {
+        companyName: "",
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
+        pin: "",
+        gstin: "",
+      },
+      placeOfSupply: "",
+      stateCode: "",
+      ewayBillNo: "",
+      vehicleNo: "",
+      boxNo: "",
+      challanNo: "",
+      challanDate: "",
     },
   });
 
@@ -202,30 +182,16 @@ const BulkDeviceInward: React.FC = () => {
 
   const checkRequiredFields = (data: RowData[]) => {
     let hasErrors = false;
-    const requiredFields: Array<keyof RowData> = [
-      "partComponent",
-      "qty",
-      "rate",
-      "hsnCode",
-      "gstType",
-      "gstRate",
-    ];
-
     const missingDetails: string[] = [];
 
     data.forEach((item, index) => {
       const missingFields: string[] = [];
 
-      requiredFields.forEach((field) => {
-        if (
-          item[field] === "" ||
-          item[field] === 0 ||
-          item[field] === undefined ||
-          item[field] === null
-        ) {
-          missingFields.push(field);
-        }
-      });
+      if (!item.partComponent?.value) missingFields.push("Goods/Product");
+      if (!item.hsnCode) missingFields.push("HSN/SAC");
+      if (!item.qty || item.qty < 1) missingFields.push("Qty");
+      if (item.rate === undefined || item.rate === null || item.rate <= 0)
+        missingFields.push("Rate");
 
       if (missingFields.length > 0) {
         missingDetails.push(`Row ${index + 1}: ${missingFields.join(", ")}`);
@@ -245,22 +211,13 @@ const BulkDeviceInward: React.FC = () => {
 
   const resetall = () => {
     setRowData([]);
-    setTotal({ cgst: 0, sgst: 0, igst: 0, taxableValue: 0 });
+    setSerialNumbers([]);
     reset();
     dispatch(resetDocumentFile());
     dispatch(clearaddressdetail());
   };
 
   const onSubmit: SubmitHandler<FormData> = (data) => {
-    // Validate required fields
-    if (!data.vendorname) {
-      showToast("Please select a vendor", "error");
-      return;
-    }
-    if (!data.vendorbranch) {
-      showToast("Please select a vendor branch", "error");
-      return;
-    }
     if (!data.billaddressid) {
       showToast("Please select a bill address", "error");
       return;
@@ -289,16 +246,14 @@ const BulkDeviceInward: React.FC = () => {
           );
           const qty = rowData.map((item) => Number(item.qty));
           const rate = rowData.map((item) => Number(item.rate));
-          const gsttype = rowData.map((item) => item.gstType);
-          const gstrate = rowData.map((item) => Number(item.gstRate));
-          const hsncode = rowData.map((item) => item.hsnCode);
-          const remark = rowData.map((item) => item.remarks);
-          const dueDate = watch("duedate");
-          let formattedDueDate = "";
-          if (dueDate) {
-            const date = dayjs(dueDate);
+          const hsncode = rowData.map((item) => item.hsnCode || "");
+
+          const challanDate = formData.challanDate;
+          let formattedChallanDate = "";
+          if (challanDate) {
+            const date = dayjs(challanDate);
             if (date.isValid()) {
-              formattedDueDate = date.format("DD-MM-YYYY");
+              formattedChallanDate = date.format("DD-MM-YYYY");
             }
           }
 
@@ -306,33 +261,24 @@ const BulkDeviceInward: React.FC = () => {
             component,
             qty,
             rate,
-            gsttype,
-            gstrate,
             hsncode,
-            remark,
-            currency: formData.currency?.value || "",
-            vendorname: formData.vendorname?.id || "",
-            vendorbranch: formData.vendorbranch || "",
-            vendoraddress: formData.vendoraddress || "",
-            duedate: formattedDueDate,
-            billaddressid: formData.billaddressid || "",
-            shipaddressid: formData.shipaddressid || "",
-            billaddress:
-              formData.billaddress?.addressLine1 +
-                formData.billaddress?.addressLine2 || "",
-            shipaddress:
-              formData.shipaddress?.addressLine1 +
-                formData.shipaddress?.addressLine2 || "",
-            exchange: formData.exchange || "",
-            doucmentDate: formData.doucmentDate || "",
-            paymentterms: watch("paymentTerms") || formData.paymentTerms || "",
-            termsOfDelivery:
-              watch("termsOfDelivery") || formData.termsOfDelivery || "",
-            vendorMobile: formData.vendorMobile || "",
+            serialno: serialNumbers,
+            placeOfSupply: formData.placeOfSupply,
+            stateCode: formData.stateCode,
+            challanNo: formData.challanNo,
+            challanDate: formattedChallanDate,
+            boxNo: formData.boxNo,
+            ewayBillNo: formData.ewayBillNo,
+            vehicleNo: formData.vehicleNo,
+            billFrom: formData.billFrom,
+            shipFrom: formData.shipFrom,
+            billaddressid: formData.billaddressid,
+            billaddress: formData.billaddress,
+            shipaddressid: formData.shipaddressid,
+            shipaddress: formData.shipaddress,
             updaterow: rowData.map((item) => item.updaterow),
             poid: id,
             vendor_type: "v01",
-            poRemarks: watch("remarks") || "",
           };
           if (isEdit) {
             dispatch(updatePO(payload)).then((response: any) => {
@@ -360,12 +306,25 @@ const BulkDeviceInward: React.FC = () => {
     }
   };
   useEffect(() => {
-    dispatch(getVendorAsync(null));
-    dispatch(getLocationAsync(null));
-    dispatch(getPertCodesync(null));
-    dispatch(getCurrency());
     dispatch(getDispatchFromDetail());
     dispatch(getShippingAddress());
+
+    axiosInstance
+      .get("/product/bySku/null?type=soundBox")
+      .then((response: any) => {
+        const raw = response?.data?.data ?? response?.data ?? [];
+        const mapped = Array.isArray(raw)
+          ? raw.map((item: any) => ({
+              label: item.name,
+              value: item.sku,
+              hsn: item.hsn,
+            }))
+          : [];
+        setProductOptions(mapped);
+      })
+      .catch(() => {
+        // axiosInstance interceptor already toasts errors
+      });
   }, []);
 
   const handleBillAddressChange = (value: any) => {
@@ -374,9 +333,7 @@ const BulkDeviceInward: React.FC = () => {
       setValue("billaddress.label", value.label);
       setValue("billaddress.addressLine1", value.addressLine1);
       setValue("billaddress.addressLine2", value.addressLine2);
-      setValue("billaddress.mobileNo", value.mobileNo);
       setValue("billaddress.gst", value.gst);
-      setValue("billaddress.pan", value.pan);
       setValue("billaddress.pin", value.pin);
     }
   };
@@ -387,8 +344,6 @@ const BulkDeviceInward: React.FC = () => {
       setValue("shipaddress.addressLine1", value.addressLine1);
       setValue("shipaddress.addressLine2", value.addressLine2);
       setValue("shipaddress.city", value.city);
-      setValue("shipaddress.gst", value.gst);
-      setValue("shipaddress.pan", value.pan);
       setValue("shipaddress.pin", value.pin);
     }
   };
@@ -400,125 +355,43 @@ const BulkDeviceInward: React.FC = () => {
         if (response.payload.success) {
           const { bill, ship, materials, header } = response.payload.data;
 
-          // Set vendor name with proper object structure
-          setValue("vendorname", {
-            id: header?.vendorcode?.value,
-            text: header?.vendorcode?.label,
-          });
+          setValue("billaddressid", bill?.code || "");
+          handleBillAddressChange(bill || "");
+          setValue("shipaddressid", ship?.code || "");
+          handleShipAddressChange(ship || "");
+          setValue("placeOfSupply", header?.placeOfSupply || "");
+          setValue("stateCode", header?.stateCode || "");
+          setValue("challanNo", header?.challanNo || "");
+          setValue("boxNo", header?.boxNo || "");
+          setValue("ewayBillNo", header?.ewayBillNo || "");
+          setValue("vehicleNo", header?.vehicleNo || "");
 
-          dispatch(getVendorBranchAsync(header?.vendorcode?.value));
-          setValue("vendorbranch", header?.vendorbranch?.value);
-
-          dispatch(getVendorAddress(header?.vendorbranch?.value)).then(
-            (response: any) => {
-              if (response.payload.data.success) {
-                setValue(
-                  "vendoraddress",
-                  replaceBrWithNewLine(response.payload.data?.data?.address) ||
-                    "",
-                );
-                setValue("gstin", response.payload.data?.data?.gstid);
-              }
-            },
-          );
-          setValue("vendorMobile", header?.vendorMobile || "");
-
-          // Parse and set due date properly
-          if (header?.duedate) {
+          if (header?.challanDate) {
             try {
-              // Parse the date string in DD-MM-YYYY format
-              const [day, month, year] = header.duedate.split("-");
+              const [day, month, year] = String(header.challanDate).split("-");
               const parsedDate = dayjs(`${year}-${month}-${day}`);
-
-              if (parsedDate.isValid()) {
-                setValue("duedate", parsedDate);
-              }
+              if (parsedDate.isValid()) setValue("challanDate", parsedDate);
             } catch (error) {
               console.error("Error parsing date:", error);
             }
           }
 
-          setValue("exchange", header?.exchangerate || "");
-
-          // Set currency with proper object structure
-          setValue("currency", {
-            value: header?.currency?.value,
-            label: header?.currency?.label,
-          });
-
-          setValue("billaddressid", bill?.code || "");
-          handleBillAddressChange(bill || "");
-          setValue("shipaddressid", ship?.code || "");
-          handleShipAddressChange(ship || "");
-          setValue("paymentTerms", header?.paymentterms || "");
-          setValue("termsOfDelivery", header?.termsOfDelivery || "");
-          setValue("remarks", header?.poRemarks || "");
-          // Set payment terms and terms of delivery
-          setValue("paymentTerms", header?.paymentterms || "");
-          setValue("termsOfDelivery", header?.termsofcondition || "");
-
-          // Update form data in Redux
-          dispatch(
-            setFormData({
-              ...formData,
-              paymentTerms: header?.paymentterms || "",
-              termsOfDelivery: header?.termsOfDelivery || "",
-            }),
-          );
-
           setRowData(
             materials.map((item: any) => ({
+              id: String(item.updateid ?? ""),
               partComponent: {
-                lable: item.component_short,
+                label: item.component_short,
                 value: item.componentKey,
+                hsn: item.hsncode,
               },
+              hsnCode: item.hsncode || "",
               qty: Number(item.orderqty) || 0,
-              updaterow: item.updateid,
               rate: Number(item.rate) || 0,
-              taxableValue: Number(item.taxablevalue) || 0,
-              foreignValue: Number(item.exchangetaxablevalue),
-              hsnCode: item.hsncode,
-              gstType: item.gsttype[0]?.id,
-              gstRate: Number(item.gstrate),
-              cgst: Number(item.cgst) || 0,
-              sgst: Number(item.sgst) || 0,
-              igst: Number(item.igst) || 0,
-              remarks: item.remark,
-              currency: {
-                value: item.header?.currency?.value,
-                label: item.header?.currency?.label,
-              },
+              amount: (Number(item.orderqty) || 0) * (Number(item.rate) || 0),
               isNew: true,
-              excRate: item.header?.exchangerate || 1,
-              uom: item.uom,
+              updaterow: item.updateid,
             })),
           );
-          setTotal({
-            cgst: Number(
-              materials.reduce(
-                (acc: number, item: any) => acc + Number(item.cgst),
-                0,
-              ),
-            ),
-            sgst: Number(
-              materials.reduce(
-                (acc: number, item: any) => acc + Number(item.sgst),
-                0,
-              ),
-            ),
-            igst: Number(
-              materials.reduce(
-                (acc: number, item: any) => acc + Number(item.igst),
-                0,
-              ),
-            ),
-            taxableValue: Number(
-              materials.reduce(
-                (acc: number, item: any) => acc + Number(item.taxablevalue),
-                0,
-              ),
-            ),
-          });
         }
       });
     }
@@ -557,18 +430,11 @@ const BulkDeviceInward: React.FC = () => {
 
           {activeStep === 0 && (
             <div className="h-[calc(100vh-200px)] py-[20px] sm:px-[10px] md:px-[30px] lg:px-[50px] flex flex-col gap-[20px] overflow-y-auto">
-              <div
-                id="primary-item-details"
-                className="flex items-center w-full gap-3"
-              >
+              {/* SECTION 1: Bill From */}
+              <div className="flex items-center w-full gap-3">
                 <div className="flex items-center gap-[5px]">
-                  <Icons.user />
-                  <h2
-                    id="primary-item-details"
-                    className="text-lg font-semibold"
-                  >
-                    Vendor Details
-                  </h2>
+                  <Icons.shipping />
+                  <h2 className="text-lg font-semibold">Bill From</h2>
                 </div>
                 <Divider
                   sx={{
@@ -580,128 +446,215 @@ const BulkDeviceInward: React.FC = () => {
               </div>
               <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px]">
                 <Controller
-                  name="vendorname"
+                  name="billFrom.companyName"
                   control={control}
-                  rules={{ required: "Vendor  is required" }}
+                  rules={{ required: "Bill From Address is required" }}
                   render={({ field }) => (
-                    <SelectVendor
-                      varient="filled"
-                      error={!!errors.vendorname}
-                      helperText={errors.vendorname?.message}
-                      value={field.value}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        dispatch(getVendorBranchAsync(e!.id));
-                      }}
-                      label={
-                        isEdit && isNext ? watch("vendorname")?.text : "Vendor"
+                    <Autocomplete
+                      value={
+                        dispatchFromDetails?.data?.find(
+                          (address: any) => address.code === field.value,
+                        ) || null
                       }
+                      onChange={(_, newValue) => {
+                        field.onChange(newValue?.code || "");
+                        setValue(
+                          "billFrom.addressLine1",
+                          newValue?.addressLine1 || "",
+                        );
+                        setValue(
+                          "billFrom.addressLine2",
+                          newValue?.addressLine2 || "",
+                        );
+                        setValue("billFrom.city", newValue?.city || "");
+                        setValue("billFrom.pin", newValue?.pin || "");
+                        setValue("billFrom.gstin", newValue?.gst || "");
+                      }}
+                      disablePortal
+                      id="bill-from-address"
+                      options={dispatchFromDetails || []}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Bill From Address"
+                          error={!!errors.billFrom?.companyName}
+                          helperText={errors.billFrom?.companyName?.message}
+                          variant="filled"
+                        />
+                      )}
                     />
                   )}
                 />
-                <Controller
-                  name="vendorbranch"
-                  control={control}
-                  rules={{ required: "Vendor Branch  is required" }}
-                  render={({ field }) => (
-                    <FormControl
-                      variant="filled"
-                      error={!!errors.vendorbranch}
-                      disabled={!VendorBranchData}
-                      fullWidth
-                    >
-                      <InputLabel id="Vendor-simple-select-label">
-                        Vendor Branch
-                      </InputLabel>
-                      <Select
-                        labelId="Vendor-simple-select-label"
-                        id="Vendor-simple-select"
-                        label="Vendor Branch"
-                        value={field.value}
-                        onChange={(e) => {
-                          field.onChange(e.target.value);
-                          dispatch(getVendorAddress(e.target.value)).then(
-                            (response: any) => {
-                              if (response.payload.data.success) {
-                                setValue(
-                                  "vendoraddress",
-                                  replaceBrWithNewLine(
-                                    response.payload.data?.data?.address,
-                                  ) || "",
-                                );
-                                setValue(
-                                  "gstin",
-                                  response.payload.data?.data?.gstid,
-                                );
-                                setValue(
-                                  "vendorMobile",
-                                  response.payload.data?.data?.phone,
-                                );
-                                setGstTypeStatus(
-                                  response.payload.data?.data?.state === "09"
-                                    ? "L"
-                                    : "I",
-                                );
-                              }
-                            },
-                          );
-                        }}
-                      >
-                        {VendorBranchData?.map((item) => (
-                          <MenuItem value={item.id}>{item.text}</MenuItem>
-                        ))}
-                      </Select>
-                      {errors.vendorbranch && (
-                        <FormHelperText>
-                          {errors.vendorbranch.message}
-                        </FormHelperText>
-                      )}
-                    </FormControl>
-                  )}
-                />
-
                 <TextField
                   variant="filled"
-                  // sx={{ mb: 1 }}
-                  error={!!errors.vendorMobile}
-                  helperText={errors?.vendorMobile?.message}
-                  focused={!!watch("vendorMobile")}
-                  // multiline
+                  multiline
                   rows={3}
+                  error={!!errors.billFrom?.addressLine1}
+                  helperText={errors?.billFrom?.addressLine1?.message}
+                  focused={!!watch("billFrom.addressLine1")}
                   fullWidth
-                  label="Mobile No"
-                  className="h-[10px] resize-none"
-                  {...register("vendorMobile", {
-                    required: "Mobile No is required",
+                  label="Address Line 1"
+                  className="h-[100px] resize-none"
+                  {...register("billFrom.addressLine1", {
+                    required: "Address Line 1 is required",
                   })}
                 />
-
-                <div className="flex items-center gap-[10px] text-slate-600 sm:col-span-1 md:col-span-2 ">
-                  <p className="font-[500]">GSTIN :</p>
-                  <p>{venderaddressdata ? venderaddressdata.gstid : "--"}</p>
-                </div>
-                <div className="col-span-2">
-                  <TextField
-                    variant="filled"
-                    sx={{ mb: 1 }}
-                    error={!!errors.vendoraddress}
-                    helperText={errors?.vendoraddress?.message}
-                    focused={!!watch("vendoraddress")}
-                    multiline
-                    rows={3}
-                    fullWidth
-                    label="Bill From Address"
-                    className="h-[100px] resize-none"
-                    {...register("vendoraddress", {
-                      required: "Bill From Address is required",
-                    })}
-                  />
-                </div>
+                <TextField
+                  variant="filled"
+                  multiline
+                  rows={3}
+                  error={!!errors.billFrom?.addressLine2}
+                  helperText={errors?.billFrom?.addressLine2?.message}
+                  focused={!!watch("billFrom.addressLine2")}
+                  fullWidth
+                  label="Address Line 2"
+                  className="h-[100px] resize-none"
+                  {...register("billFrom.addressLine2")}
+                />
+                <TextField
+                  variant="filled"
+                  error={!!errors.billFrom?.city}
+                  helperText={errors?.billFrom?.city?.message}
+                  focused={!!watch("billFrom.city")}
+                  fullWidth
+                  label="City/State"
+                  {...register("billFrom.city")}
+                />
+                <TextField
+                  variant="filled"
+                  error={!!errors.billFrom?.pin}
+                  helperText={errors?.billFrom?.pin?.message}
+                  focused={!!watch("billFrom.pin")}
+                  fullWidth
+                  label="Pin Code"
+                  {...register("billFrom.pin")}
+                />
+                <TextField
+                  variant="filled"
+                  error={!!errors.billFrom?.gstin}
+                  helperText={errors?.billFrom?.gstin?.message}
+                  focused={!!watch("billFrom.gstin")}
+                  fullWidth
+                  label="GSTIN"
+                  {...register("billFrom.gstin")}
+                />
               </div>
+
+              {/* SECTION 2: Ship From */}
+              <div className="flex items-center w-full gap-3">
+                <div className="flex items-center gap-[5px]">
+                  <Icons.building />
+                  <h2 className="text-lg font-semibold">Ship From</h2>
+                </div>
+                <Divider
+                  sx={{
+                    borderBottomWidth: 2,
+                    borderColor: "#f59e0b",
+                    flexGrow: 1,
+                  }}
+                />
+              </div>
+              <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px]">
+                <Controller
+                  name="shipFrom.companyName"
+                  control={control}
+                  rules={{ required: "Ship From Address is required" }}
+                  render={({ field }) => (
+                    <Autocomplete
+                      value={
+                        shippingAddress?.data?.find(
+                          (address: any) => address.code === field.value,
+                        ) || null
+                      }
+                      onChange={(_, newValue) => {
+                        field.onChange(newValue?.code || "");
+                        setValue(
+                          "shipFrom.addressLine1",
+                          newValue?.addressLine1 || "",
+                        );
+                        setValue(
+                          "shipFrom.addressLine2",
+                          newValue?.addressLine2 || "",
+                        );
+                        setValue("shipFrom.city", newValue?.city || "");
+                        setValue("shipFrom.pin", newValue?.pin || "");
+                        setValue("shipFrom.gstin", newValue?.gst || "");
+                      }}
+                      disablePortal
+                      id="ship-from-address"
+                      options={shippingAddress || []}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Ship From Address"
+                          error={!!errors.shipFrom?.companyName}
+                          helperText={errors.shipFrom?.companyName?.message}
+                          variant="filled"
+                        />
+                      )}
+                    />
+                  )}
+                />
+                <TextField
+                  variant="filled"
+                  multiline
+                  rows={3}
+                  error={!!errors.shipFrom?.addressLine1}
+                  helperText={errors?.shipFrom?.addressLine1?.message}
+                  focused={!!watch("shipFrom.addressLine1")}
+                  fullWidth
+                  label="Address Line 1"
+                  className="h-[100px] resize-none"
+                  {...register("shipFrom.addressLine1", {
+                    required: "Address Line 1 is required",
+                  })}
+                />
+                <TextField
+                  variant="filled"
+                  multiline
+                  rows={3}
+                  error={!!errors.shipFrom?.addressLine2}
+                  helperText={errors?.shipFrom?.addressLine2?.message}
+                  focused={!!watch("shipFrom.addressLine2")}
+                  fullWidth
+                  label="Address Line 2"
+                  className="h-[100px] resize-none"
+                  {...register("shipFrom.addressLine2")}
+                />
+                <TextField
+                  variant="filled"
+                  error={!!errors.shipFrom?.city}
+                  helperText={errors?.shipFrom?.city?.message}
+                  focused={!!watch("shipFrom.city")}
+                  fullWidth
+                  label="City/State"
+                  {...register("shipFrom.city")}
+                />
+                <TextField
+                  variant="filled"
+                  error={!!errors.shipFrom?.pin}
+                  helperText={errors?.shipFrom?.pin?.message}
+                  focused={!!watch("shipFrom.pin")}
+                  fullWidth
+                  label="Pin Code"
+                  {...register("shipFrom.pin")}
+                />
+                <TextField
+                  variant="filled"
+                  error={!!errors.shipFrom?.gstin}
+                  helperText={errors?.shipFrom?.gstin?.message}
+                  focused={!!watch("shipFrom.gstin")}
+                  fullWidth
+                  label="GSTIN"
+                  {...register("shipFrom.gstin")}
+                />
+              </div>
+
+              {/* SECTION 3: Bill To */}
               <div className="flex items-center w-full gap-3">
                 <div className="flex items-center gap-[5px]">
                   <Icons.shipping />
-                  <h2 className="text-lg font-semibold">Billing Details</h2>
+                  <h2 className="text-lg font-semibold">Bill To</h2>
                 </div>
                 <Divider
                   sx={{
@@ -738,113 +691,63 @@ const BulkDeviceInward: React.FC = () => {
                         <TextField
                           {...params}
                           label={(billLabel || "Bill Address") as any}
-                          error={!!errors.billaddress}
-                          helperText={errors.billaddress?.message}
+                          error={!!errors.billaddressid}
+                          helperText={(errors as any).billaddressid?.message}
                           variant="filled"
                         />
                       )}
                     />
                   )}
                 />
-
                 <TextField
                   variant="filled"
-                  // sx={{ mb: 1 }}
-                  error={!!errors.billaddress?.pin}
-                  helperText={errors?.billaddress?.pin?.message}
-                  focused={!!watch("billaddress.pin")}
-                  // multiline
-                  rows={3}
-                  fullWidth
-                  label="PinCode"
-                  className="h-[10px] resize-none"
-                  {...register("billaddress.pin", {
-                    required: "PinCode is required",
-                  })}
-                />
-
-                <TextField
-                  variant="filled"
-                  // sx={{ mb: 1 }}
-                  error={!!errors.billaddress?.mobileNo}
-                  helperText={errors?.billaddress?.mobileNo?.message}
-                  focused={!!watch("billaddress.mobileNo")}
-                  // multiline
-                  rows={3}
-                  fullWidth
-                  label="Mobile No"
-                  className="h-[10px] resize-none"
-                  {...register("billaddress.mobileNo", {
-                    required: "Mobile No is required",
-                  })}
-                />
-                <TextField
-                  variant="filled"
-                  // sx={{ mb: 1 }}
-                  error={!!errors.billaddress?.gst}
-                  helperText={errors?.billaddress?.gst?.message}
-                  focused={!!watch("billaddress.gst")}
-                  // multiline
-                  rows={3}
-                  fullWidth
-                  label="GST"
-                  className="h-[10px] resize-none"
-                  {...register("billaddress.gst", {
-                    required: "GST is required",
-                  })}
-                />
-                <TextField
-                  variant="filled"
-                  sx={{ mb: 5 }}
-                  error={!!errors.billaddress?.pan}
-                  helperText={errors?.billaddress?.pan?.message}
-                  focused={!!watch("billaddress.pan")}
-                  // multiline
-                  rows={3}
-                  fullWidth
-                  label="PAN"
-                  className="h-[10px] resize-none"
-                  {...register("billaddress.pan", {
-                    required: "PAN is required",
-                  })}
-                />
-                <div></div>
-
-                <TextField
-                  variant="filled"
-                  sx={{ mb: 1 }}
                   error={!!errors.billaddress?.addressLine1}
                   helperText={errors?.billaddress?.addressLine1?.message}
                   focused={!!watch("billaddress.addressLine1")}
                   multiline
                   rows={3}
                   fullWidth
-                  label="Dispatch From Address 1"
+                  label="Address Line 1"
                   className="h-[100px] resize-none"
-                  {...register("billaddress.addressLine1", {
-                    required: "Address 1 is required",
-                  })}
+                  {...register("billaddress.addressLine1")}
                 />
                 <TextField
                   variant="filled"
-                  sx={{ mb: 1 }}
                   error={!!errors.billaddress?.addressLine2}
                   helperText={errors?.billaddress?.addressLine2?.message}
                   focused={!!watch("billaddress.addressLine2")}
                   multiline
                   rows={3}
                   fullWidth
-                  label="Dispatch From Address 2"
+                  label="Address Line 2"
                   className="h-[100px] resize-none"
-                  {...register("billaddress.addressLine2", {
-                    required: "Address 2 is required",
-                  })}
+                  {...register("billaddress.addressLine2")}
+                />
+                <TextField
+                  variant="filled"
+                  error={!!errors.billaddress?.gst}
+                  helperText={errors?.billaddress?.gst?.message}
+                  focused={!!watch("billaddress.gst")}
+                  fullWidth
+                  label="GSTIN"
+                  {...register("billaddress.gst")}
+                />
+                <TextField
+                  variant="filled"
+                  error={!!errors.billaddress?.pin}
+                  helperText={errors?.billaddress?.pin?.message}
+                  focused={!!watch("billaddress.pin")}
+                  fullWidth
+                  label="Pin Code"
+                  {...register("billaddress.pin")}
                 />
               </div>
+
+              {/* SECTION 4: Ship To */}
               <div className="flex items-center w-full gap-3">
                 <div className="flex items-center gap-[5px]">
                   <Icons.building />
-                  <h2 className="text-lg font-semibold">Shipping Details</h2>
+                  <h2 className="text-lg font-semibold">Ship To</h2>
                 </div>
                 <Divider
                   sx={{
@@ -866,7 +769,6 @@ const BulkDeviceInward: React.FC = () => {
                   control={control}
                   render={({ field }) => (
                     <Autocomplete
-                      // value={field.value}
                       value={
                         shippingAddress?.data?.find(
                           (address: any) => address.code === field.value,
@@ -882,106 +784,59 @@ const BulkDeviceInward: React.FC = () => {
                         <TextField
                           {...params}
                           label={(shipLabel || "Ship Address") as any}
-                          error={!!errors.shipaddress}
-                          helperText={errors.shipaddress?.message}
+                          error={!!errors.shipaddressid}
+                          helperText={(errors as any).shipaddressid?.message}
                           variant="filled"
                         />
                       )}
                     />
                   )}
                 />
-
                 <TextField
                   variant="filled"
-                  // sx={{ mb: 1 }}
-                  error={!!errors.shipaddress?.pin}
-                  helperText={errors?.shipaddress?.pin?.message}
-                  focused={!!watch("shipaddress.pin")}
-                  // multiline
-                  rows={3}
-                  fullWidth
-                  label="PinCode"
-                  className="h-[10px] resize-none"
-                  {...register("shipaddress.pin", {
-                    required: "PinCode is required",
-                  })}
-                />
-
-                <TextField
-                  variant="filled"
-                  // sx={{ mb: 1 }}
-                  error={!!errors.shipaddress?.gst}
-                  helperText={errors?.shipaddress?.gst?.message}
-                  focused={!!watch("shipaddress.gst")}
-                  // multiline
-                  rows={3}
-                  fullWidth
-                  label="GST"
-                  className="h-[10px] resize-none"
-                  {...register("shipaddress.gst", {
-                    required: "GST is required",
-                  })}
-                />
-                <TextField
-                  variant="filled"
-                  // sx={{ mb: 1 }}
-                  error={!!errors.shipaddress?.pan}
-                  helperText={errors?.shipaddress?.pan?.message}
-                  focused={!!watch("shipaddress.pan")}
-                  // multiline
-                  rows={3}
-                  fullWidth
-                  label="PAN"
-                  className="h-[10px] resize-none"
-                  {...register("shipaddress.pan", {
-                    required: "PAN is required",
-                  })}
-                />
-                <TextField
-                  variant="filled"
-                  sx={{ mb: 5 }}
-                  error={!!errors.shipaddress?.city}
-                  helperText={errors?.shipaddress?.city?.message}
-                  focused={!!watch("shipaddress.city")}
-                  rows={3}
-                  fullWidth
-                  label="City"
-                  className="h-[10px] resize-none"
-                  {...register("shipaddress.city")}
-                />
-                <div></div>
-
-                <TextField
-                  variant="filled"
-                  sx={{ mb: 1 }}
                   error={!!errors.shipaddress?.addressLine1}
                   helperText={errors?.shipaddress?.addressLine1?.message}
                   focused={!!watch("shipaddress.addressLine1")}
                   multiline
                   rows={3}
                   fullWidth
-                  label="Dispatch From Address 1"
+                  label="Address Line 1"
                   className="h-[100px] resize-none"
-                  {...register("shipaddress.addressLine1", {
-                    required: "Address 1 is required",
-                  })}
+                  {...register("shipaddress.addressLine1")}
                 />
                 <TextField
                   variant="filled"
-                  sx={{ mb: 1 }}
                   error={!!errors.shipaddress?.addressLine2}
                   helperText={errors?.shipaddress?.addressLine2?.message}
                   focused={!!watch("shipaddress.addressLine2")}
                   multiline
                   rows={3}
                   fullWidth
-                  label="Dispatch From Address 2"
+                  label="Address Line 2"
                   className="h-[100px] resize-none"
-                  {...register("shipaddress.addressLine2", {
-                    required: "Address 2 is required",
-                  })}
+                  {...register("shipaddress.addressLine2")}
+                />
+                <TextField
+                  variant="filled"
+                  error={!!errors.shipaddress?.city}
+                  helperText={errors?.shipaddress?.city?.message}
+                  focused={!!watch("shipaddress.city")}
+                  fullWidth
+                  label="City"
+                  {...register("shipaddress.city")}
+                />
+                <TextField
+                  variant="filled"
+                  error={!!errors.shipaddress?.pin}
+                  helperText={errors?.shipaddress?.pin?.message}
+                  focused={!!watch("shipaddress.pin")}
+                  fullWidth
+                  label="Pin Code"
+                  {...register("shipaddress.pin")}
                 />
               </div>
+
+              {/* SECTION 5: Document Details */}
               <div className="flex items-center w-full gap-3">
                 <div className="flex items-center gap-[5px]">
                   <Icons.documentDetail />
@@ -996,64 +851,57 @@ const BulkDeviceInward: React.FC = () => {
                 />
               </div>
               <div className="grid grid-cols-3 gap-[30px] py-[20px]">
-                <Controller
-                  name="currency"
-                  rules={{
-                    required: {
-                      value: true,
-                      message: "Currency is required",
-                    },
-                  }}
-                  control={control}
-                  render={({ field }) => (
-                    <Autocomplete
-                      // value={field.value}
-                      // value={
-                      //   currencyData?.find(
-                      //     (address: any) => address.code === field.value
-                      value={field.value as any}
-                      onChange={(_, newValue) => field.onChange(newValue)}
-                      disablePortal
-                      id="combo-box-demo"
-                      options={transformSkuCode(currencyData) || []}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label={
-                            isEdit && isNext
-                              ? watch("currency")?.label
-                              : "Currency"
-                          }
-                          error={!!errors.currency}
-                          helperText={errors.currency?.message}
-                          variant="filled"
-                        />
-                      )}
-                    />
-                  )}
+                <TextField
+                  variant="filled"
+                  error={!!errors.placeOfSupply}
+                  helperText={errors?.placeOfSupply?.message}
+                  focused={!!watch("placeOfSupply")}
+                  fullWidth
+                  label="Place of Supply"
+                  {...register("placeOfSupply", {
+                    required: "Place of Supply is required",
+                  })}
                 />
                 <TextField
                   variant="filled"
-                  // sx={{ mb: 1 }}
-                  error={!!errors.exchange}
-                  helperText={errors?.exchange?.message}
-                  focused={!!watch("exchange")}
-                  // multiline
-                  rows={3}
+                  error={!!errors.stateCode}
+                  helperText={errors?.stateCode?.message}
+                  focused={!!watch("stateCode")}
                   fullWidth
-                  label="Exchange Rate"
-                  className="h-[10px] resize-none"
-                  {...register("exchange", {
-                    required: "Exchange Rate is required",
+                  label="State Code"
+                  {...register("stateCode", {
+                    required: "State Code is required",
+                  })}
+                />
+                <TextField
+                  variant="filled"
+                  error={!!errors.challanNo}
+                  helperText={errors?.challanNo?.message}
+                  focused={!!watch("challanNo")}
+                  fullWidth
+                  label="Challan Number"
+                  {...register("challanNo", {
+                    required: "Challan No is required",
+                  })}
+                />
+                <TextField
+                  variant="filled"
+                  error={!!errors.boxNo}
+                  helperText={errors?.boxNo?.message}
+                  focused={!!watch("boxNo")}
+                  fullWidth
+                  label="Box ID"
+                  {...register("boxNo", {
+                    required: "Box No is required",
                   })}
                 />
                 <Controller
-                  name="duedate"
+                  name="challanDate"
                   control={control}
                   rules={{
-                    required: "Due Date is required",
+                    required: "Challan Date is required",
                     validate: (value) => {
-                      if (!value) return "Due Date is required";
+                      if (!value) return "Challan Date is required";
                       return dayjs(value).isValid() || "Invalid date";
                     },
                   }}
@@ -1068,8 +916,8 @@ const BulkDeviceInward: React.FC = () => {
                         slotProps={{
                           textField: {
                             variant: "filled",
-                            error: !!errors.duedate,
-                            helperText: errors.duedate?.message,
+                            error: !!errors.challanDate,
+                            helperText: (errors as any).challanDate?.message,
                             fullWidth: true,
                           },
                         }}
@@ -1084,84 +932,254 @@ const BulkDeviceInward: React.FC = () => {
                             dispatch(
                               setFormData({
                                 ...formData,
-                                duedate: newValue,
+                                challanDate: newValue,
                               }),
                             );
                           }
                         }}
                         sx={{ width: "100%" }}
-                        label="Due Date"
-                        name="duedate"
+                        label="Challan Date"
+                        name="challanDate"
                       />
                     </LocalizationProvider>
                   )}
                 />
                 <TextField
                   variant="filled"
-                  label="Payment Terms"
-                  {...register("paymentTerms", {
-                    required: "Payment Terms is required",
-                  })}
-                  error={!!errors.paymentTerms}
-                  helperText={errors.paymentTerms?.message}
-                  value={watch("paymentTerms") || ""}
-                  onChange={(e) => {
-                    setValue("paymentTerms", e.target.value);
-                    dispatch(
-                      setFormData({
-                        ...formData,
-                        paymentTerms: e.target.value,
-                      }),
-                    );
-                  }}
+                  focused={!!watch("ewayBillNo")}
+                  fullWidth
+                  label="E-way Bill No"
+                  {...register("ewayBillNo")}
                 />
                 <TextField
                   variant="filled"
-                  label="Terms of Delivery"
-                  {...register("termsOfDelivery", {
-                    required: "Terms of Delivery is required",
-                  })}
-                  error={!!errors.termsOfDelivery}
-                  helperText={errors.termsOfDelivery?.message}
-                  value={watch("termsOfDelivery") || ""}
-                  onChange={(e) => {
-                    setValue("termsOfDelivery", e.target.value);
-                    dispatch(
-                      setFormData({
-                        ...formData,
-                        termsOfDelivery: e.target.value,
-                      }),
-                    );
+                  focused={!!watch("vehicleNo")}
+                  fullWidth
+                  label="Vehicle Number"
+                  {...register("vehicleNo")}
+                />
+              </div>
+
+              {/* GOODS SECTION moved to form page */}
+              <div className="flex items-center w-full gap-3">
+                <div className="flex items-center gap-[5px]">
+                  <Icons.documentDetail />
+                  <h2 className="text-lg font-semibold">Goods Details</h2>
+                </div>
+                <Divider
+                  sx={{
+                    borderBottomWidth: 2,
+                    borderColor: "#f59e0b",
+                    flexGrow: 1,
                   }}
                 />
               </div>
-              <TextField
-                variant="filled"
-                sx={{ mb: 1 }}
-                error={!!errors.remarks}
-                helperText={errors?.remarks?.message}
-                focused={!!watch("remarks")}
-                multiline
-                rows={3}
-                fullWidth
-                label="Remarks"
-                className="h-[100px] resize-none"
-                {...register("remarks", {
-                  required: "Remarks is required",
-                })}
-              />
+              <div className="p-[20px] flex flex-col gap-[15px]">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="px-[10px] py-[8px] font-[500]">S.No</th>
+                        <th className="px-[10px] py-[8px] font-[500]">
+                          Description of Goods (SKU)
+                        </th>
+                        <th className="px-[10px] py-[8px] font-[500]">
+                          HSN/SAC
+                        </th>
+                        <th className="px-[10px] py-[8px] font-[500]">
+                          Quantity
+                        </th>
+                        <th className="px-[10px] py-[8px] font-[500]">Rate</th>
+                        <th className="px-[10px] py-[8px] font-[500]">
+                          Amount
+                        </th>
+                        <th className="px-[10px] py-[8px] font-[500]">
+                          Delete
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rowData.map((row, idx) => (
+                        <tr key={row.id}>
+                          <td className="px-[10px] py-[8px] w-[60px]">
+                            {idx + 1}
+                          </td>
+                          <td className="px-[10px] py-[8px] min-w-[280px]">
+                            <Autocomplete
+                              value={row.partComponent}
+                              onChange={(_, newValue) => {
+                                setRowData((prev) =>
+                                  prev.map((r) => {
+                                    if (r.id !== row.id) return r;
+                                    const nextHsn = newValue?.hsn || r.hsnCode;
+                                    const nextAmount =
+                                      (r.qty || 0) * (r.rate || 0);
+                                    return {
+                                      ...r,
+                                      partComponent: newValue,
+                                      hsnCode: nextHsn || "",
+                                      amount: nextAmount,
+                                    };
+                                  }),
+                                );
+                              }}
+                              disablePortal
+                              id={`sku-autocomplete-${row.id}`}
+                              options={productOptions}
+                              getOptionLabel={(opt) => opt?.label || ""}
+                              renderInput={(params) => (
+                                <TextField {...params} variant="filled" />
+                              )}
+                            />
+                          </td>
+                          <td className="px-[10px] py-[8px] w-[160px]">
+                            <TextField
+                              variant="filled"
+                              value={row.hsnCode || ""}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setRowData((prev) =>
+                                  prev.map((r) =>
+                                    r.id === row.id ? { ...r, hsnCode: v } : r,
+                                  ),
+                                );
+                              }}
+                            />
+                          </td>
+                          <td className="px-[10px] py-[8px] w-[130px]">
+                            <TextField
+                              variant="filled"
+                              type="number"
+                              required
+                              inputProps={{ min: 1 }}
+                              value={row.qty === 0 ? "" : row.qty}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setRowData((prev) =>
+                                  prev.map((r) => {
+                                    if (r.id !== row.id) return r;
+                                    const nextQty = v === "" ? 0 : Number(v);
+                                    return {
+                                      ...r,
+                                      qty: nextQty,
+                                      amount: nextQty * (r.rate || 0),
+                                    };
+                                  }),
+                                );
+                              }}
+                            />
+                          </td>
+                          <td className="px-[10px] py-[8px] w-[130px]">
+                            <TextField
+                              variant="filled"
+                              type="number"
+                              required
+                              value={row.rate === 0 ? "" : row.rate}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setRowData((prev) =>
+                                  prev.map((r) => {
+                                    if (r.id !== row.id) return r;
+                                    const nextRate = v === "" ? 0 : Number(v);
+                                    return {
+                                      ...r,
+                                      rate: nextRate,
+                                      amount: (r.qty || 0) * nextRate,
+                                    };
+                                  }),
+                                );
+                              }}
+                            />
+                          </td>
+                          <td className="px-[10px] py-[8px] w-[140px]">
+                            {(row.amount || 0).toFixed(2)}
+                          </td>
+                          <td className="px-[10px] py-[8px] w-[70px]">
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setRowData((prev) =>
+                                  prev.filter((r) => r.id !== row.id),
+                                );
+                              }}
+                            >
+                              <Icons.delete />
+                            </IconButton>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td className="px-[10px] py-[8px]" colSpan={3}>
+                          <strong>Total</strong>
+                        </td>
+                        <td className="px-[10px] py-[8px]">
+                          <strong>
+                            {rowData.reduce((acc, r) => acc + (r.qty || 0), 0)}
+                          </strong>
+                        </td>
+                        <td className="px-[10px] py-[8px]" />
+                        <td className="px-[10px] py-[8px]">
+                          <strong>
+                            {rowData
+                              .reduce((acc, r) => acc + (r.amount || 0), 0)
+                              .toFixed(2)}
+                          </strong>
+                        </td>
+                        <td className="px-[10px] py-[8px]" />
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                <div className="text-slate-700">
+                  <p className="font-[500]">Amount Chargeable (in Words)</p>
+                  <p className="text-[14px]">
+                    {inrRupeesInWordsUpper(
+                      rowData.reduce((acc, r) => acc + (r.amount || 0), 0),
+                    )}
+                  </p>
+                </div>
+
+                <LoadingButton
+                  variant="contained"
+                  sx={{ width: "fit-content" }}
+                  startIcon={<Icons.add />}
+                  onClick={() => {
+                    const newId =
+                      typeof crypto !== "undefined" &&
+                      (crypto as any).randomUUID
+                        ? (crypto as any).randomUUID()
+                        : `${Date.now()}_${Math.random()}`;
+                    setRowData((prev) => [
+                      ...prev,
+                      {
+                        id: newId,
+                        partComponent: null,
+                        hsnCode: "",
+                        qty: 0,
+                        rate: 0,
+                        amount: 0,
+                        isNew: true,
+                      },
+                    ]);
+                  }}
+                >
+                  Add Row
+                </LoadingButton>
+              </div>
             </div>
           )}
           {activeStep === 1 && (
             <div className="flex-1 min-h-0 w-full overflow-auto">
-              {/* <AddPOTable
-                rowData={rowData}
-                setRowData={setRowData}
-                setTotal={setTotal}
-                exchange={formData?.exchange}
-                currency={formData?.currency?.value}
-                gstTypeStatus={gstTypeStatus}
-              /> */}
+              <div className="px-[20px] py-[20px]">
+                <SerialNumberUpload
+                  onSerialNumbersChange={(serials: string[]) =>
+                    setSerialNumbers(serials)
+                  }
+                />
+              </div>
             </div>
           )}
           {activeStep === 2 && (
@@ -1181,77 +1199,6 @@ const BulkDeviceInward: React.FC = () => {
             </div>
           )}
           <div className="h-[50px] border-t border-neutral-300 flex items-center justify-end px-[20px] bg-neutral-50 gap-[10px] relative">
-            {activeStep === 1 && (
-              <div
-                className={`absolute bottom-0 left-0 w-[500px] z-[10]  transition-all bg-white ${
-                  open ? "h-[290px]" : "h-[50px]"
-                } border-r overflow-hidden`}
-              >
-                <div className="h-[50px] bg-[#5F259F] flex items-center pe-[20px] gap-[10px]">
-                  <Button
-                    type="button"
-                    onClick={() => setOpen(!open)}
-                    className="bg-amber-500 hover:bg-amber-600 p-0  rounded-none h-full w-[50px]"
-                  >
-                    <Icons.up
-                      className={`h-[20px] w-[20px] transition-transform duration-200 ${
-                        open ? "rotate-180" : "rotate-0"
-                      }`}
-                    />
-                  </Button>
-                  <Typography
-                    variant="h6"
-                    component={"div"}
-                    fontWeight={500}
-                    fontSize={"17px"}
-                    className="text-white"
-                  >
-                    Total GST and Tax Details
-                  </Typography>
-                </div>
-                <Card className="border-0 rounded-none shadow-none">
-                  <CardContent className="flex flex-col gap-[20px] pt-[20px]">
-                    <div className="flex justify-between">
-                      <p className="text-slate-600 font-[500]">
-                        Sub-Total value before Taxes
-                      </p>
-                      <p className="text-[14px] text-muted-foreground">
-                        {total.taxableValue.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="flex justify-between">
-                      <p className="text-slate-600 font-[500]">CGST</p>
-                      <p className="text-[14px] text-muted-foreground">
-                        (+) {total.cgst.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="flex justify-between">
-                      <p className="text-slate-600 font-[500]">SGST</p>
-                      <p className="text-[14px] text-muted-foreground">
-                        (+) {total.sgst.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="flex justify-between">
-                      <p className="text-slate-600 font-[500]">IGST</p>
-                      <p className="text-[14px] text-muted-foreground">
-                        (+) {total.igst.toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="flex justify-between">
-                      <p className="text-slate-600 font-[500]">
-                        Sub-Total values after Taxes
-                      </p>
-                      <p className="text-[14px] text-muted-foreground">
-                        {(
-                          total.taxableValue +
-                          (total.cgst + total.sgst + total.igst)
-                        ).toFixed(2)}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
             {activeStep === 0 && (
               <>
                 <LoadingButton
@@ -1271,7 +1218,6 @@ const BulkDeviceInward: React.FC = () => {
                   endIcon={<Icons.next />}
                   onClick={() => {
                     onSubmit(watch());
-                    setIsNext(false);
                   }}
                 >
                   Next
