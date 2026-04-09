@@ -7,6 +7,7 @@ import { useUser } from "@/hooks/useUser";
 import { showToast } from "@/utils/toasterContext";
 import { verifyOtpAsync } from "@/features/authentication/authSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
+import { getPostLoginRedirectPath } from "@/utils/authRedirect";
 
 const OtpPage: React.FC = () => {
   const [otp, setOtp] = useState("");
@@ -30,7 +31,8 @@ const OtpPage: React.FC = () => {
           localStorage.setItem("showOtpPage", "");
           localStorage.removeItem("username");
           showToast("Verified successfully", "success");
-          navigate("/");
+          const redirectPath = getPostLoginRedirectPath("/");
+          navigate(redirectPath, { replace: true });
         } else {
           showToast("Invalid OTP", "error");
         }
