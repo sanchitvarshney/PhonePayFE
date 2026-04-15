@@ -13,7 +13,7 @@ export type CreateRawMinPayloadType = {
   doc_id: string;
   doc_date: string;
   vendortype: string;
-  invoiceAttachment: DocumentFileData[];
+  invoiceAttachment: string;
   component: string[];
   qty: number[];
   rate: number[];
