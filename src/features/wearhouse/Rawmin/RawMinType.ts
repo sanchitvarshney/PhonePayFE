@@ -18,6 +18,17 @@ export type CreateRawMinPayloadType = {
   qty: number[];
   rate: number[];
   remarks: string[];
+  // Optional metadata used by Good Spare Inward excel upload flow
+  location?: string;
+  costCenter?: string;
+  boxId?: string[];
+  challanNo?: string[];
+  challanDate?: string[];
+  curierName?: string[];
+  courierName?: string[];
+  docketNo?: string[];
+  recievedDate?: string[];
+  receivedDate?: string[];
   cc: string;
   deliveryAddress: string;
   deliveryGst: string;
@@ -45,6 +56,8 @@ export type InvoiceFileType = {
 };
 
 export type RawMINFormData = {
+  pickLocation?: { label: string; value: string } | null;
+  costCenter?: { label: string; value: string } | null;
   vendorType: string;
   vendor: VendorData | null;
   vendorBranch: string;

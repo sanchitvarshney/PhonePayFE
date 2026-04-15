@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import MaterialInvardUploadDocumentDrawer from "@/components/Drawers/wearhouse/MaterialInvardUploadDocumentDrawer";
@@ -15,8 +15,9 @@ import {
 import { createRawMin, deletefile, resetDocumentFile, resetFormData, storeDocumentFile, storeFormdata } from "@/features/wearhouse/Rawmin/RawMinSlice";
 import { getPertCodesync } from "@/features/production/MaterialRequestWithoutBom/MRRequestWithoutBomSlice";
 import { CreateRawMinPayloadType } from "@/features/wearhouse/Rawmin/RawMinType";
-import { getCurrency } from "@/features/common/commonSlice";
+import { getCostCenter, getCurrency } from "@/features/common/commonSlice";
 import {
+  Autocomplete,
   Divider,
   FormControl,
   FormHelperText,
@@ -54,6 +55,8 @@ import * as XLSX from "xlsx";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
 
 type FormData = {
+  pickLocation: { label: string; value: string } | null;
+  costCenter: { label: string; value: string } | null;
   vendorType: string;
   vendor: VendorData | null;
   vendorBranch: string;
@@ -87,6 +90,62 @@ const normalizeHeader = (header: string) =>
     .replace(/\./g, "")
     .replace(/\//g, "");
 
+const formatDateFromParts = (day: number, month: number, year: number): string => {
+  const d = String(day).padStart(2, "0");
+  const m = String(month).padStart(2, "0");
+  return `${d}-${m}-${year}`;
+};
+
+const parseExcelDateValue = (value: unknown): string => {
+  if (value === null || value === undefined || value === "") return "";
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const parsed = XLSX.SSF.parse_date_code(value);
+    if (parsed?.d && parsed?.m && parsed?.y) {
+      return formatDateFromParts(parsed.d, parsed.m, parsed.y);
+    }
+    return String(value);
+  }
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return dayjs(value).format("DD-MM-YYYY");
+  }
+
+  if (typeof value !== "string") return "";
+  const raw = value.trim();
+  if (!raw) return "";
+
+  if (/^\d+(\.\d+)?$/.test(raw)) {
+    const serial = Number(raw);
+    if (Number.isFinite(serial)) {
+      const parsed = XLSX.SSF.parse_date_code(serial);
+      if (parsed?.d && parsed?.m && parsed?.y) {
+        return formatDateFromParts(parsed.d, parsed.m, parsed.y);
+      }
+    }
+  }
+
+  const sepMatch = /^(\d{1,4})[/-](\d{1,2})[/-](\d{1,4})$/.exec(raw);
+  if (sepMatch) {
+    let a = Number(sepMatch[1]);
+    const b = Number(sepMatch[2]);
+    let c = Number(sepMatch[3]);
+
+    if (a > 999) {
+      return formatDateFromParts(c, b, a);
+    }
+    if (c < 100) c += 2000;
+    return formatDateFromParts(a, b, c);
+  }
+
+  const asDayjs = dayjs(raw);
+  if (asDayjs.isValid()) {
+    return asDayjs.format("DD-MM-YYYY");
+  }
+
+  return typeof value === "string" ? raw : "";
+};
+
 // Keys we expect in normalized form, and the human‑readable label for error messages.
 // Note: "Courier Name" is treated as OPTIONAL for validation – if present it will show in preview,
 // but we don't block upload when it's missing.
@@ -118,8 +177,11 @@ const GoodSpareInwardv2: React.FC = () => {
   const [excelFileError, setExcelFileError] = useState<string | null>(null);
 
   const dispatch = useAppDispatch();
-  const { VendorBranchData, venderaddressdata, uploadInvoiceFileLoading } = useAppSelector((state) => state.divicemin);
+  const { VendorBranchData, venderaddressdata, uploadInvoiceFileLoading, locationData } = useAppSelector(
+    (state) => state.divicemin
+  );
   const { documnetFileData, createminLoading, formdata } = useAppSelector((state) => state.rawmin);
+  const { costCenterData, costCenterLoading } = useAppSelector((state) => state.common);
 
   const {
     register,
@@ -131,6 +193,8 @@ const GoodSpareInwardv2: React.FC = () => {
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
+      pickLocation: null,
+      costCenter: null,
       vendorType: "V01",
       vendor: null,
       vendorBranch: "",
@@ -143,6 +207,22 @@ const GoodSpareInwardv2: React.FC = () => {
 
   const [activeStep, setActiveStep] = useState(0);
   const steps = ["Form Details", "Add Component Details", "Review & Submit"];
+
+  const pickLocationOptions = useMemo(() => {
+    if (!locationData?.length) return [];
+    return locationData.map((item) => ({
+      label: item.text,
+      value: item.id,
+    }));
+  }, [locationData]);
+
+  const costCenterOptions = useMemo(() => {
+    if (!costCenterData?.length) return [];
+    return costCenterData.map((item) => ({
+      label: item.text,
+      value: item.id,
+    }));
+  }, [costCenterData]);
 
   const handleNext = () => {
     setActiveStep((prevStep) => prevStep + 1);
@@ -199,7 +279,15 @@ const GoodSpareInwardv2: React.FC = () => {
       headerMap[normalizeHeader(key)] = key;
     });
 
-    const missingHeaders = EXPECTED_HEADERS.filter((h) => !headerMap[h.normKey]).map((h) => h.label);
+    const hasReceiveDateHeader = Boolean(
+      headerMap.receivedate || headerMap.recieveddate || headerMap.recievedate
+    );
+    const missingHeaders = EXPECTED_HEADERS.filter((h) => {
+      if (h.normKey === "receivedate") {
+        return !hasReceiveDateHeader;
+      }
+      return !headerMap[h.normKey];
+    }).map((h) => h.label);
 
     if (missingHeaders.length > 0) {
       headerErrors.push(`Missing required columns: ${missingHeaders.join(", ")}`);
@@ -214,7 +302,7 @@ const GoodSpareInwardv2: React.FC = () => {
     const challanRefKey = key("challanrefno") || "";
     const challanDateKey = key("challandate") || "";
     const docketNoKey = key("docketno") || "";
-    const receiveDateKey = key("receivedate") || "";
+    const receiveDateKey = key("receivedate") || key("recieveddate") || key("recievedate") || "";
     const rateKey = key("inwardpriceinr") || "";
     const remarksKey = key("remarks") || "";
 
@@ -239,10 +327,10 @@ const GoodSpareInwardv2: React.FC = () => {
         qty: q,
         boxId: boxIdKey ? String(row[boxIdKey] ?? "").trim() : "",
         challanRefNo: challanRefKey ? String(row[challanRefKey] ?? "").trim() : "",
-        challanDate: challanDateKey ? String(row[challanDateKey] ?? "").trim() : "",
+        challanDate: challanDateKey ? parseExcelDateValue(row[challanDateKey]) : "",
         courierName: courierKey ? String(row[courierKey] ?? "").trim() : "",
         docketNo: docketNoKey ? String(row[docketNoKey] ?? "").trim() : "",
-        receiveDate: receiveDateKey ? String(row[receiveDateKey] ?? "").trim() : "",
+        receiveDate: receiveDateKey ? parseExcelDateValue(row[receiveDateKey]) : "",
         inwardPriceInr: rate,
         remarks: remarksKey ? String(row[remarksKey] ?? "").trim() : "",
       };
@@ -346,12 +434,28 @@ const GoodSpareInwardv2: React.FC = () => {
     const qty = excelRows.map((row) => Number(row.qty) || 0);
     const rate = excelRows.map((row) => Number(row.inwardPriceInr) || 0);
     const remarks = excelRows.map((row) => String(row.remarks ?? "").trim());
+    const boxId = excelRows.map((row) => String(row.boxId ?? "").trim());
+    const challanNo = excelRows.map((row) => String(row.challanRefNo ?? "").trim());
+    const challanDate = excelRows.map((row) => String(row.challanDate ?? "").trim());
+    const curierName = excelRows.map((row) => String(row.courierName ?? "").trim());
+    const docketNo = excelRows.map((row) => String(row.docketNo ?? "").trim());
+    const recievedDate = excelRows.map((row) => String(row.receiveDate ?? "").trim());
 
     const payload: CreateRawMinPayloadType = {
       component,
       qty,
       rate,
       remarks,
+      location: formdata.pickLocation?.value || "",
+      costCenter: formdata.costCenter?.value || "",
+      boxId,
+      challanNo,
+      challanDate,
+      curierName,
+      courierName: curierName,
+      docketNo,
+      recievedDate,
+      receivedDate: recievedDate,
       vendor: formdata.vendor?.id || "",
       vendorbranch: formdata.vendorBranch || "",
       address: formdata.vendorAddress || "",
@@ -364,7 +468,7 @@ const GoodSpareInwardv2: React.FC = () => {
                             2nd & 3rd Floor, B-88,Sec-83,
                             Noida Gautam Buddha Nagar, UP-201305`,
       deliveryGst: "09AATCM1744R1ZH",
-      minType: "GOOD-SPARE-INWARD",
+      minType: "NORMAL-MIN",
     };
 
     dispatch(createRawMin(payload)).then((response: any) => {
@@ -402,10 +506,13 @@ const GoodSpareInwardv2: React.FC = () => {
     dispatch(getLocationAsync(null));
     dispatch(getPertCodesync(null));
     dispatch(getCurrency());
+    dispatch(getCostCenter());
   }, [dispatch]);
 
   useEffect(() => {
     if (formdata) {
+      setValue("pickLocation", formdata.pickLocation ?? null);
+      setValue("costCenter", formdata.costCenter ?? null);
       setValue("vendorType", formdata.vendorType);
       setValue("vendor", formdata.vendor);
       setValue("vendorBranch", formdata.vendorBranch);
@@ -551,6 +658,52 @@ const GoodSpareInwardv2: React.FC = () => {
                 <Divider sx={{ borderBottomWidth: 2, borderColor: "#f59e0b", flexGrow: 1 }} />
               </div>
               <div className="grid grid-cols-3 gap-[30px] py-[20px]">
+                <Controller
+                  name="pickLocation"
+                  control={control}
+                  rules={{ required: "Pick location is required" }}
+                  render={({ field }) => (
+                    <Autocomplete
+                      options={pickLocationOptions}
+                      value={field.value}
+                      onChange={(_, value) => field.onChange(value)}
+                      isOptionEqualToValue={(option, value) => option.value === value?.value}
+                      getOptionLabel={(option) => option.label || ""}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Pick Location"
+                          variant="filled"
+                          error={!!errors.pickLocation}
+                          helperText={errors.pickLocation?.message}
+                        />
+                      )}
+                    />
+                  )}
+                />
+                <Controller
+                  name="costCenter"
+                  control={control}
+                  render={({ field }) => (
+                    <Autocomplete
+                      options={costCenterOptions}
+                      loading={costCenterLoading}
+                      value={field.value}
+                      onChange={(_, value) => field.onChange(value)}
+                      isOptionEqualToValue={(option, value) => option.value === value?.value}
+                      getOptionLabel={(option) => option.label || ""}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Cost Center"
+                          variant="filled"
+                          error={!!errors.costCenter}
+                          helperText={errors.costCenter?.message}
+                        />
+                      )}
+                    />
+                  )}
+                />
                 <Controller
                   name="doucmentDate"
                   control={control}
