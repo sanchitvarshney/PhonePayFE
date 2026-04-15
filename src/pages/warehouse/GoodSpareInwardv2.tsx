@@ -146,6 +146,43 @@ const parseExcelDateValue = (value: unknown): string => {
   return typeof value === "string" ? raw : "";
 };
 
+const getOptionValue = (option: unknown): string => {
+  if (typeof option === "string") return option.trim();
+  if (typeof option === "number") return String(option);
+  const obj = option as
+    | {
+        value?: string | number;
+        id?: string | number;
+        code?: string | number;
+        key?: string | number;
+        costCenterId?: string | number;
+        locationId?: string | number;
+        label?: string | number;
+        text?: string | number;
+        name?: string | number;
+      }
+    | null
+    | undefined;
+  const candidates = [
+    obj?.value,
+    obj?.id,
+    obj?.code,
+    obj?.key,
+    obj?.costCenterId,
+    obj?.locationId,
+    obj?.label,
+    obj?.text,
+    obj?.name,
+  ];
+  for (const candidate of candidates) {
+    if (candidate !== undefined && candidate !== null) {
+      const normalized = String(candidate).trim();
+      if (normalized) return normalized;
+    }
+  }
+  return "";
+};
+
 // Keys we expect in normalized form, and the human‑readable label for error messages.
 // Note: "Courier Name" is treated as OPTIONAL for validation – if present it will show in preview,
 // but we don't block upload when it's missing.
@@ -190,6 +227,7 @@ const GoodSpareInwardv2: React.FC = () => {
     control,
     reset,
     setValue,
+    getValues,
     watch,
     formState: { errors },
   } = useForm<FormData>({
@@ -245,16 +283,29 @@ const GoodSpareInwardv2: React.FC = () => {
   const pickLocationOptions = useMemo(() => {
     if (!locationData?.length) return [];
     return locationData.map((item) => ({
-      label: item.text,
-      value: item.id,
+      label: String((item as any).text ?? (item as any).name ?? (item as any).label ?? ""),
+      value: String(
+        (item as any).id ??
+          (item as any).code ??
+          (item as any).value ??
+          (item as any).key ??
+          ""
+      ),
     }));
   }, [locationData]);
 
   const costCenterOptions = useMemo(() => {
     if (!costCenterData?.length) return [];
     return costCenterData.map((item) => ({
-      label: item.text,
-      value: item.id,
+      label: String((item as any).text ?? (item as any).name ?? (item as any).label ?? ""),
+      value: String(
+        (item as any).id ??
+          (item as any).code ??
+          (item as any).value ??
+          (item as any).key ??
+          (item as any).text ??
+          ""
+      ),
     }));
   }, [costCenterData]);
 
@@ -286,6 +337,19 @@ const GoodSpareInwardv2: React.FC = () => {
   const onSubmit: SubmitHandler<FormData> = (data) => {
     if (!documnetFileData || documnetFileData.length === 0) {
       showToast("Please Upload Invoice Documents", "error");
+      return;
+    }
+    const selectedCostCenter =
+      getOptionValue(data.costCenter) || getOptionValue(getValues("costCenter"));
+    if (!selectedCostCenter) {
+      showToast("Cost center is required", "error");
+      return;
+    }
+
+    const selectedPickLocation =
+      getOptionValue(data.pickLocation) || getOptionValue(getValues("pickLocation"));
+    if (!selectedPickLocation) {
+      showToast("Pick location is required", "error");
       return;
     }
     dispatch(storeFormdata(data));
@@ -454,10 +518,10 @@ const GoodSpareInwardv2: React.FC = () => {
       return;
     }
 
-    // if (!documnetFileData || documnetFileData.length === 0) {
-    //   showToast("Please Upload Invoice Documents", "error");
-    //   return;
-    // }
+    if (!documnetFileData || documnetFileData.length === 0) {
+      showToast("Please Upload Invoice Documents", "error");
+      return;
+    }
 
     if (excelHeaderErrors.length > 0 || excelRowErrors.length > 0 || excelFileError) {
       showToast("Please resolve Excel errors before submitting", "error");
@@ -475,13 +539,41 @@ const GoodSpareInwardv2: React.FC = () => {
     const docketNo = excelRows.map((row) => String(row.docketNo ?? "").trim());
     const recievedDate = excelRows.map((row) => String(row.receiveDate ?? "").trim());
 
+    const selectedCostCenter =
+      getOptionValue(formdata.costCenter) ||
+      getOptionValue(getValues("costCenter")) ||
+      costCenterOptions.find(
+        (item) =>
+          item.label ===
+          (getOptionValue(formdata.costCenter) || getOptionValue(getValues("costCenter")))
+      )?.value ||
+      "";
+
+    // if (!selectedCostCenter) {
+    //   showToast("Cost center is required", "error");
+    //   return;
+    // }
+
+    const invoicePath = documnetFileData?.[0]?.fileID || "";
+    if (!invoicePath) {
+      showToast("Invoice path is missing. Please upload invoice again.", "error");
+      return;
+    }
+
     const payload: CreateRawMinPayloadType = {
       component,
       qty,
       rate,
       remarks,
-      location: formdata.pickLocation?.value || "",
-      costCenter: formdata.costCenter?.value || "",
+      location:
+        getOptionValue(formdata.pickLocation) ||
+        getOptionValue(getValues("pickLocation")) ||
+        pickLocationOptions.find(
+          (item) =>
+            item.label ===
+            (getOptionValue(formdata.pickLocation) || getOptionValue(getValues("pickLocation")))
+        )?.value ||
+        "",
       boxId,
       challanNo,
       challanDate,
@@ -496,8 +588,8 @@ const GoodSpareInwardv2: React.FC = () => {
       doc_id: formdata.documentId || "",
       doc_date: dayjs(formdata.doucmentDate).format("DD-MM-YYYY") || "",
       vendortype: formdata.vendorType || "",
-      invoiceAttachment: documnetFileData || [],
-      cc: formdata.costCenter?.value || "",
+      invoiceAttachment: invoicePath,
+      cc: selectedCostCenter,
       deliveryAddress: `MsCorpres Manufacturer and Refurbisher Pvt. Ltd.
                             2nd & 3rd Floor, B-88,Sec-83,
                             Noida Gautam Buddha Nagar, UP-201305`,
@@ -524,7 +616,17 @@ const GoodSpareInwardv2: React.FC = () => {
       formdata.append("fileName", filename);
       dispatch(uploadInvoiceFile(formdata)).then((res: any) => {
         if (res.payload.data.success) {
-          dispatch(storeDocumentFile(res.payload.data?.data[0]));
+          const uploadedPath = String(res.payload.data?.data || "").trim();
+          if (!uploadedPath) {
+            showToast("Upload succeeded but file path not found", "error");
+            return;
+          }
+          dispatch(
+            storeDocumentFile({
+              originalFileName: filename || uploadedPath.split("/").pop() || "invoice",
+              fileID: uploadedPath,
+            })
+          );
           showToast(res.payload.data.message, "success");
           setfile(null);
           setFilename("");
@@ -700,7 +802,16 @@ const GoodSpareInwardv2: React.FC = () => {
                     <Autocomplete
                       options={pickLocationOptions}
                       value={field.value}
-                      onChange={(_, value) => field.onChange(value)}
+                      onChange={(_, value) => {
+                        if (!value) {
+                          field.onChange(null);
+                          return;
+                        }
+                        field.onChange({
+                          label: String((value as any).label ?? (value as any).text ?? (value as any).name ?? ""),
+                          value: getOptionValue(value),
+                        });
+                      }}
                       isOptionEqualToValue={(option, value) => option.value === value?.value}
                       getOptionLabel={(option) => option.label || ""}
                       renderInput={(params) => (
@@ -718,13 +829,21 @@ const GoodSpareInwardv2: React.FC = () => {
                 <Controller
                   name="costCenter"
                   control={control}
-                  rules={{ required: "Cost center is required" }}
                   render={({ field }) => (
                     <Autocomplete
                       options={costCenterOptions}
                       loading={costCenterLoading}
                       value={field.value}
-                      onChange={(_, value) => field.onChange(value)}
+                      onChange={(_, value) => {
+                        if (!value) {
+                          field.onChange(null);
+                          return;
+                        }
+                        field.onChange({
+                          label: String((value as any).label ?? (value as any).text ?? (value as any).name ?? ""),
+                          value: getOptionValue(value),
+                        });
+                      }}
                       isOptionEqualToValue={(option, value) => option.value === value?.value}
                       getOptionLabel={(option) => option.label || ""}
                       renderInput={(params) => (

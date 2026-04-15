@@ -30,11 +30,8 @@ const RawMinSlice = createSlice({
   initialState,
   reducers: {
     storeDocumentFile: (state, action) => {
-      if (state.documnetFileData) {
-        state.documnetFileData?.push(action.payload);
-      } else {
-        state.documnetFileData = [action.payload];
-      }
+      // Backend accepts a single invoice path for this flow, so keep only latest upload.
+      state.documnetFileData = [action.payload];
     },
     deletefile: (state, action) => {
       if (state.documnetFileData) {
