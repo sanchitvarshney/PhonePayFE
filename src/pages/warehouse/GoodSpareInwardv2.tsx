@@ -163,18 +163,24 @@ const getOptionValue = (option: unknown): string => {
       }
     | null
     | undefined;
-  return String(
-    obj?.value ??
-      obj?.id ??
-      obj?.code ??
-      obj?.key ??
-      obj?.costCenterId ??
-      obj?.locationId ??
-      obj?.label ??
-      obj?.text ??
-      obj?.name ??
-      ""
-  ).trim();
+  const candidates = [
+    obj?.value,
+    obj?.id,
+    obj?.code,
+    obj?.key,
+    obj?.costCenterId,
+    obj?.locationId,
+    obj?.label,
+    obj?.text,
+    obj?.name,
+  ];
+  for (const candidate of candidates) {
+    if (candidate !== undefined && candidate !== null) {
+      const normalized = String(candidate).trim();
+      if (normalized) return normalized;
+    }
+  }
+  return "";
 };
 
 // Keys we expect in normalized form, and the human‑readable label for error messages.
@@ -297,6 +303,7 @@ const GoodSpareInwardv2: React.FC = () => {
           (item as any).code ??
           (item as any).value ??
           (item as any).key ??
+          (item as any).text ??
           ""
       ),
     }));
@@ -330,6 +337,19 @@ const GoodSpareInwardv2: React.FC = () => {
   const onSubmit: SubmitHandler<FormData> = (data) => {
     if (!documnetFileData || documnetFileData.length === 0) {
       showToast("Please Upload Invoice Documents", "error");
+      return;
+    }
+    const selectedCostCenter =
+      getOptionValue(data.costCenter) || getOptionValue(getValues("costCenter"));
+    if (!selectedCostCenter) {
+      showToast("Cost center is required", "error");
+      return;
+    }
+
+    const selectedPickLocation =
+      getOptionValue(data.pickLocation) || getOptionValue(getValues("pickLocation"));
+    if (!selectedPickLocation) {
+      showToast("Pick location is required", "error");
       return;
     }
     dispatch(storeFormdata(data));
@@ -809,7 +829,6 @@ const GoodSpareInwardv2: React.FC = () => {
                 <Controller
                   name="costCenter"
                   control={control}
-                  rules={{ required: "Cost center is required" }}
                   render={({ field }) => (
                     <Autocomplete
                       options={costCenterOptions}
