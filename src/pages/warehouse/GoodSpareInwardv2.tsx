@@ -164,6 +164,7 @@ const EXPECTED_HEADERS: { normKey: string; label: string }[] = [
 const MAX_FILE_SIZE_BYTES = 1024 * 1024; // 1 MB
 
 const GoodSpareInwardv2: React.FC = () => {
+  const DownloadIcon = Icons.download;
   const [filename, setFilename] = useState<string>("");
   const [alert, setAlert] = useState<boolean>(false);
   const [file, setfile] = useState<File[] | null>(null);
@@ -208,6 +209,39 @@ const GoodSpareInwardv2: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const steps = ["Form Details", "Add Component Details", "Review & Submit"];
 
+  const downloadSampleFile = () => {
+    const sampleRows = [
+      {
+        Partcode: "PARTCODE001",
+        Qty: 10,
+        BoxID: "BOX-1001",
+        "Challan/ Ref. No": "CHL-12345",
+        "Challan Date": "15-04-2026",
+        "Curier Name": "BlueDart",
+        "Docket No": "DCKT-7890",
+        "Receive Date": "16-04-2026",
+        "Inward Price (INR)": 1250,
+        Remarks: "Sample row 1",
+      },
+      {
+        Partcode: "PARTCODE002",
+        Qty: 5,
+        BoxID: "BOX-1002",
+        "Challan/ Ref. No": "CHL-12346",
+        "Challan Date": "15-04-2026",
+        "Curier Name": "Delhivery",
+        "Docket No": "DCKT-7891",
+        "Receive Date": "16-04-2026",
+        "Inward Price (INR)": 980,
+        Remarks: "Sample row 2",
+      },
+    ];
+    const ws = XLSX.utils.json_to_sheet(sampleRows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "GoodSpareInward");
+    XLSX.writeFile(wb, "good_spare_inward_sample.xlsx");
+  };
+
   const pickLocationOptions = useMemo(() => {
     if (!locationData?.length) return [];
     return locationData.map((item) => ({
@@ -250,10 +284,10 @@ const GoodSpareInwardv2: React.FC = () => {
   };
 
   const onSubmit: SubmitHandler<FormData> = (data) => {
-    // if (!documnetFileData || documnetFileData.length === 0) {
-    //   showToast("Please Upload Invoice Documents", "error");
-    //   return;
-    // }
+    if (!documnetFileData || documnetFileData.length === 0) {
+      showToast("Please Upload Invoice Documents", "error");
+      return;
+    }
     dispatch(storeFormdata(data));
     handleNext();
   };
@@ -463,7 +497,7 @@ const GoodSpareInwardv2: React.FC = () => {
       doc_date: dayjs(formdata.doucmentDate).format("DD-MM-YYYY") || "",
       vendortype: formdata.vendorType || "",
       invoiceAttachment: documnetFileData || [],
-      cc: "",
+      cc: formdata.costCenter?.value || "",
       deliveryAddress: `MsCorpres Manufacturer and Refurbisher Pvt. Ltd.
                             2nd & 3rd Floor, B-88,Sec-83,
                             Noida Gautam Buddha Nagar, UP-201305`,
@@ -684,6 +718,7 @@ const GoodSpareInwardv2: React.FC = () => {
                 <Controller
                   name="costCenter"
                   control={control}
+                  rules={{ required: "Cost center is required" }}
                   render={({ field }) => (
                     <Autocomplete
                       options={costCenterOptions}
@@ -837,6 +872,16 @@ const GoodSpareInwardv2: React.FC = () => {
                       <Typography variant="body2" color="textSecondary">
                         Allowed file type: <b>.xlsx</b> | Max size: <b>1 MB</b>
                       </Typography>
+                      <Box>
+                        <LoadingButton
+                          type="button"
+                          variant="text"
+                          startIcon={<DownloadIcon />}
+                          onClick={downloadSampleFile}
+                        >
+                          Download Sample File
+                        </LoadingButton>
+                      </Box>
                       <Box>
                         <label className="border border-dashed border-slate-300 rounded-md px-3 py-2 w-full flex items-center gap-2 cursor-pointer hover:bg-slate-50">
                           <FileUploadIcon fontSize="small" className="mr-2" />

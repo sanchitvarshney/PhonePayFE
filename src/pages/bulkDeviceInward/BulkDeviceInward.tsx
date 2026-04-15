@@ -26,6 +26,7 @@ import { Icons } from "@/components/icons";
 import { showToast } from "@/utils/toasterContext";
 import ConfirmationModel from "@/components/reusable/ConfirmationModel";
 import Success from "@/components/reusable/Success";
+import * as XLSX from "xlsx";
 import axiosInstance from "@/api/axiosInstance";
 import {
   getDispatchFromDetail,
@@ -165,7 +166,19 @@ const deriveDeviceModelFromText = (text: string): string => {
   return text.replace(/^\s*\([^)]*\)\s*/, "").trim();
 };
 
+const downloadSerialSampleFile = () => {
+  const sampleRows = [
+    { serialno: "SN00000001" },
+    { serialno: "SN00000002" },
+  ];
+  const ws = XLSX.utils.json_to_sheet(sampleRows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "SerialNumbers");
+  XLSX.writeFile(wb, "bulk_device_inward_serial_sample.xlsx");
+};
+
 const BulkDeviceInward: React.FC = () => {
+  const DownloadIcon = Icons.download;
   const navigate = useNavigate();
   const [alert, setAlert] = useState<boolean>(false);
   const [minNo, setMinno] = useState<string>("");
@@ -1177,6 +1190,16 @@ const BulkDeviceInward: React.FC = () => {
                     setSerialNumbers(serials)
                   }
                 />
+                <div>
+                  <LoadingButton
+                    type="button"
+                    variant="text"
+                    startIcon={<DownloadIcon />}
+                    onClick={downloadSerialSampleFile}
+                  >
+                    Download Serial Sample File
+                  </LoadingButton>
+                </div>
               </div>
             </div>
           )}
