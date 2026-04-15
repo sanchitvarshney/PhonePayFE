@@ -19,6 +19,7 @@ import { AgGridReact } from "ag-grid-react";
 import type { ColDef, GetRowIdParams } from "ag-grid-community";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { getLocationAsync } from "@/features/wearhouse/Divicemin/devaiceMinSlice";
+import { getCostCenter } from "@/features/common/commonSlice";
 import { showToast } from "@/utils/toasterContext";
 import { Icons } from "@/components/icons";
 import axiosInstance from "@/api/axiosInstance";
@@ -35,6 +36,7 @@ type LocationOption = { label: string; value: string };
 
 interface FormValues {
   location: LocationOption | null;
+  costCenter: LocationOption | null;
 }
 
 const Consumption: React.FC = () => {
@@ -48,6 +50,7 @@ const Consumption: React.FC = () => {
 
   const dispatch = useAppDispatch();
   const { locationData } = useAppSelector((state) => state.divicemin);
+  const { costCenterData } = useAppSelector((state) => state.common);
 
   const {
     control,
@@ -55,11 +58,12 @@ const Consumption: React.FC = () => {
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    defaultValues: { location: null },
+    defaultValues: { location: null, costCenter: null },
   });
 
   useEffect(() => {
     dispatch(getLocationAsync(null));
+    dispatch(getCostCenter());
   }, [dispatch]);
 
   const locationOptions = useMemo<LocationOption[]>(() => {
@@ -69,6 +73,14 @@ const Consumption: React.FC = () => {
       value: item.id,
     }));
   }, [locationData]);
+
+  const costCenterOptions = useMemo<LocationOption[]>(() => {
+    if (!costCenterData?.length) return [];
+    return costCenterData.map((item) => ({
+      label: item.text,
+      value: item.id,
+    }));
+  }, [costCenterData]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -160,7 +172,11 @@ const Consumption: React.FC = () => {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     if (!data.location) {
-      showToast("Please select a drop location", "error");
+      showToast("Please select a pick location", "error");
+      return;
+    }
+    if (!data.costCenter) {
+      showToast("Please select a cost center", "error");
       return;
     }
     if (excelData.length === 0) {
@@ -172,6 +188,8 @@ const Consumption: React.FC = () => {
     try {
       const response = await axiosInstance.post("/consumption/create", {
         location: data.location?.value,
+        costCenter: data.costCenter?.value,
+        cc: data.costCenter?.value,
         partcode: excelData.map((row) => row.partcode),
         qty: excelData.map((row) => row.qty),
       });
@@ -179,7 +197,7 @@ const Consumption: React.FC = () => {
         response.data?.message || "Consumption saved successfully",
         "success",
       );
-      reset({ location: null });
+      reset({ location: null, costCenter: null });
       setExcelData([]);
       setFileName("");
       setFileError("");
@@ -278,35 +296,64 @@ const Consumption: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-4 mb-4 shrink-0">
             <div>
               <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
-                Drop Location
+                Pick Location & Cost Center
               </Typography>
-              <Controller
-                name="location"
-                control={control}
-                rules={{ required: "Location is required" }}
-                render={({ field }) => (
-                  <Autocomplete
-                    options={locationOptions}
-                    getOptionLabel={(option) => option.label || ""}
-                    isOptionEqualToValue={(option, value) =>
-                      !!value && option.value === value.value
-                    }
-                    value={field.value}
-                    onChange={(_, v) => field.onChange(v)}
-                    fullWidth
-                    disablePortal
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Drop Location"
-                        variant="filled"
-                        error={!!errors.location}
-                        helperText={errors.location?.message}
-                      />
-                    )}
-                  />
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Controller
+                  name="location"
+                  control={control}
+                  rules={{ required: "Location is required" }}
+                  render={({ field }) => (
+                    <Autocomplete
+                      options={locationOptions}
+                      getOptionLabel={(option) => option.label || ""}
+                      isOptionEqualToValue={(option, value) =>
+                        !!value && option.value === value.value
+                      }
+                      value={field.value}
+                      onChange={(_, v) => field.onChange(v)}
+                      fullWidth
+                      disablePortal
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Pick Location"
+                          variant="filled"
+                          error={!!errors.location}
+                          helperText={errors.location?.message}
+                        />
+                      )}
+                    />
+                  )}
+                />
+                <Controller
+                  name="costCenter"
+                  control={control}
+                  rules={{ required: "Cost center is required" }}
+                  render={({ field }) => (
+                    <Autocomplete
+                      options={costCenterOptions}
+                      getOptionLabel={(option) => option.label || ""}
+                      isOptionEqualToValue={(option, value) =>
+                        !!value && option.value === value.value
+                      }
+                      value={field.value}
+                      onChange={(_, v) => field.onChange(v)}
+                      fullWidth
+                      disablePortal
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Cost Center"
+                          variant="filled"
+                          error={!!errors.costCenter}
+                          helperText={errors.costCenter?.message}
+                        />
+                      )}
+                    />
+                  )}
+                />
+              </div>
             </div>
 
             <div>
