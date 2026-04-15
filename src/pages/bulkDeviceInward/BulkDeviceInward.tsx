@@ -7,7 +7,6 @@ import {
 } from "@/features/wearhouse/Divicemin/devaiceMinSlice";
 import {
   resetDocumentFile,
-  resetFormData,
 } from "@/features/wearhouse/Rawmin/RawMinSlice";
 import {
   Autocomplete,
@@ -215,10 +214,6 @@ const BulkDeviceInward: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const steps = ["Form Details", "Add Component Details", "Review & Submit"];
 
-  const handleNext = () => {
-    setActiveStep((prevStep) => prevStep + 1);
-  };
-
   const handleBack = () => {
     // Set form values from Redux state before going back
     if (formData) {
@@ -241,6 +236,7 @@ const BulkDeviceInward: React.FC = () => {
     reset(defaultFormValues);
     dispatch(resetDocumentFile());
     dispatch(clearaddressdetail());
+    dispatch(setFormData(null as any));
     setActiveStep(0);
     setMinno("");
   };
@@ -264,112 +260,116 @@ const BulkDeviceInward: React.FC = () => {
     }
   };
   const finalSubmit = () => {
-    if (formData) {
-      if (!singleRow.partComponent) {
-        showToast("Please select a product", "error");
-        return;
-      }
-      if (!singleRow.qty || singleRow.qty <= 0) {
-        showToast("Please enter valid quantity", "error");
-        return;
-      }
-      if (!singleRow.rate || singleRow.rate <= 0) {
-        showToast("Please enter valid rate", "error");
-        return;
-      }
+    if (!formData) {
+      showToast("Please fill form details first", "error");
+      return;
+    }
+    if (!singleRow.partComponent) {
+      showToast("Please select a product", "error");
+      return;
+    }
+    if (!singleRow.qty || singleRow.qty <= 0) {
+      showToast("Please enter valid quantity", "error");
+      return;
+    }
+    if (!singleRow.rate || singleRow.rate <= 0) {
+      showToast("Please enter valid rate", "error");
+      return;
+    }
 
-      const component = singleRow.partComponent?.value || "";
-      const qty = singleRow.qty;
-      const rate = singleRow.rate;
-      const hsncode = singleRow.hsnCode;
+    const component = singleRow.partComponent?.value || "";
+    const qty = singleRow.qty;
+    const rate = singleRow.rate;
+    const hsncode = singleRow.hsnCode;
 
-      const challanDate = formData.challanDate;
-      let formattedChallanDate = "";
-      if (challanDate) {
-        const date = dayjs(challanDate);
-        if (date.isValid()) {
-          formattedChallanDate = date.format("DD-MM-YYYY");
+    const challanDate = formData.challanDate;
+    let formattedChallanDate = "";
+    if (challanDate) {
+      const date = dayjs(challanDate);
+      if (date.isValid()) {
+        formattedChallanDate = date.format("DD-MM-YYYY");
+      }
+    }
+
+    const payload: any = {
+      component,
+      sku: singleRow.partComponent?.sku || "",
+      device_key: singleRow.partComponent?.device_key || "",
+      device_model: singleRow.partComponent?.device_model || "",
+      device_modal: singleRow.partComponent?.device_modal || "",
+      qty,
+      rate,
+      hsncode,
+      serialno: serialNumbers,
+      placeOfSupply: formData.placeOfSupply,
+      stateCode: formData.stateCode,
+      challanNo: formData.challanNo,
+      challanDate: formattedChallanDate,
+      boxNo: formData.boxNo,
+      ewayBillNo: formData.ewayBillNo,
+      vehicleNo: formData.vehicleNo,
+      billFrom: formData.billFrom,
+      shipFrom: formData.shipFrom,
+      billaddressid: formData.billaddressid,
+      billaddress: formData.billaddress,
+      shipaddressid: formData.shipaddressid,
+      shipaddress: formData.shipaddress,
+      updaterow:
+        singleRow.updaterow !== undefined && singleRow.updaterow !== null
+          ? singleRow.updaterow
+          : "",
+      poid: id,
+      vendor_type: "v01",
+    };
+    if (isEdit) {
+      dispatch(updatePO(payload)).then((response: any) => {
+        const body = response?.payload?.data ?? response?.payload ?? {};
+        if (body?.success === true || String(body?.status).toLowerCase() === "success") {
+          showToast(body?.message ?? "Details Submitted successfully", "success");
+          resetall();
+          navigate("/procurement/manage");
+        } else {
+          showToast(body?.message ?? "Failed to submit details", "error");
         }
-      }
+      });
+    } else {
+      dispatch(createBulkDeviceInward(payload)).then((response: any) => {
+        const requestStatus = response?.meta?.requestStatus;
+        const body = response?.payload?.data ?? response?.payload ?? {};
+        const statusText = String(body?.status ?? body?.data?.status ?? "").toLowerCase();
+        const isSuccess =
+          requestStatus === "fulfilled" &&
+          (body?.success === true ||
+            body?.data?.success === true ||
+            statusText === "success");
 
-      const payload: any = {
-        sku:component,
-        device_key: singleRow.partComponent?.device_key || "",
-        device_model: singleRow.partComponent?.device_model || "",
-        qty,
-        rate,
-        hsncode,
-        serialno: serialNumbers,
-        placeOfSupply: formData.placeOfSupply,
-        stateCode: formData.stateCode,
-        challanNo: formData.challanNo,
-        challanDate: formattedChallanDate,
-        boxNo: formData.boxNo,
-        ewayBillNo: formData.ewayBillNo,
-        vehicleNo: formData.vehicleNo,
-        billFrom: formData.billFrom,
-        shipFrom: formData.shipFrom,
-        billaddressid: formData.billaddressid,
-        billaddress: formData.billaddress,
-        shipaddressid: formData.shipaddressid,
-        shipaddress: formData.shipaddress,
-        updaterow:
-          singleRow.updaterow !== undefined && singleRow.updaterow !== null
-            ? singleRow.updaterow
-            : "",
-        poid: id,
-        vendor_type: "v01",
-      };
-      if (isEdit) {
-        dispatch(updatePO(payload)).then((response: any) => {
-          if (response.payload.data.success) {
-            showToast(response.payload?.data?.message, "success");
-            resetall();
-            handleNext();
-            dispatch(resetFormData());
-            navigate("/procurement/manage");
-          }
-        });
-      } else {
-        dispatch(createBulkDeviceInward(payload)).then((response: any) => {
-          const payloadResponse = response?.payload;
-          const body = payloadResponse?.data ?? payloadResponse ?? {};
-          const isSuccess = Boolean(
-            body?.success ??
-            body?.status ??
-            body?.data?.success ??
-            body?.data?.status
-          );
-
-          if (isSuccess) {
-            showToast(
-              body?.message ??
+        if (isSuccess) {
+          showToast(
+            body?.message ??
               body?.data?.message ??
               "Device inward created successfully",
-              "success"
-            );
-            resetall();
-            dispatch(resetFormData());
-            const ref =
-              body?.data?.po_id ??
-              body?.data?.id ??
-              body?.data?.dc_id ??
-              body?.dc_id ??
-              body?.data?.challan_no ??
-              body?.challan_no ??
-              "";
-            setMinno(ref ? String(ref) : "");
-            setActiveStep(2);
-          } else {
-            showToast(
-              body?.message ??
+            "success"
+          );
+          const ref =
+            body?.data?.po_id ??
+            body?.data?.id ??
+            body?.data?.dc_id ??
+            body?.dc_id ??
+            body?.data?.challan_no ??
+            body?.challan_no ??
+            "";
+          resetall();
+          setMinno(ref ? String(ref) : "");
+          setActiveStep(2);
+        } else {
+          showToast(
+            body?.message ??
               body?.data?.message ??
               "Failed to create device inward",
-              "error"
-            );
-          }
-        });
-      }
+            "error"
+          );
+        }
+      });
     }
   };
   useEffect(() => {
@@ -523,7 +523,6 @@ const BulkDeviceInward: React.FC = () => {
         onConfirm={() => {
           resetall();
           dispatch(resetDocumentFile());
-          dispatch(resetFormData());
           setActiveStep(0);
           setAlert(false);
         }}
@@ -1189,7 +1188,7 @@ const BulkDeviceInward: React.FC = () => {
                   PO No. : {minNo}
                 </Typography>
                 <LoadingButton
-                  onClick={() => setActiveStep(0)}
+                  onClick={() => resetall()}
                   variant="contained"
                 >
                   Create New PO

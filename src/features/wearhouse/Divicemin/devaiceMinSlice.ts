@@ -69,7 +69,7 @@ export const uploadSerialFile = createAsyncThunk<AxiosResponse<UploadSerialFileR
 export const uploadInvoiceFile = createAsyncThunk<AxiosResponse<UploadInvoiceFileApiResponse>, FormData>(
   "wearhouse/deviceMin/upload-invoice",
   async (params) => {
-    const response = await axiosInstance.post(`/deviceMin/upload-invoice`, params, {
+    const response = await axiosInstance.post(`/partCode/upload-invoice`, params, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response;
