@@ -82,6 +82,17 @@ const Consumption: React.FC = () => {
     }));
   }, [costCenterData]);
 
+  const downloadSampleFile = () => {
+    const sampleRows = [
+      { partcode: "PARTCODE001", qty: 10 },
+      { partcode: "PARTCODE002", qty: 5 },
+    ];
+    const ws = XLSX.utils.json_to_sheet(sampleRows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Consumption");
+    XLSX.writeFile(wb, "consumption_sample.xlsx");
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -263,6 +274,7 @@ const Consumption: React.FC = () => {
 
   const DocumentIcon = Icons.documentDetail;
   const UploadIcon = Icons.uploadfile;
+  const DownloadIcon = Icons.download;
 
   return (
     <div className="h-full w-full min-h-0 flex p-[20px]">
@@ -375,6 +387,15 @@ const Consumption: React.FC = () => {
                 sx={{ mb: 1 }}
               >
                 Choose Excel File (.xlsx)
+              </Button>
+              <Button
+                type="button"
+                variant="text"
+                startIcon={<DownloadIcon />}
+                onClick={downloadSampleFile}
+                sx={{ mb: 1, ml: 1 }}
+              >
+                Download Sample File
               </Button>
               {fileName ? (
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
