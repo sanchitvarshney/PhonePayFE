@@ -116,16 +116,6 @@ const staticMenu: Menu[] = [
             icon: "report",
             description: "MIN From PO",
           },
-          {
-            menu_key: "bulk-device-inward",
-            name: "Bulk Device Inward",
-            parent_menu_key: "procurement",
-            url: "/bulk-device-inward/create",
-            order: 2,
-            is_active: 1,
-            icon: "report",
-            description: "Bulk Device Inward",
-          },
         ],
       },
       {
