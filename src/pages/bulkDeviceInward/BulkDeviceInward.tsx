@@ -45,7 +45,15 @@ import SerialNumberUpload from "@/components/procurement/SerialNumberUpload";
 
 interface SingleRowData {
   id: string;
-  partComponent: { label: string; value: string; id: string } | null;
+  partComponent: {
+    label: string;
+    value: string;
+    id: string;
+    sku: string;
+    device_key: string;
+    device_model: string;
+    device_modal: string;
+  } | null;
   hsnCode: string;
   qty: number;
   rate: number;
@@ -108,6 +116,56 @@ interface FormData {
   challanNo: string;
   challanDate: string | dayjs.Dayjs;
 }
+
+const defaultFormValues: FormData = {
+  billaddressid: "",
+  billaddress: {
+    id: 0,
+    gst: "",
+    pin: "",
+    addressLine1: "",
+    addressLine2: "",
+    label: "",
+  },
+  shipaddressid: "",
+  shipaddress: {
+    id: 0,
+    pin: "",
+    city: "",
+    addressLine1: "",
+    addressLine2: "",
+    label: "",
+  },
+  billFrom: {
+    companyName: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    pin: "",
+    gstin: "",
+  },
+  shipFrom: {
+    companyName: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    pin: "",
+    gstin: "",
+  },
+  placeOfSupply: "",
+  stateCode: "",
+  ewayBillNo: "",
+  vehicleNo: "",
+  boxNo: "",
+  challanNo: "",
+  challanDate: "",
+};
+
+const deriveDeviceModelFromText = (text: string): string => {
+  if (!text) return "";
+  return text.replace(/^\s*\([^)]*\)\s*/, "").trim();
+};
+
 const BulkDeviceInward: React.FC = () => {
   const navigate = useNavigate();
   const [alert, setAlert] = useState<boolean>(false);
@@ -122,7 +180,15 @@ const BulkDeviceInward: React.FC = () => {
   });
   const [serialNumbers, setSerialNumbers] = useState<string[]>([]);
   const [skuOptions, setSkuOptions] = useState<
-    Array<{ label: string; value: string; id: string }>
+    Array<{
+      label: string;
+      value: string;
+      id: string;
+      sku: string;
+      device_key: string;
+      device_model: string;
+      device_modal: string;
+    }>
   >([]);
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.po);
@@ -143,31 +209,7 @@ const BulkDeviceInward: React.FC = () => {
     watch,
     formState: { errors },
   } = useForm<FormData>({
-    defaultValues: {
-      billFrom: {
-        companyName: "",
-        addressLine1: "",
-        addressLine2: "",
-        city: "",
-        pin: "",
-        gstin: "",
-      },
-      shipFrom: {
-        companyName: "",
-        addressLine1: "",
-        addressLine2: "",
-        city: "",
-        pin: "",
-        gstin: "",
-      },
-      placeOfSupply: "",
-      stateCode: "",
-      ewayBillNo: "",
-      vehicleNo: "",
-      boxNo: "",
-      challanNo: "",
-      challanDate: "",
-    },
+    defaultValues: defaultFormValues,
   });
 
   const [activeStep, setActiveStep] = useState(0);
@@ -196,9 +238,11 @@ const BulkDeviceInward: React.FC = () => {
       rate: 0,
     });
     setSerialNumbers([]);
-    reset();
+    reset(defaultFormValues);
     dispatch(resetDocumentFile());
     dispatch(clearaddressdetail());
+    setActiveStep(0);
+    setMinno("");
   };
 
   const onSubmit: SubmitHandler<FormData> = (data) => {
@@ -234,10 +278,10 @@ const BulkDeviceInward: React.FC = () => {
         return;
       }
 
-      const component = [singleRow.partComponent?.value];
-      const qty = [singleRow.qty];
-      const rate = [singleRow.rate];
-      const hsncode = [singleRow.hsnCode];
+      const component = singleRow.partComponent?.value || "";
+      const qty = singleRow.qty;
+      const rate = singleRow.rate;
+      const hsncode = singleRow.hsnCode;
 
       const challanDate = formData.challanDate;
       let formattedChallanDate = "";
@@ -249,7 +293,9 @@ const BulkDeviceInward: React.FC = () => {
       }
 
       const payload: any = {
-        component,
+        sku:component,
+        device_key: singleRow.partComponent?.device_key || "",
+        device_model: singleRow.partComponent?.device_model || "",
         qty,
         rate,
         hsncode,
@@ -269,8 +315,8 @@ const BulkDeviceInward: React.FC = () => {
         shipaddress: formData.shipaddress,
         updaterow:
           singleRow.updaterow !== undefined && singleRow.updaterow !== null
-            ? [singleRow.updaterow]
-            : [],
+            ? singleRow.updaterow
+            : "",
         poid: id,
         vendor_type: "v01",
       };
@@ -286,19 +332,41 @@ const BulkDeviceInward: React.FC = () => {
         });
       } else {
         dispatch(createBulkDeviceInward(payload)).then((response: any) => {
-          const body = response.payload?.data;
-          if (body?.success) {
-            showToast(body?.message, "success");
+          const payloadResponse = response?.payload;
+          const body = payloadResponse?.data ?? payloadResponse ?? {};
+          const isSuccess = Boolean(
+            body?.success ??
+            body?.status ??
+            body?.data?.success ??
+            body?.data?.status
+          );
+
+          if (isSuccess) {
+            showToast(
+              body?.message ??
+              body?.data?.message ??
+              "Device inward created successfully",
+              "success"
+            );
             resetall();
-            handleNext();
             dispatch(resetFormData());
             const ref =
               body?.data?.po_id ??
               body?.data?.id ??
               body?.data?.dc_id ??
+              body?.dc_id ??
               body?.data?.challan_no ??
+              body?.challan_no ??
               "";
             setMinno(ref ? String(ref) : "");
+            setActiveStep(2);
+          } else {
+            showToast(
+              body?.message ??
+              body?.data?.message ??
+              "Failed to create device inward",
+              "error"
+            );
           }
         });
       }
@@ -318,8 +386,15 @@ const BulkDeviceInward: React.FC = () => {
         const options =
           response.data.data?.map((item: any) => ({
             label: item.text,
-            value: item.sku,
+            value: item.id,
             id: item.id,
+            sku: item.sku ?? item.text ?? "",
+            device_key: item.device_key ?? item.deviceKey ?? item.id ?? "",
+            device_modal:
+              item.device_modal ??
+              item.device_model ??
+              item.deviceModel ??
+              deriveDeviceModelFromText(item.text ?? ""),
           })) ?? [];
         setSkuOptions(options);
       } catch (error) {
@@ -414,6 +489,15 @@ const BulkDeviceInward: React.FC = () => {
                     label: first.component_short || "",
                     value: first.componentKey,
                     id: String(first.componentKey),
+                    sku: first.sku || first.component_short || "",
+                    device_key:
+                      first.device_key || first.deviceKey || String(first.componentKey),
+                    device_model:
+                      first.device_model ||
+                      first.deviceModel ||
+                      deriveDeviceModelFromText(first.component_short || ""),
+                    device_modal:
+                      first.device_modal || first.device_model || first.deviceModal || "",
                   }
                 : null,
               hsnCode: first.hsncode || "",
