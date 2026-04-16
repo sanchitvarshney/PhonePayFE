@@ -130,13 +130,13 @@ const staticMenu: Menu[] = [
       },
       {
         menu_key: "warehouse-good-spare-inward",
-        name: "Good Spare Inward",
+        name: "Goods Spare Inward",
         parent_menu_key: "warehouse",
         url: "/warehouse/good-spare-inward",
         order: 3,
         is_active: 1,
         icon: "material",
-        description: "Good Spare Inward",
+        description: "Goods Spare Inward",
       },
       {
         menu_key: "bulk-device-inward",

@@ -54,7 +54,6 @@ interface SingleRowData {
     device_model: string;
     device_modal: string;
   } | null;
-  hsnCode: string;
   qty: number;
   rate: number;
   updaterow?: string;
@@ -166,6 +165,21 @@ const deriveDeviceModelFromText = (text: string): string => {
   return text.replace(/^\s*\([^)]*\)\s*/, "").trim();
 };
 
+const getDuplicateValues = (values: string[]): string[] => {
+  const seen = new Map<string, string>();
+  const duplicates = new Set<string>();
+  values.forEach((raw) => {
+    const normalized = raw.trim().toLowerCase();
+    if (!normalized) return;
+    if (seen.has(normalized)) {
+      duplicates.add(seen.get(normalized)!);
+      return;
+    }
+    seen.set(normalized, raw.trim());
+  });
+  return Array.from(duplicates);
+};
+
 const downloadSerialSampleFile = () => {
   const sampleRows = [
     { serialno: "SN00000001" },
@@ -186,11 +200,11 @@ const BulkDeviceInward: React.FC = () => {
   const [singleRow, setSingleRow] = useState<SingleRowData>({
     id: newSingleRowId(),
     partComponent: null,
-    hsnCode: "",
     qty: 0,
     rate: 0,
   });
   const [serialNumbers, setSerialNumbers] = useState<string[]>([]);
+  const [serialUploadKey, setSerialUploadKey] = useState(0);
   const [skuOptions, setSkuOptions] = useState<
     Array<{
       label: string;
@@ -241,11 +255,11 @@ const BulkDeviceInward: React.FC = () => {
     setSingleRow({
       id: newSingleRowId(),
       partComponent: null,
-      hsnCode: "",
       qty: 0,
       rate: 0,
     });
     setSerialNumbers([]);
+    setSerialUploadKey((prev) => prev + 1);
     reset(defaultFormValues);
     dispatch(resetDocumentFile());
     dispatch(clearaddressdetail());
@@ -290,10 +304,28 @@ const BulkDeviceInward: React.FC = () => {
       return;
     }
 
+    const normalizedSerialNumbers = serialNumbers
+      .map((serial) => String(serial ?? "").trim())
+      .filter(Boolean);
+    const duplicateSerialNumbers = getDuplicateValues(normalizedSerialNumbers);
+    if (duplicateSerialNumbers.length > 0) {
+      showToast(
+        `Duplicate serial numbers found: ${duplicateSerialNumbers.join(", ")}`,
+        "error",
+      );
+      return;
+    }
+
     const component = singleRow.partComponent?.value || "";
     const qty = singleRow.qty;
     const rate = singleRow.rate;
-    const hsncode = singleRow.hsnCode;
+    if (normalizedSerialNumbers.length > 0 && normalizedSerialNumbers.length !== qty) {
+      showToast(
+        `Quantity (${qty}) must match uploaded serial count (${normalizedSerialNumbers.length})`,
+        "error",
+      );
+      return;
+    }
 
     const challanDate = formData.challanDate;
     let formattedChallanDate = "";
@@ -312,8 +344,7 @@ const BulkDeviceInward: React.FC = () => {
       device_modal: singleRow.partComponent?.device_modal || "",
       qty,
       rate,
-      hsncode,
-      serialno: serialNumbers,
+      serialno: normalizedSerialNumbers,
       placeOfSupply: formData.placeOfSupply,
       stateCode: formData.stateCode,
       challanNo: formData.challanNo,
@@ -513,7 +544,6 @@ const BulkDeviceInward: React.FC = () => {
                       first.device_modal || first.device_model || first.deviceModal || "",
                   }
                 : null,
-              hsnCode: first.hsncode || "",
               qty: Number(first.orderqty) || 0,
               rate: Number(first.rate) || 0,
               updaterow: first.updateid,
@@ -1141,27 +1171,28 @@ const BulkDeviceInward: React.FC = () => {
                   />
                   <TextField
                     variant="filled"
-                    label="HSN/SAC Code"
-                    value={singleRow.hsnCode}
-                    onChange={(e) =>
-                      setSingleRow((prev) => ({
-                        ...prev,
-                        hsnCode: e.target.value,
-                      }))
-                    }
-                    fullWidth
-                  />
-                  <TextField
-                    variant="filled"
                     type="number"
                     label="Quantity"
                     value={singleRow.qty === 0 ? "" : singleRow.qty}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const nextQty = Number(e.target.value);
+                      if (
+                        serialNumbers.length > 0 &&
+                        nextQty > 0 &&
+                        serialNumbers.length !== nextQty
+                      ) {
+                        showToast(
+                          `Quantity (${nextQty}) must match uploaded serial count (${serialNumbers.length})`,
+                          "error",
+                        );
+                        setSerialNumbers([]);
+                        setSerialUploadKey((prev) => prev + 1);
+                      }
                       setSingleRow((prev) => ({
                         ...prev,
-                        qty: Number(e.target.value),
-                      }))
-                    }
+                        qty: nextQty,
+                      }));
+                    }}
                     fullWidth
                   />
                   <TextField
@@ -1186,9 +1217,38 @@ const BulkDeviceInward: React.FC = () => {
                   />
                 </div>
                 <SerialNumberUpload
-                  onSerialNumbersChange={(serials: string[]) =>
-                    setSerialNumbers(serials)
-                  }
+                  key={serialUploadKey}
+                  onSerialNumbersChange={(serials: string[]) => {
+                    const normalizedSerials = serials
+                      .map((serial) => String(serial ?? "").trim())
+                      .filter(Boolean);
+                    const duplicateSerialNumbers =
+                      getDuplicateValues(normalizedSerials);
+                    if (duplicateSerialNumbers.length > 0) {
+                      showToast(
+                        `Duplicate serial numbers found: ${duplicateSerialNumbers.join(", ")}`,
+                        "error",
+                      );
+                      setSerialNumbers([]);
+                      setSerialUploadKey((prev) => prev + 1);
+                      return;
+                    }
+                    const enteredQty = Number(singleRow.qty) || 0;
+                    if (
+                      enteredQty > 0 &&
+                      normalizedSerials.length > 0 &&
+                      normalizedSerials.length !== enteredQty
+                    ) {
+                      showToast(
+                        `Uploaded serial count (${normalizedSerials.length}) must match quantity (${enteredQty})`,
+                        "error",
+                      );
+                      setSerialNumbers([]);
+                      setSerialUploadKey((prev) => prev + 1);
+                      return;
+                    }
+                    setSerialNumbers(normalizedSerials);
+                  }}
                 />
                 <div>
                   <LoadingButton

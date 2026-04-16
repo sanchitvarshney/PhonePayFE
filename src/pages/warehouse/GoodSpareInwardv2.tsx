@@ -183,6 +183,28 @@ const getOptionValue = (option: unknown): string => {
   return "";
 };
 
+const getDuplicatePartcodeMessages = (rows: ExcelGridRow[]): string[] => {
+  const partcodeMap = new Map<string, { display: string; lines: number[] }>();
+  rows.forEach((row) => {
+    const display = String(row.partcode ?? "").trim();
+    const normalized = display.toLowerCase();
+    if (!normalized) return;
+    const existing = partcodeMap.get(normalized);
+    if (existing) {
+      existing.lines.push(row.lineNo + 1);
+      return;
+    }
+    partcodeMap.set(normalized, { display, lines: [row.lineNo + 1] });
+  });
+
+  return Array.from(partcodeMap.values())
+    .filter((entry) => entry.lines.length > 1)
+    .map(
+      (entry) =>
+        `Duplicate Partcode '${entry.display}' found at rows ${entry.lines.join(", ")}.`
+    );
+};
+
 // Keys we expect in normalized form, and the human‑readable label for error messages.
 // Note: "Courier Name" is treated as OPTIONAL for validation – if present it will show in preview,
 // but we don't block upload when it's missing.
@@ -453,6 +475,8 @@ const GoodSpareInwardv2: React.FC = () => {
       }
     });
 
+    rowErrors.push(...getDuplicatePartcodeMessages(gridRows));
+
     setExcelHeaderErrors(headerErrors);
     setExcelRowErrors(rowErrors);
 
@@ -461,6 +485,9 @@ const GoodSpareInwardv2: React.FC = () => {
       showToast("Excel file parsed successfully", "success");
     } else {
       setExcelRows([]);
+      if (rowErrors.some((error) => error.toLowerCase().includes("duplicate"))) {
+        showToast("Duplicate entries found in Excel file", "error");
+      }
     }
   };
 
