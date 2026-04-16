@@ -65,22 +65,6 @@ const getDuplicateValues = (values: string[]): string[] => {
   });
   return Array.from(duplicates);
 };
-
-const getDuplicateValues = (values: string[]): string[] => {
-  const seen = new Map<string, string>();
-  const duplicates = new Set<string>();
-  values.forEach((raw) => {
-    const normalized = raw.trim().toLowerCase();
-    if (!normalized) return;
-    if (seen.has(normalized)) {
-      duplicates.add(seen.get(normalized)!);
-      return;
-    }
-    seen.set(normalized, raw.trim());
-  });
-  return Array.from(duplicates);
-};
-
 const getOptionValue = (option: unknown): string => {
   if (typeof option === "string") return option.trim();
   if (typeof option === "number") return String(option);
