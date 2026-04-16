@@ -34,6 +34,43 @@ interface ExcelRow {
 
 type LocationOption = { label: string; value: string };
 
+const getOptionValue = (option: unknown): string => {
+  if (typeof option === "string") return option.trim();
+  if (typeof option === "number") return String(option);
+  const obj = option as
+    | {
+        value?: string | number;
+        id?: string | number;
+        code?: string | number;
+        key?: string | number;
+        costCenterId?: string | number;
+        locationId?: string | number;
+        label?: string | number;
+        text?: string | number;
+        name?: string | number;
+      }
+    | null
+    | undefined;
+  const candidates = [
+    obj?.value,
+    obj?.id,
+    obj?.code,
+    obj?.key,
+    obj?.costCenterId,
+    obj?.locationId,
+    obj?.label,
+    obj?.text,
+    obj?.name,
+  ];
+  for (const candidate of candidates) {
+    if (candidate !== undefined && candidate !== null) {
+      const normalized = String(candidate).trim();
+      if (normalized) return normalized;
+    }
+  }
+  return "";
+};
+
 interface FormValues {
   location: LocationOption | null;
   costCenter: LocationOption | null;
@@ -56,6 +93,7 @@ const Consumption: React.FC = () => {
     control,
     handleSubmit,
     reset,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: { location: null, costCenter: null },
@@ -68,18 +106,49 @@ const Consumption: React.FC = () => {
 
   const locationOptions = useMemo<LocationOption[]>(() => {
     if (!locationData?.length) return [];
-    return locationData.map((item) => ({
-      label: item.text,
-      value: item.id,
-    }));
+    return locationData.map((item) => {
+      const raw = item as {
+        text?: string;
+        name?: string;
+        label?: string;
+        id?: string | number;
+        code?: string | number;
+        value?: string | number;
+        key?: string | number;
+      };
+      const label = String(raw.text ?? raw.name ?? raw.label ?? "");
+      const value = String(
+        raw.id ?? raw.code ?? raw.value ?? raw.key ?? raw.text ?? raw.name ?? raw.label ?? "",
+      );
+      return { label, value };
+    });
   }, [locationData]);
 
   const costCenterOptions = useMemo<LocationOption[]>(() => {
     if (!costCenterData?.length) return [];
-    return costCenterData.map((item) => ({
-      label: item.text,
-      value: item.id,
-    }));
+    return costCenterData.map((item) => {
+      const raw = item as {
+        text?: string;
+        name?: string;
+        label?: string;
+        id?: string | number;
+        code?: string | number;
+        value?: string | number;
+        key?: string | number;
+      };
+      const label = String(raw.text ?? raw.name ?? raw.label ?? "");
+      const value = String(
+        raw.id ??
+          raw.code ??
+          raw.value ??
+          raw.key ??
+          raw.text ??
+          raw.name ??
+          raw.label ??
+          "",
+      );
+      return { label, value };
+    });
   }, [costCenterData]);
 
   const downloadSampleFile = () => {
@@ -182,11 +251,16 @@ const Consumption: React.FC = () => {
   };
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    if (!data.location) {
+    const locationId =
+      getOptionValue(data.location) || getOptionValue(getValues("location"));
+    const cc =
+      getOptionValue(data.costCenter) || getOptionValue(getValues("costCenter"));
+
+    if (!locationId) {
       showToast("Please select a pick location", "error");
       return;
     }
-    if (!data.costCenter) {
+    if (!cc) {
       showToast("Please select a cost center", "error");
       return;
     }
@@ -198,9 +272,9 @@ const Consumption: React.FC = () => {
     setSubmitting(true);
     try {
       const response = await axiosInstance.post("/consumption/create", {
-        location: data.location?.value,
-        costCenter: data.costCenter?.value,
-        cc: data.costCenter?.value,
+        pickLocation: locationId,
+        costCenter: cc,
+        cc,
         partcode: excelData.map((row) => row.partcode),
         qty: excelData.map((row) => row.qty),
       });
