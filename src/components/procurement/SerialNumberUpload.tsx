@@ -6,6 +6,8 @@ import { Icons } from "@/components/icons";
 
 export interface SerialNumberUploadProps {
   onSerialNumbersChange: (serials: string[]) => void;
+  disabled?: boolean;
+  disabledMessage?: string;
 }
 
 function normalizeHeader(v: unknown): string {
@@ -17,6 +19,8 @@ function normalizeHeader(v: unknown): string {
 
 export default function SerialNumberUpload({
   onSerialNumbersChange,
+  disabled = false,
+  disabledMessage = "",
 }: SerialNumberUploadProps) {
   const [error, setError] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
@@ -69,6 +73,7 @@ export default function SerialNumberUpload({
           component="label"
           variant="contained"
           startIcon={<Icons.uploadfile />}
+          disabled={disabled}
         >
           Upload File
           <input
@@ -105,6 +110,10 @@ export default function SerialNumberUpload({
         {error ? (
           <Typography variant="inherit" className="text-red-600">
             {error}
+          </Typography>
+        ) : disabled && disabledMessage ? (
+          <Typography variant="inherit" className="text-amber-600">
+            {disabledMessage}
           </Typography>
         ) : (
           <Typography variant="inherit" className="text-slate-600">

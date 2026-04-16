@@ -240,7 +240,13 @@ const BulkDeviceInward: React.FC = () => {
   });
 
   const [activeStep, setActiveStep] = useState(0);
-  const steps = ["Form Details", "Add Component Details", "Review & Submit"];
+  const steps = ["Form Details", "Add Device Details", "Review & Submit"];
+  const isSerialUploadDisabled =
+    !singleRow.partComponent ||
+    !singleRow.qty ||
+    singleRow.qty <= 0 ||
+    !singleRow.rate ||
+    singleRow.rate <= 0;
 
   const handleBack = () => {
     // Set form values from Redux state before going back
@@ -1165,7 +1171,7 @@ const BulkDeviceInward: React.FC = () => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Description of Goods (SKU)"
+                        label="Select SKU"
                         variant="filled"
                       />
                     )}
@@ -1220,7 +1226,18 @@ const BulkDeviceInward: React.FC = () => {
                 </div>
                 <SerialNumberUpload
                   key={serialUploadKey}
+                  disabled={isSerialUploadDisabled}
+                  disabledMessage="Select description, then enter quantity and rate before uploading Excel."
                   onSerialNumbersChange={(serials: string[]) => {
+                    if (isSerialUploadDisabled) {
+                      showToast(
+                        "Please select description and enter quantity and rate before uploading Excel",
+                        "error",
+                      );
+                      setSerialNumbers([]);
+                      setSerialUploadKey((prev) => prev + 1);
+                      return;
+                    }
                     const normalizedSerials = serials
                       .map((serial) => String(serial ?? "").trim())
                       .filter(Boolean);
