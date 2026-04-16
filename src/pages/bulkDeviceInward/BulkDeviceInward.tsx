@@ -11,6 +11,7 @@ import {
 import {
   Autocomplete,
   Divider,
+  InputAdornment,
   Step,
   StepLabel,
   Stepper,
@@ -1194,6 +1195,7 @@ const BulkDeviceInward: React.FC = () => {
                       }));
                     }}
                     fullWidth
+                    InputProps={{ endAdornment: <InputAdornment position="end">pcs</InputAdornment> }}
                   />
                   <TextField
                     variant="filled"

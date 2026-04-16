@@ -9,7 +9,16 @@ import {
   Box,
   Button,
   Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
@@ -30,9 +39,32 @@ interface ExcelRow {
   rowKey: string;
   partcode: string;
   qty: number;
+  availableQty: number;
 }
 
 type LocationOption = { label: string; value: string };
+type StockCheckRow = {
+  partcode: string;
+  requiredQty: number;
+  availableQty: number;
+  status: string;
+  message: string;
+};
+
+const getDuplicateValues = (values: string[]): string[] => {
+  const seen = new Map<string, string>();
+  const duplicates = new Set<string>();
+  values.forEach((raw) => {
+    const normalized = raw.trim().toLowerCase();
+    if (!normalized) return;
+    if (seen.has(normalized)) {
+      duplicates.add(seen.get(normalized)!);
+      return;
+    }
+    seen.set(normalized, raw.trim());
+  });
+  return Array.from(duplicates);
+};
 
 const getDuplicateValues = (values: string[]): string[] => {
   const seen = new Map<string, string>();
@@ -97,6 +129,8 @@ const Consumption: React.FC = () => {
   const [fileError, setFileError] = useState<string>("");
   const [parseSuccess, setParseSuccess] = useState(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [stockCheckRows, setStockCheckRows] = useState<StockCheckRow[]>([]);
+  const [stockCheckOpen, setStockCheckOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const gridRef = useRef<AgGridReact<ExcelRow>>(null);
 
@@ -180,6 +214,19 @@ const Consumption: React.FC = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const locationId = getOptionValue(getValues("location"));
+    const costCenterId = getOptionValue(getValues("costCenter"));
+
+    if (!locationId || !costCenterId) {
+      const msg = "Please select pick location and cost center before uploading Excel";
+      showToast(msg, "error");
+      setFileError(msg);
+      setExcelData([]);
+      setFileName("");
+      setParseSuccess(false);
+      e.target.value = "";
+      return;
+    }
 
     const validTypes = [
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -205,7 +252,7 @@ const Consumption: React.FC = () => {
       setExcelData([]);
       setParseSuccess(false);
     };
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const data = new Uint8Array(event.target?.result as ArrayBuffer);
       const workbook = XLSX.read(data, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -269,10 +316,83 @@ const Consumption: React.FC = () => {
         ...row,
         lineNo: idx + 1,
         rowKey: `r-${idx}-${row.partcode}`,
+        availableQty: 0,
       }));
 
-      setExcelData(parsed);
-      setParseSuccess(true);
+      try {
+        const checkResponse = await axiosInstance.post("/consumption/check", {
+          partcode: parsed.map((row) => row.partcode),
+          qty: parsed.map((row) => row.qty),
+          costCenter: costCenterId,
+          location: locationId,
+        });
+        const checkBody = checkResponse?.data ?? {};
+        const isSuccess =
+          checkBody?.success === true ||
+          String(checkBody?.status ?? "").toLowerCase() === "success";
+        const checkRows: StockCheckRow[] = Array.isArray(checkBody?.data)
+          ? checkBody.data.map((item: any) => ({
+              partcode: String(item?.partcode ?? "").trim(),
+              requiredQty: Number(item?.requiredQty ?? 0),
+              availableQty: Number(item?.availableQty ?? 0),
+              status: String(item?.status ?? "").trim(),
+              message: String(item?.message ?? "").trim(),
+            }))
+          : [];
+
+        setStockCheckRows(checkRows);
+        setStockCheckOpen(true);
+
+        if (!isSuccess) {
+          throw new Error(checkBody?.message || "Consumption check failed");
+        }
+
+        const hasInsufficient = checkRows.some(
+          (row) => row.status.toLowerCase() === "insufficient",
+        );
+        if (hasInsufficient) {
+          const msg =
+            "Insufficient stock found for one or more partcodes. Excel upload blocked.";
+          showToast(msg, "error");
+          setFileError(msg);
+          setExcelData([]);
+          setFileName("");
+          setParseSuccess(false);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
+          return;
+        }
+
+        const availableQtyByPartcode = new Map(
+          checkRows.map((row) => [row.partcode.toLowerCase(), row.availableQty]),
+        );
+        const enrichedRows: ExcelRow[] = parsed.map((row) => ({
+          ...row,
+          availableQty:
+            Number(availableQtyByPartcode.get(row.partcode.toLowerCase())) || 0,
+        }));
+
+        setExcelData(enrichedRows);
+        setParseSuccess(true);
+        showToast(
+          checkBody?.message || "Excel validated successfully",
+          "success",
+        );
+      } catch (error: any) {
+        const message =
+          error?.response?.data?.message ||
+          error?.message ||
+          "Consumption check failed";
+        showToast(message, "error");
+        setFileError(message);
+        setExcelData([]);
+        setFileName("");
+        setParseSuccess(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
     };
     reader.readAsArrayBuffer(file);
   };
@@ -354,6 +474,16 @@ const Consumption: React.FC = () => {
         field: "qty",
         width: 120,
         maxWidth: 140,
+        filter: "agNumberColumnFilter",
+        sortable: true,
+        cellStyle: { textAlign: "left" },
+        headerStyle: { textAlign: "left" },
+      },
+      {
+        headerName: "Available Qty",
+        field: "availableQty",
+        width: 160,
+        maxWidth: 180,
         filter: "agNumberColumnFilter",
         sortable: true,
         cellStyle: { textAlign: "left" },
@@ -567,6 +697,52 @@ const Consumption: React.FC = () => {
           </Box>
         </form>
       </Paper>
+      <Dialog
+        open={stockCheckOpen}
+        onClose={() => setStockCheckOpen(false)}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>Consumption Stock Check</DialogTitle>
+        <DialogContent>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Partcode</TableCell>
+                <TableCell>Required Qty</TableCell>
+                <TableCell>Available Qty</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Message</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {stockCheckRows.map((row, idx) => (
+                <TableRow key={`${row.partcode}-${idx}`}>
+                  <TableCell>{row.partcode}</TableCell>
+                  <TableCell>{row.requiredQty}</TableCell>
+                  <TableCell>{row.availableQty}</TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="body2"
+                      color={
+                        row.status.toLowerCase() === "insufficient"
+                          ? "error.main"
+                          : "success.main"
+                      }
+                    >
+                      {row.status}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>{row.message}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setStockCheckOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
