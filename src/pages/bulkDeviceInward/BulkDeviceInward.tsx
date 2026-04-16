@@ -1182,7 +1182,8 @@ const BulkDeviceInward: React.FC = () => {
                     label="Quantity"
                     value={singleRow.qty === 0 ? "" : singleRow.qty}
                     onChange={(e) => {
-                      const nextQty = Number(e.target.value);
+                      const rawQty = e.target.value;
+                      const nextQty = rawQty === "" ? 0 : Math.trunc(Number(rawQty));
                       if (
                         serialNumbers.length > 0 &&
                         nextQty > 0 &&
@@ -1201,6 +1202,7 @@ const BulkDeviceInward: React.FC = () => {
                       }));
                     }}
                     fullWidth
+                    inputProps={{ min: 1, step: 1 }}
                     InputProps={{ endAdornment: <InputAdornment position="end">pcs</InputAdornment> }}
                   />
                   <TextField
