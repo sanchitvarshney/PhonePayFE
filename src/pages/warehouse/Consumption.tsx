@@ -34,6 +34,21 @@ interface ExcelRow {
 
 type LocationOption = { label: string; value: string };
 
+const getDuplicateValues = (values: string[]): string[] => {
+  const seen = new Map<string, string>();
+  const duplicates = new Set<string>();
+  values.forEach((raw) => {
+    const normalized = raw.trim().toLowerCase();
+    if (!normalized) return;
+    if (seen.has(normalized)) {
+      duplicates.add(seen.get(normalized)!);
+      return;
+    }
+    seen.set(normalized, raw.trim());
+  });
+  return Array.from(duplicates);
+};
+
 const getOptionValue = (option: unknown): string => {
   if (typeof option === "string") return option.trim();
   if (typeof option === "number") return String(option);
@@ -233,6 +248,18 @@ const Consumption: React.FC = () => {
 
       if (rows.length === 0) {
         setFileError("No valid data found in Excel file");
+        setExcelData([]);
+        setParseSuccess(false);
+        return;
+      }
+
+      const duplicatePartcodes = getDuplicateValues(
+        rows.map((row) => row.partcode),
+      );
+      if (duplicatePartcodes.length > 0) {
+        const duplicateMsg = `Duplicate partcode entries found: ${duplicatePartcodes.join(", ")}`;
+        showToast(duplicateMsg, "error");
+        setFileError(duplicateMsg);
         setExcelData([]);
         setParseSuccess(false);
         return;
