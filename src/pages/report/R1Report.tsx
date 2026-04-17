@@ -4,6 +4,8 @@ import dayjs, { Dayjs } from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { AgGridReact } from "ag-grid-react";
+import { ModuleRegistry } from "@ag-grid-community/core";
+import { ExcelExportModule } from "@ag-grid-enterprise/excel-export";
 import LoadingButton from "@mui/lab/LoadingButton";
 import SearchIcon from "@mui/icons-material/Search";
 import { FormControl, MenuItem, Select, TextField } from "@mui/material";
@@ -13,8 +15,9 @@ import MuiTooltip from "@/components/reusable/MuiTooltip";
 import R1ReportTable from "@/table/report/R1ReportTable";
 import { rangePresets } from "@/utils/rangePresets";
 import { Button } from "@/components/ui/button";
-import { useSocketContext } from "@/components/context/SocketContext";
 import { getR1Report } from "@/features/report/report/reportSlice";
+
+ModuleRegistry.registerModules([ExcelExportModule]);
 
 const R1Report: React.FC = () => {
   const [colapse, setcolapse] = useState<boolean>(false);
@@ -31,23 +34,19 @@ const R1Report: React.FC = () => {
   const { r1ReportLoading, r1Report } = useAppSelector((state) => state.report);
   const gridRef = useRef<AgGridReact<any>>(null);
   const { RangePicker } = DatePicker;
-  const { emitR6DispatchReport, isConnected } = useSocketContext();
+  const hasReportData = (r1Report?.data?.data?.length ?? 0) > 0;
 
   const onBtExport = () => {
-    if (type === "min") {
-      emitR6DispatchReport({
-        type: "MINNO",
-        data: min,
-        module: moduleType,
-      });
-    } else {
-      emitR6DispatchReport({
-        type: type === "date" ? "DATE" : type,
-        startDate: date.from?.format("DD-MM-YYYY") || "",
-        endDate: date.to?.format("DD-MM-YYYY") || "",
-        module: moduleType,
-      });
+    const gridApi = gridRef.current?.api;
+    if (!gridApi || gridApi.getDisplayedRowCount() === 0) {
+      showToast("No data available to download", "error");
+      return;
     }
+
+    gridApi.exportDataAsExcel({
+      fileName: `R1-Report-${dayjs().format("DD-MM-YYYY")}.xlsx`,
+      sheetName: "R1 Report",
+    });
   };
 
   const handlePageChange = (page: number) => {
@@ -216,7 +215,7 @@ const R1Report: React.FC = () => {
                   </LoadingButton>
                   <MuiTooltip title="Download" placement="right">
                     <LoadingButton
-                      disabled={!isConnected}
+                      disabled={!hasReportData}
                       variant="contained"
                       color="primary"
                       style={{
@@ -273,7 +272,7 @@ const R1Report: React.FC = () => {
                   </LoadingButton>
                   <MuiTooltip title="Download" placement="right">
                     <LoadingButton
-                      disabled={!r1Report}
+                      disabled={!hasReportData}
                       variant="contained"
                       color="primary"
                       style={{
