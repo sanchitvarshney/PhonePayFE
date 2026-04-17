@@ -14,6 +14,7 @@ import procurementReducer from "@/features/procurement/poSlices";
 import vendorReducer from "@/features/master/vendor/vendorSlice";
 import reportReducer from "@/features/report/report/reportSlice";
 import queryReducer from "@/features/query/query/querySlice";
+import salesOrderReducer from "@/features/salesOrder/salesOrderSlice";
 
 export const store = configureStore({
   reducer: {
@@ -29,6 +30,7 @@ export const store = configureStore({
     rawmin: rawminReducer,
     materialRequestWithoutBom: materialRequestWithoutBomReducer,
     po: procurementReducer,
+    salesOrder: salesOrderReducer,
     vendor: vendorReducer,
     report: reportReducer,
     query: queryReducer,
