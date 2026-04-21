@@ -5,6 +5,7 @@ import Tab from "@mui/material/Tab";
 import { useNavigate, useLocation } from "react-router-dom";
 import ManageHistoryIcon from "@mui/icons-material/ManageHistory";
 import WarehouseIcon from "@mui/icons-material/Warehouse";
+import DescriptionIcon from "@mui/icons-material/Description";
 
 const PHONEPE_PURPLE = "#5F259F";
 
@@ -15,7 +16,11 @@ type Props = {
 const SalesOrderLayout: React.FC<Props> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const tabRoutes = ["/sales-order/create", "/sales-order/manage"];
+  const tabRoutes = [
+    "/sales-order/create",
+    "/sales-order/manage",
+    "/sales-order/manage-challan",
+  ];
   const currentTabIndex = tabRoutes.indexOf(location.pathname);
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -53,6 +58,15 @@ const SalesOrderLayout: React.FC<Props> = ({ children }) => {
               <div className="flex items-center gap-[10px]">
                 <ManageHistoryIcon fontSize="small" />
                 Manage Sales Order
+              </div>
+            }
+          />
+          <Tab
+            sx={{ fontWeight: "500" }}
+            label={
+              <div className="flex items-center gap-[10px]">
+                <DescriptionIcon fontSize="small" />
+                Manage Challan
               </div>
             }
           />

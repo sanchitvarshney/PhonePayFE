@@ -4,6 +4,7 @@ import type { AxiosResponse } from "axios";
 
 type SalesOrderState = {
   loading: boolean;
+  cancelLoading: boolean;
   error: string | null;
   formData: unknown;
   manageSalesOrderData: any;
@@ -12,6 +13,7 @@ type SalesOrderState = {
 
 const initialState: SalesOrderState = {
   loading: false,
+  cancelLoading: false,
   error: null,
   formData: null,
   manageSalesOrderData: null,
@@ -40,6 +42,29 @@ export const fetchSalesOrder = createAsyncThunk<
   );
   return response;
 });
+
+export const fetchSalesOrderDetails = createAsyncThunk<
+  AxiosResponse<unknown>,
+  { salesOrder: string }
+>("salesOrder/fetchSalesOrderDetails", async (payload) => {
+  const response = await axiosInstance.get(
+    `/salesorder/fetch-salesOrder-details?salesOrder=${encodeURIComponent(
+      payload.salesOrder,
+    )}`,
+  );
+  return response;
+});
+
+export const cancelSalesOrder = createAsyncThunk<AxiosResponse<unknown>, unknown>(
+  "salesOrder/cancelSalesOrder",
+  async (payload) => {
+    const response = await axiosInstance.post(
+      "/salesorder/cancel-salesOrder",
+      payload,
+    );
+    return response;
+  },
+);
 
 const salesOrderSlice = createSlice({
   name: "salesOrder",
@@ -81,6 +106,17 @@ const salesOrderSlice = createSlice({
       .addCase(fetchSalesOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to fetch sales order";
+      })
+      .addCase(cancelSalesOrder.pending, (state) => {
+        state.cancelLoading = true;
+        state.error = null;
+      })
+      .addCase(cancelSalesOrder.fulfilled, (state) => {
+        state.cancelLoading = false;
+      })
+      .addCase(cancelSalesOrder.rejected, (state, action) => {
+        state.cancelLoading = false;
+        state.error = action.error.message || "Failed to cancel sales order";
       });
   },
 });
