@@ -31,6 +31,17 @@ export const createSalesOrder = createAsyncThunk<AxiosResponse<unknown>, unknown
   },
 );
 
+export const updateSalesOrder = createAsyncThunk<AxiosResponse<unknown>, unknown>(
+  "salesOrder/updateSalesOrder",
+  async (payload) => {
+    const response = await axiosInstance.post(
+      "/salesorder/updateSalesOrder",
+      payload,
+    );
+    return response;
+  },
+);
+
 export const fetchSalesOrder = createAsyncThunk<
   AxiosResponse<unknown>,
   { wise: string; data: string }
@@ -92,6 +103,17 @@ const salesOrderSlice = createSlice({
       .addCase(createSalesOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to create sales order";
+      })
+      .addCase(updateSalesOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateSalesOrder.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(updateSalesOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to update sales order";
       })
       .addCase(fetchSalesOrder.pending, (state) => {
         state.loading = true;

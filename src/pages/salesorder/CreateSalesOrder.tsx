@@ -11,6 +11,7 @@ import {
   createSalesOrder,
   resetSalesOrderFormData,
   setSalesOrderFormData,
+  updateSalesOrder,
 } from "@/features/salesOrder/salesOrderSlice";
 import {
   Autocomplete,
@@ -53,7 +54,7 @@ function newSingleRowId(): string {
 }
 
 interface BillAddress {
-  id: number;
+  id: string;
   gst: string;
   pin: string;
   addressLine1: string;
@@ -62,7 +63,7 @@ interface BillAddress {
 }
 
 interface ShippingAddress {
-  id: number;
+  id: string;
   pin: string;
   city: string;
   addressLine1: string;
@@ -72,6 +73,8 @@ interface ShippingAddress {
 
 interface BillFromAddress {
   companyName: string;
+  id?: string;
+  code?: string;
   addressLine1: string;
   addressLine2: string;
   city: string;
@@ -81,6 +84,8 @@ interface BillFromAddress {
 
 interface ShipFromAddress {
   companyName: string;
+  id?: string;
+  code?: string;
   addressLine1: string;
   addressLine2: string;
   city: string;
@@ -99,7 +104,7 @@ interface FormData {
 const defaultFormValues: FormData = {
   billaddressid: "",
   billaddress: {
-    id: 0,
+    id: "",
     gst: "",
     pin: "",
     addressLine1: "",
@@ -108,7 +113,7 @@ const defaultFormValues: FormData = {
   },
   shipaddressid: "",
   shipaddress: {
-    id: 0,
+    id: "",
     pin: "",
     city: "",
     addressLine1: "",
@@ -152,12 +157,12 @@ const mapSalesOrderDetailsToFormValues = (details: any): FormData => {
       billAddress?.code ??
       "",
     billaddress: {
-      id: Number(
+      id: String(
         billAddress?.id ??
           details?.billAddressId ??
           details?.billaddressid ??
           details?.billaddress_id ??
-          0,
+          "",
       ),
       gst:
         billAddress?.gst ??
@@ -184,12 +189,12 @@ const mapSalesOrderDetailsToFormValues = (details: any): FormData => {
       shipAddress?.code ??
       "",
     shipaddress: {
-      id: Number(
+      id: String(
         shipAddress?.id ??
           details?.shipAddressId ??
           details?.shipaddressid ??
           details?.shipaddress_id ??
-          0,
+          "",
       ),
       pin: shipAddress?.pin ?? details?.shipToPin ?? "",
       city: shipAddress?.city ?? details?.shipToCity ?? "",
@@ -209,8 +214,22 @@ const mapSalesOrderDetailsToFormValues = (details: any): FormData => {
       companyName:
         billFrom?.companyName ??
         billFrom?.code ??
+        details?.billFromCode ??
+        details?.billFromId ??
         details?.billFromCompanyName ??
         "",
+      id: String(
+        billFrom?.id ??
+          details?.billFromId ??
+          details?.billFromCode ??
+          "",
+      ),
+      code: String(
+        billFrom?.code ??
+          details?.billFromCode ??
+          details?.billFromId ??
+          "",
+      ),
       addressLine1:
         billFrom?.addressLine1 ??
         billFrom?.line1 ??
@@ -229,8 +248,22 @@ const mapSalesOrderDetailsToFormValues = (details: any): FormData => {
       companyName:
         shipFrom?.companyName ??
         shipFrom?.code ??
+        details?.shipFromCode ??
+        details?.shipFromId ??
         details?.shipFromCompanyName ??
         "",
+      id: String(
+        shipFrom?.id ??
+          details?.shipFromId ??
+          details?.shipFromCode ??
+          "",
+      ),
+      code: String(
+        shipFrom?.code ??
+          details?.shipFromCode ??
+          details?.shipFromId ??
+          "",
+      ),
       addressLine1:
         shipFrom?.addressLine1 ??
         shipFrom?.line1 ??
@@ -272,7 +305,13 @@ const mapSalesOrderDetailsToSingleRow = (details: any): SingleRowData => {
           value: String(partValue),
           id: String(partValue),
           sku: String(details?.sku ?? ""),
-          device_key: String(details?.device_key ?? ""),
+          device_key: String(
+            details?.device_key ??
+              details?.deviceKey ??
+              details?.device_key_id ??
+              details?.deviceKeyId ??
+              "",
+          ),
           device_model: String(
             details?.deviceModal ??
             details?.device_model ??
@@ -410,7 +449,14 @@ const CreateSalesOrder: React.FC = () => {
       shipaddress: activeFormData.shipaddress,
       orderType: "sales-order",
     };
-    dispatch(createSalesOrder(payload)).then((response: any) => {
+    const submitAction = isEditMode
+      ? updateSalesOrder({
+          ...payload,
+          salesOrder: resolvedSalesOrderId,
+        })
+      : createSalesOrder(payload);
+
+    dispatch(submitAction).then((response: any) => {
       console.log(response)
       if(response.payload.data.success) {
         showToast(response.payload.data.message, "success");
@@ -509,6 +555,7 @@ const CreateSalesOrder: React.FC = () => {
 
   const handleBillAddressChange = (value: any) => {
     if (value) {
+      setValue("billaddress.id", String(value.id ?? value.code ?? ""));
       setValue("billaddress.label", value.label);
       setValue("billaddress.addressLine1", value.addressLine1);
       setValue("billaddress.addressLine2", value.addressLine2);
@@ -518,6 +565,7 @@ const CreateSalesOrder: React.FC = () => {
   };
   const handleShipAddressChange = (value: any) => {
     if (value) {
+      setValue("shipaddress.id", String(value.id ?? value.code ?? ""));
       setValue("shipaddress.label", value.label);
       setValue("shipaddress.addressLine1", value.addressLine1);
       setValue("shipaddress.addressLine2", value.addressLine2);
@@ -528,6 +576,8 @@ const CreateSalesOrder: React.FC = () => {
 
   const handleBillFromAddressFill = (value: any) => {
     if (value) {
+      setValue("billFrom.id", String(value.id ?? value.code ?? ""));
+      setValue("billFrom.code", String(value.code ?? value.id ?? ""));
       setValue(
         "billFrom.addressLine1",
         value.addressLine1 || "",
@@ -543,6 +593,8 @@ const CreateSalesOrder: React.FC = () => {
   };
   const handleShipFromAddressFill = (value: any) => {
     if (value) {
+      setValue("shipFrom.id", String(value.id ?? value.code ?? ""));
+      setValue("shipFrom.code", String(value.code ?? value.id ?? ""));
       setValue(
         "shipFrom.addressLine1",
         value.addressLine1 || "",
