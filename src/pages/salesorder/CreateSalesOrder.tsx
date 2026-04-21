@@ -11,6 +11,7 @@ import {
   createSalesOrder,
   resetSalesOrderFormData,
   setSalesOrderFormData,
+  updateSalesOrder,
 } from "@/features/salesOrder/salesOrderSlice";
 import {
   Autocomplete,
@@ -18,10 +19,6 @@ import {
   InputAdornment,
   TextField,
 } from "@mui/material";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import dayjs from "dayjs";
 import { LoadingButton } from "@mui/lab";
 import { Icons } from "@/components/icons";
 import { showToast } from "@/utils/toasterContext";
@@ -31,7 +28,7 @@ import {
   getDispatchFromDetail,
   getShippingAddress,
 } from "@/features/master/client/clientSlice";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import FullPageLoading from "@/components/shared/FullPageLoading";
 
 interface SingleRowData {
@@ -57,7 +54,7 @@ function newSingleRowId(): string {
 }
 
 interface BillAddress {
-  id: number;
+  id: string;
   gst: string;
   pin: string;
   addressLine1: string;
@@ -66,7 +63,7 @@ interface BillAddress {
 }
 
 interface ShippingAddress {
-  id: number;
+  id: string;
   pin: string;
   city: string;
   addressLine1: string;
@@ -76,6 +73,8 @@ interface ShippingAddress {
 
 interface BillFromAddress {
   companyName: string;
+  id?: string;
+  code?: string;
   addressLine1: string;
   addressLine2: string;
   city: string;
@@ -85,6 +84,8 @@ interface BillFromAddress {
 
 interface ShipFromAddress {
   companyName: string;
+  id?: string;
+  code?: string;
   addressLine1: string;
   addressLine2: string;
   city: string;
@@ -98,19 +99,12 @@ interface FormData {
   shipaddress: ShippingAddress;
   billFrom: BillFromAddress;
   shipFrom: ShipFromAddress;
-  placeOfSupply: string;
-  stateCode: string;
-  ewayBillNo?: string;
-  vehicleNo?: string;
-  boxNo: string;
-  challanNo: string;
-  challanDate: string | dayjs.Dayjs;
 }
 
 const defaultFormValues: FormData = {
   billaddressid: "",
   billaddress: {
-    id: 0,
+    id: "",
     gst: "",
     pin: "",
     addressLine1: "",
@@ -119,7 +113,7 @@ const defaultFormValues: FormData = {
   },
   shipaddressid: "",
   shipaddress: {
-    id: 0,
+    id: "",
     pin: "",
     city: "",
     addressLine1: "",
@@ -142,13 +136,6 @@ const defaultFormValues: FormData = {
     pin: "",
     gstin: "",
   },
-  placeOfSupply: "",
-  stateCode: "",
-  ewayBillNo: "",
-  vehicleNo: "",
-  boxNo: "",
-  challanNo: "",
-  challanDate: "",
 };
 
 const deriveDeviceModelFromText = (text: string): string => {
@@ -156,9 +143,201 @@ const deriveDeviceModelFromText = (text: string): string => {
   return text.replace(/^\s*\([^)]*\)\s*/, "").trim();
 };
 
+const mapSalesOrderDetailsToFormValues = (details: any): FormData => {
+  const billAddress = details?.billaddress ?? details?.billAddress ?? {};
+  const shipAddress = details?.shipaddress ?? details?.shipAddress ?? {};
+  const billFrom = details?.billFrom ?? details?.bill_from ?? {};
+  const shipFrom = details?.shipFrom ?? details?.ship_from ?? {};
+
+  return {
+    billaddressid:
+      details?.billaddressid ??
+      details?.billaddress_id ??
+      details?.billAddressId ??
+      billAddress?.code ??
+      "",
+    billaddress: {
+      id: String(
+        billAddress?.id ??
+          details?.billAddressId ??
+          details?.billaddressid ??
+          details?.billaddress_id ??
+          "",
+      ),
+      gst:
+        billAddress?.gst ??
+        billAddress?.gstin ??
+        details?.billToGst ??
+        "",
+      pin: billAddress?.pin ?? details?.billToPin ?? "",
+      addressLine1:
+        billAddress?.addressLine1 ??
+        billAddress?.line1 ??
+        details?.billToAddressLine1 ??
+        "",
+      addressLine2:
+        billAddress?.addressLine2 ??
+        billAddress?.line2 ??
+        details?.billToAddressLine2 ??
+        "",
+      label: billAddress?.label ?? details?.billToLabel ?? "",
+    },
+    shipaddressid:
+      details?.shipaddressid ??
+      details?.shipaddress_id ??
+      details?.shipAddressId ??
+      shipAddress?.code ??
+      "",
+    shipaddress: {
+      id: String(
+        shipAddress?.id ??
+          details?.shipAddressId ??
+          details?.shipaddressid ??
+          details?.shipaddress_id ??
+          "",
+      ),
+      pin: shipAddress?.pin ?? details?.shipToPin ?? "",
+      city: shipAddress?.city ?? details?.shipToCity ?? "",
+      addressLine1:
+        shipAddress?.addressLine1 ??
+        shipAddress?.line1 ??
+        details?.shipToAddressLine1 ??
+        "",
+      addressLine2:
+        shipAddress?.addressLine2 ??
+        shipAddress?.line2 ??
+        details?.shipToAddressLine2 ??
+        "",
+      label: shipAddress?.label ?? details?.shipToLabel ?? "",
+    },
+    billFrom: {
+      companyName:
+        billFrom?.companyName ??
+        billFrom?.code ??
+        details?.billFromCode ??
+        details?.billFromId ??
+        details?.billFromCompanyName ??
+        "",
+      id: String(
+        billFrom?.id ??
+          details?.billFromId ??
+          details?.billFromCode ??
+          "",
+      ),
+      code: String(
+        billFrom?.code ??
+          details?.billFromCode ??
+          details?.billFromId ??
+          "",
+      ),
+      addressLine1:
+        billFrom?.addressLine1 ??
+        billFrom?.line1 ??
+        details?.billFromAddressLine1 ??
+        "",
+      addressLine2:
+        billFrom?.addressLine2 ??
+        billFrom?.line2 ??
+        details?.billFromAddressLine2 ??
+        "",
+      city: billFrom?.city ?? details?.billFromCity ?? "",
+      pin: billFrom?.pin ?? details?.billFromPin ?? "",
+      gstin: billFrom?.gstin ?? billFrom?.gst ?? details?.billFromGstin ?? "",
+    },
+    shipFrom: {
+      companyName:
+        shipFrom?.companyName ??
+        shipFrom?.code ??
+        details?.shipFromCode ??
+        details?.shipFromId ??
+        details?.shipFromCompanyName ??
+        "",
+      id: String(
+        shipFrom?.id ??
+          details?.shipFromId ??
+          details?.shipFromCode ??
+          "",
+      ),
+      code: String(
+        shipFrom?.code ??
+          details?.shipFromCode ??
+          details?.shipFromId ??
+          "",
+      ),
+      addressLine1:
+        shipFrom?.addressLine1 ??
+        shipFrom?.line1 ??
+        details?.shipFromAddressLine1 ??
+        "",
+      addressLine2:
+        shipFrom?.addressLine2 ??
+        shipFrom?.line2 ??
+        details?.shipFromAddressLine2 ??
+        "",
+      city: shipFrom?.city ?? details?.shipFromCity ?? "",
+      pin: shipFrom?.pin ?? details?.shipFromPin ?? "",
+      gstin: shipFrom?.gstin ?? shipFrom?.gst ?? details?.shipFromGstin ?? "",
+    },
+  };
+};
+
+const mapSalesOrderDetailsToSingleRow = (details: any): SingleRowData => {
+  const partValue =
+    details?.component ??
+    details?.component_id ??
+    details?.partcode ??
+    details?.sku ??
+    "";
+  const partLabel =
+    details?.component_name ??
+    details?.component ??
+    details?.deviceModal ??
+    details?.device_model ??
+    details?.partcode ??
+    details?.sku ??
+    "";
+
+  return {
+    id: newSingleRowId(),
+    partComponent: partValue
+      ? {
+          label: String(partLabel),
+          value: String(partValue),
+          id: String(partValue),
+          sku: String(details?.sku ?? ""),
+          device_key: String(
+            details?.device_key ??
+              details?.deviceKey ??
+              details?.device_key_id ??
+              details?.deviceKeyId ??
+              "",
+          ),
+          device_model: String(
+            details?.deviceModal ??
+            details?.device_model ??
+              details?.device_modal ??
+              deriveDeviceModelFromText(String(partLabel)),
+          ),
+          device_modal: String(
+            details?.device_modal ?? details?.device_model ?? "",
+          ),
+        }
+      : null,
+    qty: Number(details?.qty ?? details?.quantity ?? 0),
+    rate: Number(details?.rate ?? details?.price ?? 0),
+  };
+};
+
 const CreateSalesOrder: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { salesOrderId } = useParams<{ salesOrderId?: string }>();
+  const resolvedSalesOrderId = salesOrderId
+    ? decodeURIComponent(salesOrderId)
+    : "";
+  const isEditMode = location.pathname.includes("/sales-order/edit/");
   const [alert, setAlert] = useState<boolean>(false);
+  const [prefillLoading, setPrefillLoading] = useState<boolean>(false);
   const [singleRow, setSingleRow] = useState<SingleRowData>({
     id: newSingleRowId(),
     partComponent: null,
@@ -253,15 +432,6 @@ const CreateSalesOrder: React.FC = () => {
     const qty = singleRow.qty;
     const rate = singleRow.rate;
 
-    const challanDate = activeFormData.challanDate;
-    let formattedChallanDate = "";
-    if (challanDate) {
-      const date = dayjs(challanDate);
-      if (date.isValid()) {
-        formattedChallanDate = date.format("DD-MM-YYYY");
-      }
-    }
-
     const payload: any = {
       component,
       sku: singleRow.partComponent?.sku || "",
@@ -271,13 +441,6 @@ const CreateSalesOrder: React.FC = () => {
       qty,
       rate,
       serialno: [],
-      placeOfSupply: activeFormData.placeOfSupply,
-      stateCode: activeFormData.stateCode,
-      challanNo: activeFormData.challanNo,
-      challanDate: formattedChallanDate,
-      boxNo: activeFormData.boxNo,
-      ewayBillNo: activeFormData.ewayBillNo,
-      vehicleNo: activeFormData.vehicleNo,
       billFrom: activeFormData.billFrom,
       shipFrom: activeFormData.shipFrom,
       billaddressid: activeFormData.billaddressid,
@@ -286,39 +449,31 @@ const CreateSalesOrder: React.FC = () => {
       shipaddress: activeFormData.shipaddress,
       orderType: "sales-order",
     };
-    dispatch(createSalesOrder(payload)).then((response: any) => {
-      const requestStatus = response?.meta?.requestStatus;
-      const body = response?.payload?.data ?? response?.payload ?? {};
-      const statusText = String(body?.status ?? body?.data?.status ?? "").toLowerCase();
-      const isSuccess =
-        requestStatus === "fulfilled" &&
-        (body?.success === true ||
-          body?.data?.success === true ||
-          statusText === "success");
+    const submitAction = isEditMode
+      ? updateSalesOrder({
+          ...payload,
+          salesOrder: resolvedSalesOrderId,
+        })
+      : createSalesOrder(payload);
 
-      if (isSuccess) {
-        showToast(
-          body?.message ??
-            body?.data?.message ??
-            "Sales order created successfully",
-          "success"
-        );
+    dispatch(submitAction).then((response: any) => {
+      console.log(response)
+      if(response.payload.data.success) {
+        showToast(response.payload.data.message, "success");
         resetall();
         navigate("/sales-order/manage");
       } else {
-        showToast(
-          body?.message ??
-            body?.data?.message ??
-            "Failed to create sales order",
-          "error"
-        );
+        showToast(response.payload.data.message, "error");
       }
+    }).catch((error: any) => {
+      showToast(error.response.data.message, "error");
+      console.error("Error creating sales order:", error);
     });
   };
   useEffect(() => {
     dispatch(getDispatchFromDetail());
     dispatch(getShippingAddress());
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     const fetchSkuOptions = async () => {
@@ -347,8 +502,60 @@ const CreateSalesOrder: React.FC = () => {
     fetchSkuOptions();
   }, []);
 
+  useEffect(() => {
+    const fetchSalesOrderDetails = async () => {
+      if (!resolvedSalesOrderId) return;
+
+      setPrefillLoading(true);
+      try {
+        const response = await axiosInstance.get(
+          `/salesorder/fetch-salesOrder-details?salesOrder=${encodeURIComponent(
+            resolvedSalesOrderId,
+          )}`,
+        );
+        const responseData = response?.data?.data ?? response?.data?.response ?? response?.data;
+        const details = Array.isArray(responseData)
+          ? responseData[0]
+          : Array.isArray(responseData?.data)
+            ? responseData.data[0]
+            : responseData;
+
+        if (!details) {
+          showToast("Sales order details not found", "error");
+          return;
+        }
+
+        const mappedFormData = mapSalesOrderDetailsToFormValues(details);
+        const mappedSingleRow = mapSalesOrderDetailsToSingleRow(details);
+
+        reset(mappedFormData);
+        dispatch(setSalesOrderFormData(mappedFormData as any));
+        setSingleRow(mappedSingleRow);
+
+        if (mappedSingleRow.partComponent) {
+          const selectedPartComponent = mappedSingleRow.partComponent;
+          setSkuOptions((previous) => {
+            const alreadyPresent = previous.some(
+              (option) => option.value === selectedPartComponent.value,
+            );
+            if (alreadyPresent) return previous;
+            return [...previous, selectedPartComponent];
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch sales order details", error);
+        showToast("Failed to fetch sales order details", "error");
+      } finally {
+        setPrefillLoading(false);
+      }
+    };
+
+    fetchSalesOrderDetails();
+  }, [dispatch, reset, resolvedSalesOrderId]);
+
   const handleBillAddressChange = (value: any) => {
     if (value) {
+      setValue("billaddress.id", String(value.id ?? value.code ?? ""));
       setValue("billaddress.label", value.label);
       setValue("billaddress.addressLine1", value.addressLine1);
       setValue("billaddress.addressLine2", value.addressLine2);
@@ -358,6 +565,7 @@ const CreateSalesOrder: React.FC = () => {
   };
   const handleShipAddressChange = (value: any) => {
     if (value) {
+      setValue("shipaddress.id", String(value.id ?? value.code ?? ""));
       setValue("shipaddress.label", value.label);
       setValue("shipaddress.addressLine1", value.addressLine1);
       setValue("shipaddress.addressLine2", value.addressLine2);
@@ -368,6 +576,8 @@ const CreateSalesOrder: React.FC = () => {
 
   const handleBillFromAddressFill = (value: any) => {
     if (value) {
+      setValue("billFrom.id", String(value.id ?? value.code ?? ""));
+      setValue("billFrom.code", String(value.code ?? value.id ?? ""));
       setValue(
         "billFrom.addressLine1",
         value.addressLine1 || "",
@@ -383,6 +593,8 @@ const CreateSalesOrder: React.FC = () => {
   };
   const handleShipFromAddressFill = (value: any) => {
     if (value) {
+      setValue("shipFrom.id", String(value.id ?? value.code ?? ""));
+      setValue("shipFrom.code", String(value.code ?? value.id ?? ""));
       setValue(
         "shipFrom.addressLine1",
         value.addressLine1 || "",
@@ -412,7 +624,7 @@ const CreateSalesOrder: React.FC = () => {
         }}
       />
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white w-full flex-1 min-h-0 flex flex-col overflow-hidden">
-        {loading && <FullPageLoading />}
+        {(loading || prefillLoading) && <FullPageLoading />}
         <div className="flex-1 min-h-0 w-full flex flex-col overflow-hidden">
             <div className="h-[calc(100vh-150px)] py-[20px] sm:px-[10px] md:px-[30px] lg:px-[50px] flex flex-col gap-[20px] overflow-y-auto">
               {/* SECTION 1: Bill From */}
@@ -847,129 +1059,6 @@ const CreateSalesOrder: React.FC = () => {
                 />
               </div>
 
-              {/* SECTION 5: Document Details */}
-              <div className="flex items-center w-full gap-3">
-                <div className="flex items-center gap-[5px]">
-                  <Icons.documentDetail />
-                  <h2 className="text-lg font-semibold">Document Details</h2>
-                </div>
-                <Divider
-                  sx={{
-                    borderBottomWidth: 2,
-                    borderColor: "#f59e0b",
-                    flexGrow: 1,
-                  }}
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-[30px] py-[20px]">
-                <TextField
-                  variant="filled"
-                  error={!!errors.placeOfSupply}
-                  helperText={errors?.placeOfSupply?.message}
-                  focused={!!watch("placeOfSupply")}
-                  fullWidth
-                  label="Place of Supply"
-                  {...register("placeOfSupply", {
-                    required: "Place of Supply is required",
-                  })}
-                />
-                <TextField
-                  variant="filled"
-                  error={!!errors.stateCode}
-                  helperText={errors?.stateCode?.message}
-                  focused={!!watch("stateCode")}
-                  fullWidth
-                  label="State Code"
-                  {...register("stateCode", {
-                    required: "State Code is required",
-                  })}
-                />
-                <TextField
-                  variant="filled"
-                  error={!!errors.challanNo}
-                  helperText={errors?.challanNo?.message}
-                  focused={!!watch("challanNo")}
-                  fullWidth
-                  label="Challan Number"
-                  {...register("challanNo", {
-                    required: "Challan No is required",
-                  })}
-                />
-                <TextField
-                  variant="filled"
-                  error={!!errors.boxNo}
-                  helperText={errors?.boxNo?.message}
-                  focused={!!watch("boxNo")}
-                  fullWidth
-                  label="Box ID"
-                  {...register("boxNo", {
-                    required: "Box No is required",
-                  })}
-                />
-                <Controller
-                  name="challanDate"
-                  control={control}
-                  rules={{
-                    required: "Challan Date is required",
-                    validate: (value) => {
-                      if (!value) return "Challan Date is required";
-                      return dayjs(value).isValid() || "Invalid date";
-                    },
-                  }}
-                  render={({ field }) => (
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <DatePicker
-                        enableAccessibleFieldDOMStructure={false}
-                        format="DD-MM-YYYY"
-                        slots={{
-                          textField: TextField,
-                        }}
-                        slotProps={{
-                          textField: {
-                            variant: "filled",
-                            error: !!errors.challanDate,
-                            helperText: (errors as any).challanDate?.message,
-                            fullWidth: true,
-                          },
-                        }}
-                        value={
-                          field.value && dayjs(field.value).isValid()
-                            ? dayjs(field.value)
-                            : null
-                        }
-                        onChange={(newValue) => {
-                          if (newValue && dayjs(newValue).isValid()) {
-                            field.onChange(newValue);
-                            dispatch(
-                              setSalesOrderFormData({
-                                ...(formData ?? {}),
-                                challanDate: newValue,
-                              }),
-                            );
-                          }
-                        }}
-                        sx={{ width: "100%" }}
-                        label="Challan Date"
-                        name="challanDate"
-                      />
-                    </LocalizationProvider>
-                  )}
-                />
-                <TextField
-                  variant="filled"
-                  focused={!!watch("ewayBillNo")}
-                  fullWidth
-                  label="E-way Bill No"
-                  {...register("ewayBillNo")}
-                />
-                <TextField
-                  variant="filled"
-                  focused={!!watch("vehicleNo")}
-                  fullWidth
-                  label="Vehicle Number"
-                  {...register("vehicleNo")}
-                />
-              </div>
               <div className="flex items-center w-full gap-3">
                 <div className="flex items-center gap-[5px]">
                   <Icons.documentDetail />
@@ -1064,7 +1153,7 @@ const CreateSalesOrder: React.FC = () => {
               variant="contained"
               startIcon={<Icons.save />}
             >
-              Submit
+              {isEditMode ? "Update" : "Submit"}
             </LoadingButton>
           </div>
         </div>

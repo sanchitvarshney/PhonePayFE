@@ -39,6 +39,7 @@ import BulkDeviceInward from "@/pages/bulkDeviceInward/BulkDeviceInward";
 import SalesOrderLayout from "@/layouts/SalesOrderLayout";
 import CreateSalesOrder from "@/pages/salesorder/CreateSalesOrder";
 import ManageSalesOrder from "@/pages/salesorder/ManageSalesOrder";
+import ManageChallan from "@/pages/salesorder/ManageChallan";
 import Consumption from "@/pages/warehouse/Consumption";
 import GoodSpareInwardv2 from "@/pages/warehouse/GoodSpareInwardv2";
 
@@ -229,11 +230,41 @@ export const router = createBrowserRouter([
         element: (
           <MainLayout>
             <SalesOrderLayout>
+              <CreateSalesOrder />
+            </SalesOrderLayout>
+          </MainLayout>
+        ),
+        path: "/sales-order/create/:salesOrderId",
+      },
+      {
+        element: (
+          <MainLayout>
+            <SalesOrderLayout>
+              <CreateSalesOrder />
+            </SalesOrderLayout>
+          </MainLayout>
+        ),
+        path: "/sales-order/edit/:salesOrderId",
+      },
+      {
+        element: (
+          <MainLayout>
+            <SalesOrderLayout>
               <ManageSalesOrder />
             </SalesOrderLayout>
           </MainLayout>
         ),
         path: "/sales-order/manage",
+      },
+      {
+        element: (
+          <MainLayout>
+            <SalesOrderLayout>
+              <ManageChallan />
+            </SalesOrderLayout>
+          </MainLayout>
+        ),
+        path: "/sales-order/manage-challan",
       },
       {
         element: (

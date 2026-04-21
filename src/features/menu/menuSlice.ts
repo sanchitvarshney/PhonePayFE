@@ -148,6 +148,16 @@ const staticMenu: Menu[] = [
             icon: "report",
             description: "Manage Sales Order",
           },
+          {
+            menu_key: "manage-sales-challan",
+            name: "Manage Challan",
+            parent_menu_key: "sales-order",
+            url: "/sales-order/manage-challan",
+            order: 3,
+            is_active: 1,
+            icon: "report",
+            description: "Manage Challan",
+          },
         ],
       },
       {

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
 import { ColDef } from "@ag-grid-community/core";
@@ -7,27 +8,93 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { FormControl, MenuItem, Select, TextField } from "@mui/material";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  IconButton,
+  Menu,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
 import CustomLoadingOverlay from "@/components/reusable/CustomLoadingOverlay";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import {
+  cancelSalesOrder,
+  createSalesOrder,
   fetchSalesOrder,
+  fetchSalesOrderDetails,
   setSalesOrderDateRange,
 } from "@/features/salesOrder/salesOrderSlice";
 import { showToast } from "@/utils/toasterContext";
+import { useNavigate } from "react-router-dom";
 
 const ManageSalesOrder: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { loading, manageSalesOrderData, dateRange } = useAppSelector(
+  const { loading, cancelLoading, manageSalesOrderData, dateRange } = useAppSelector(
     (state) => state.salesOrder,
   );
   const [colapse, setcolapse] = useState<boolean>(false);
   const [type, setType] = useState<string>("datewise");
   const [salesOrderNo, setSalesOrderNo] = useState("");
   const [date, setDate] = useState<Dayjs | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedRow, setSelectedRow] = useState<any>(null);
+  const [openCancelModal, setOpenCancelModal] = useState<boolean>(false);
+  const [cancelRemark, setCancelRemark] = useState<string>("");
+  const [openChallanModal, setOpenChallanModal] = useState<boolean>(false);
+  const [challanSourceDetails, setChallanSourceDetails] = useState<any>(null);
+  const [challanQty, setChallanQty] = useState<string>("");
+  const [placeOfSupply, setPlaceOfSupply] = useState<string>("");
+  const [stateCode, setStateCode] = useState<string>("");
+  const [challanNo, setChallanNo] = useState<string>("");
+  const [challanDate, setChallanDate] = useState<Dayjs | null>(null);
+  const [boxNo, setBoxNo] = useState<string>("");
+
+  const getSalesOrderNumber = (rowData: any): string => {
+    return (
+      rowData?.salesOrderNo ??
+      rowData?.sales_order_no ??
+      rowData?.so_transaction ??
+      rowData?.transaction_id ??
+      rowData?.salesOrder ??
+      ""
+    );
+  };
+
+  const handleMenuClick = (
+    event: React.MouseEvent<HTMLElement>,
+    rowData: any,
+  ) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedRow(rowData);
+  };
+
+  const closeMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const buildSearchData = () => {
+    if (type === "datewise") {
+      if (date) return dayjs(date).format("DD-MM-YYYY");
+      return dateRange;
+    }
+    return salesOrderNo.trim() || dateRange;
+  };
+
+  const refetchList = () => {
+    const data = buildSearchData();
+    if (!data) return;
+    dispatch(fetchSalesOrder({ wise: type, data }));
+  };
 
   const rowData = useMemo(() => {
     if (Array.isArray(manageSalesOrderData?.data)) return manageSalesOrderData.data;
@@ -39,6 +106,21 @@ const ManageSalesOrder: React.FC = () => {
   const columnDefs = useMemo<ColDef[]>(
     () => [
       {
+        headerName: "",
+        sortable: false,
+        filter: false,
+        width: 60,
+        cellRenderer: (params: { data: any }) => (
+          <IconButton
+            size="small"
+            onClick={(event) => handleMenuClick(event, params.data)}
+            className="hover:bg-gray-100"
+          >
+            <MoreVertIcon className="h-4 w-4" />
+          </IconButton>
+        ),
+      },
+      {
         headerName: "#",
         width: 90,
         valueGetter: "node.rowIndex + 1",
@@ -49,12 +131,7 @@ const ManageSalesOrder: React.FC = () => {
         sortable: true,
         filter: true,
         valueGetter: (params) =>
-          params.data?.salesOrderNo ??
-          params.data?.sales_order_no ??
-          params.data?.so_transaction ??
-          params.data?.transaction_id ??
-          params.data?.salesOrder ??
-          "",
+          getSalesOrderNumber(params.data),
       },
       {
         headerName: "Date",
@@ -140,6 +217,147 @@ const ManageSalesOrder: React.FC = () => {
 
     dispatch(setSalesOrderDateRange(salesOrderNo.trim()));
     dispatch(fetchSalesOrder({ wise: "salesorderwise", data: salesOrderNo.trim() }));
+  };
+
+  const handleCreateChallan = async () => {
+    const salesOrder = getSalesOrderNumber(selectedRow);
+    if (!salesOrder) {
+      showToast("Sales order number not found", "error");
+      return;
+    }
+
+    const detailsResponse: any = await dispatch(fetchSalesOrderDetails({ salesOrder }));
+    const responseData =
+      detailsResponse?.payload?.data?.data ??
+      detailsResponse?.payload?.data?.response ??
+      detailsResponse?.payload?.data;
+    const details = Array.isArray(responseData)
+      ? responseData[0]
+      : Array.isArray(responseData?.data)
+        ? responseData.data[0]
+        : responseData;
+
+    setChallanSourceDetails(details ?? null);
+    setChallanQty(String(details?.qty ?? selectedRow?.qty ?? ""));
+    setPlaceOfSupply("");
+    setStateCode("");
+    setChallanNo("");
+    setChallanDate(null);
+    setBoxNo("");
+    setOpenChallanModal(true);
+    closeMenu();
+  };
+
+  const handleEdit = async () => {
+    const salesOrder = getSalesOrderNumber(selectedRow);
+    if (!salesOrder) {
+      showToast("Sales order number not found", "error");
+      return;
+    }
+    await dispatch(fetchSalesOrderDetails({ salesOrder }));
+    closeMenu();
+    navigate(`/sales-order/edit/${encodeURIComponent(salesOrder)}`);
+  };
+
+  const handleCancelClick = () => {
+    setOpenCancelModal(true);
+    closeMenu();
+  };
+
+  const handleCloseCancelModal = () => {
+    setOpenCancelModal(false);
+    setCancelRemark("");
+  };
+
+  const handleSubmitCancel = async () => {
+    const salesOrder = getSalesOrderNumber(selectedRow);
+    if (!salesOrder) {
+      showToast("Sales order number not found", "error");
+      return;
+    }
+
+    if (!cancelRemark.trim()) {
+      showToast("Please enter remarks", "error");
+      return;
+    }
+
+    const response: any = await dispatch(
+      cancelSalesOrder({
+        salesOrder,
+        remark: cancelRemark.trim(),
+      }),
+    );
+
+    if (response?.payload?.data?.success) {
+      showToast(response.payload.data.message || "Sales order cancelled successfully", "success");
+      handleCloseCancelModal();
+      refetchList();
+      return;
+    }
+
+    showToast(response?.payload?.data?.message || "Failed to cancel sales order", "error");
+  };
+
+  const handleCloseChallanModal = () => {
+    setOpenChallanModal(false);
+    setChallanSourceDetails(null);
+    setChallanQty("");
+    setPlaceOfSupply("");
+    setStateCode("");
+    setChallanNo("");
+    setChallanDate(null);
+    setBoxNo("");
+  };
+
+  const handleSubmitCreateChallan = async () => {
+    const salesOrder = getSalesOrderNumber(selectedRow);
+    if (!salesOrder) {
+      showToast("Sales order number not found", "error");
+      return;
+    }
+
+    if (!placeOfSupply.trim()) {
+      showToast("Please enter place of supply", "error");
+      return;
+    }
+    if (!stateCode.trim()) {
+      showToast("Please enter state code", "error");
+      return;
+    }
+    if (!challanNo.trim()) {
+      showToast("Please enter challan number", "error");
+      return;
+    }
+    if (!challanDate) {
+      showToast("Please select challan date", "error");
+      return;
+    }
+    if (!boxNo.trim()) {
+      showToast("Please enter box number", "error");
+      return;
+    }
+    if (!challanQty.trim() || Number(challanQty) <= 0) {
+      showToast("Please enter valid qty", "error");
+      return;
+    }
+
+    const payload = {
+      salesOrder,
+      qty: Number(challanQty),
+      placeOfSupply: placeOfSupply.trim(),
+      stateCode: stateCode.trim(),
+      challanNo: challanNo.trim(),
+      challanDate: dayjs(challanDate).format("DD-MM-YYYY"),
+      boxNo: boxNo.trim(),
+    };
+
+    const response: any = await dispatch(createSalesOrder(payload));
+    if (response?.payload?.data?.success) {
+      showToast(response.payload.data.message ?? "Challan created successfully", "success");
+      handleCloseChallanModal();
+      return;
+    }
+    showToast(response?.payload?.data?.message || "Failed to create challan", "error");
   };
 
   return (
@@ -233,6 +451,192 @@ const ManageSalesOrder: React.FC = () => {
             Last search: {dateRange}
           </div>
         ) : null}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={closeMenu}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }}
+          transformOrigin={{
+            vertical: "top",
+            horizontal: "right",
+          }}
+        >
+          <MenuItem onClick={handleCreateChallan}>Create Challan</MenuItem>
+          <MenuItem onClick={handleEdit}>Edit</MenuItem>
+          <MenuItem onClick={handleCancelClick}>Cancel</MenuItem>
+        </Menu>
+
+        <Dialog
+          open={openCancelModal}
+          onClose={handleCloseCancelModal}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Cancel Sales Order</DialogTitle>
+          <DialogContent>
+            <div className="mt-4">
+              <TextField
+                fullWidth
+                label="Remarks"
+                multiline
+                rows={4}
+                value={cancelRemark}
+                onChange={(event) => setCancelRemark(event.target.value)}
+                required
+              />
+            </div>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseCancelModal}>Close</Button>
+            <LoadingButton
+              onClick={handleSubmitCancel}
+              loading={cancelLoading}
+              variant="contained"
+              color="error"
+            >
+              Submit
+            </LoadingButton>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={openChallanModal}
+          onClose={handleCloseChallanModal}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Create Challan</DialogTitle>
+          <DialogContent>
+            <div className="mt-2 mb-5 rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <Typography className="text-slate-500 text-xs uppercase tracking-wide">
+                  Source Sales Order
+                </Typography>
+                <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+                  {getSalesOrderNumber(selectedRow)}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[11px] text-slate-500 uppercase">SKU</p>
+                  <p className="text-sm font-medium text-slate-700">
+                    {challanSourceDetails?.sku ?? "-"}
+                  </p>
+                </div>
+                <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[11px] text-slate-500 uppercase">SO Qty</p>
+                  <p className="text-sm font-medium text-slate-700">
+                    {challanSourceDetails?.qty ?? selectedRow?.qty ?? "-"}
+                  </p>
+                </div>
+                <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[11px] text-slate-500 uppercase">SO Rate</p>
+                  <p className="text-sm font-medium text-slate-700">
+                    {challanSourceDetails?.rate ?? selectedRow?.rate ?? "-"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[11px] text-slate-500 uppercase mb-1">Bill To</p>
+                  <p className="text-sm font-medium text-slate-700">
+                    {challanSourceDetails?.billToLabel ?? "-"}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {challanSourceDetails?.billToAddressLine1 ?? "-"}{" "}
+                    {challanSourceDetails?.billToAddressLine2 ?? ""}
+                  </p>
+                </div>
+                <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[11px] text-slate-500 uppercase mb-1">Ship To</p>
+                  <p className="text-sm font-medium text-slate-700">
+                    {challanSourceDetails?.shipToLabel ?? "-"}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {challanSourceDetails?.shipToAddressLine1 ?? "-"}{" "}
+                    {challanSourceDetails?.shipToAddressLine2 ?? ""}
+                  </p>
+                </div>
+                <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[11px] text-slate-500 uppercase mb-1">Bill From</p>
+                  <p className="text-sm font-medium text-slate-700">
+                    {challanSourceDetails?.billFromCompanyName ?? "-"}
+                  </p>
+                </div>
+                <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[11px] text-slate-500 uppercase mb-1">Ship From</p>
+                  <p className="text-sm font-medium text-slate-700">
+                    {challanSourceDetails?.shipFromCompanyName ?? "-"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <TextField
+                label="Place of Supply"
+                value={placeOfSupply}
+                onChange={(event) => setPlaceOfSupply(event.target.value)}
+                fullWidth
+                required
+              />
+              <TextField
+                label="State Code"
+                value={stateCode}
+                onChange={(event) => setStateCode(event.target.value)}
+                fullWidth
+                required
+              />
+              <TextField
+                label="Challan Number"
+                value={challanNo}
+                onChange={(event) => setChallanNo(event.target.value)}
+                fullWidth
+                required
+              />
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  enableAccessibleFieldDOMStructure={false}
+                  format="DD-MM-YYYY"
+                  slots={{ textField: TextField }}
+                  slotProps={{ textField: { fullWidth: true, label: "Challan Date", required: true } }}
+                  value={challanDate}
+                  onChange={(value) => setChallanDate(value)}
+                />
+              </LocalizationProvider>
+              <TextField
+                label="Box Number"
+                value={boxNo}
+                onChange={(event) => setBoxNo(event.target.value)}
+                fullWidth
+                required
+              />
+              <TextField
+                label="Qty"
+                type="number"
+                value={challanQty}
+                onChange={(event) => setChallanQty(event.target.value)}
+                fullWidth
+                required
+                inputProps={{ min: 1 }}
+              />
+            </div>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseChallanModal}>Close</Button>
+            <LoadingButton
+              onClick={handleSubmitCreateChallan}
+              loading={loading}
+              variant="contained"
+            >
+              Submit Challan
+            </LoadingButton>
+          </DialogActions>
+        </Dialog>
       </div>
     </div>
   );
