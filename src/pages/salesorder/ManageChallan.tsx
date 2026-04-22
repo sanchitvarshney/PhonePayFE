@@ -35,9 +35,9 @@ const ManageChallan: React.FC = () => {
   const dispatch = useAppDispatch();
   const { challanLoading, manageChallanData } = useAppSelector((state) => state.salesOrder);
   const [colapse, setcolapse] = useState<boolean>(false);
-  const [wise, setWise] = useState<string>("challanwise");
+  const [wise, setWise] = useState<string>("datewise");
   const [challanRef, setChallanRef] = useState("");
-  const [date, setDate] = useState<Dayjs | null>(null);
+  const [date, setDate] = useState<Dayjs | null>(dayjs());
   const [lastQuery, setLastQuery] = useState<string | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<any>(null);

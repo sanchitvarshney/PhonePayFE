@@ -143,11 +143,61 @@ const deriveDeviceModelFromText = (text: string): string => {
   return text.replace(/^\s*\([^)]*\)\s*/, "").trim();
 };
 
+const normalizeCompareText = (value: unknown): string => {
+  return String(value ?? "")
+    .replace(/\r?\n/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+};
+
+const isOptionMatchedByCodeOrLabel = (option: any, selectedValue: unknown): boolean => {
+  const selected = normalizeCompareText(selectedValue);
+  if (!selected) return false;
+  const optionCode = normalizeCompareText(option?.code ?? option?.id);
+  const optionLabel = normalizeCompareText(option?.label ?? option?.companyName);
+  return optionCode === selected || optionLabel === selected;
+};
+
+const findAddressOptionByCodeOrLabel = (options: any[], selectedValue: unknown) => {
+  return options.find((item: any) => isOptionMatchedByCodeOrLabel(item, selectedValue)) ?? null;
+};
+
+const resolveAddressAutocompleteValue = (options: any[], selectedValue: unknown) => {
+  const matched = findAddressOptionByCodeOrLabel(options, selectedValue);
+  if (matched) return matched;
+  const normalized = normalizeCompareText(selectedValue);
+  if (!normalized) return null;
+  const raw = String(selectedValue ?? "").trim();
+  return {
+    code: raw,
+    id: raw,
+    label: raw,
+    companyName: raw,
+  };
+};
+
 const mapSalesOrderDetailsToFormValues = (details: any): FormData => {
   const billAddress = details?.billaddress ?? details?.billAddress ?? {};
   const shipAddress = details?.shipaddress ?? details?.shipAddress ?? {};
   const billFrom = details?.billFrom ?? details?.bill_from ?? {};
   const shipFrom = details?.shipFrom ?? details?.ship_from ?? {};
+  const billFromCode =
+    billFrom?.code ??
+    billFrom?.id ??
+    details?.billFromCode ??
+    details?.billFromId ??
+    details?.bill_from_code ??
+    details?.bill_from_id ??
+    "";
+  const shipFromCode =
+    shipFrom?.code ??
+    shipFrom?.id ??
+    details?.shipFromCode ??
+    details?.shipFromId ??
+    details?.ship_from_code ??
+    details?.ship_from_id ??
+    "";
 
   return {
     billaddressid:
@@ -212,12 +262,12 @@ const mapSalesOrderDetailsToFormValues = (details: any): FormData => {
     },
     billFrom: {
       companyName:
-        billFrom?.companyName ??
-        billFrom?.code ??
-        details?.billFromCode ??
-        details?.billFromId ??
-        details?.billFromCompanyName ??
-        "",
+        String(
+          billFrom?.companyName ||
+            details?.billFromCompanyName ||
+            billFromCode ||
+            "",
+        ),
       id: String(
         billFrom?.id ??
           details?.billFromId ??
@@ -246,12 +296,12 @@ const mapSalesOrderDetailsToFormValues = (details: any): FormData => {
     },
     shipFrom: {
       companyName:
-        shipFrom?.companyName ??
-        shipFrom?.code ??
-        details?.shipFromCode ??
-        details?.shipFromId ??
-        details?.shipFromCompanyName ??
-        "",
+        String(
+          shipFrom?.companyName ||
+            details?.shipFromCompanyName ||
+            shipFromCode ||
+            "",
+        ),
       id: String(
         shipFrom?.id ??
           details?.shipFromId ??
@@ -653,21 +703,21 @@ const CreateSalesOrder: React.FC = () => {
                         dispatchFromDetails ||
                         []
                       }
-                      getOptionLabel={(option: any) => option.label || ""}
+                      getOptionLabel={(option: any) =>
+                        option?.label || option?.companyName || option?.code || option?.id || ""
+                      }
                       isOptionEqualToValue={(option: any, value: any) =>
-                        !!value && option.code === value.code
+                        !!value &&
+                        isOptionMatchedByCodeOrLabel(option, value?.code ?? value?.label)
                       }
                       value={
-                        (
-                          dispatchFromDetails?.data ||
-                          dispatchFromDetails ||
-                          []
-                        ).find(
-                          (item: any) => item.code === field.value,
-                        ) ?? null
+                        resolveAddressAutocompleteValue(
+                          dispatchFromDetails?.data || dispatchFromDetails || [],
+                          field.value,
+                        )
                       }
                       onChange={(_, newValue) => {
-                        field.onChange(newValue?.code ?? "");
+                        field.onChange(newValue?.code ?? newValue?.label ?? "");
                         handleBillFromAddressFill(newValue);
                       }}
                       disablePortal
@@ -763,21 +813,21 @@ const CreateSalesOrder: React.FC = () => {
                       options={
                         shippingAddress?.data || shippingAddress || []
                       }
-                      getOptionLabel={(option: any) => option.label || ""}
+                      getOptionLabel={(option: any) =>
+                        option?.label || option?.companyName || option?.code || option?.id || ""
+                      }
                       isOptionEqualToValue={(option: any, value: any) =>
-                        !!value && option.code === value.code
+                        !!value &&
+                        isOptionMatchedByCodeOrLabel(option, value?.code ?? value?.label)
                       }
                       value={
-                        (
-                          shippingAddress?.data ||
-                          shippingAddress ||
-                          []
-                        ).find(
-                          (item: any) => item.code === field.value,
-                        ) ?? null
+                        resolveAddressAutocompleteValue(
+                          shippingAddress?.data || shippingAddress || [],
+                          field.value,
+                        )
                       }
                       onChange={(_, newValue) => {
-                        field.onChange(newValue?.code ?? "");
+                        field.onChange(newValue?.code ?? newValue?.label ?? "");
                         handleShipFromAddressFill(newValue);
                       }}
                       disablePortal

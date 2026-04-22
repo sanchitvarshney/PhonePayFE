@@ -49,7 +49,6 @@ const ManageSalesOrder: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [openCancelModal, setOpenCancelModal] = useState<boolean>(false);
-  const [cancelRemark, setCancelRemark] = useState<string>("");
   const [openChallanModal, setOpenChallanModal] = useState<boolean>(false);
   const [challanSourceDetails, setChallanSourceDetails] = useState<any>(null);
   const [challanQty, setChallanQty] = useState<string>("");
@@ -69,10 +68,24 @@ const ManageSalesOrder: React.FC = () => {
     );
   };
 
+  const getSalesOrderStatus = (rowData: any): string => {
+    return String(
+      rowData?.status ??
+        rowData?.salesStatus ??
+        rowData?.sales_status ??
+        "",
+    );
+  };
+
+  const isSalesOrderCancelled = (rowData: any): boolean => {
+    return getSalesOrderStatus(rowData).trim().toLowerCase() === "cancel";
+  };
+
   const handleMenuClick = (
     event: React.MouseEvent<HTMLElement>,
     rowData: any,
   ) => {
+    if (isSalesOrderCancelled(rowData)) return;
     setAnchorEl(event.currentTarget);
     setSelectedRow(rowData);
   };
@@ -109,15 +122,19 @@ const ManageSalesOrder: React.FC = () => {
         sortable: false,
         filter: false,
         width: 60,
-        cellRenderer: (params: { data: any }) => (
-          <IconButton
-            size="small"
-            onClick={(event) => handleMenuClick(event, params.data)}
-            className="hover:bg-gray-100"
-          >
-            <MoreVertIcon className="h-4 w-4" />
-          </IconButton>
-        ),
+        cellRenderer: (params: { data: any }) => {
+          const isCancelled = isSalesOrderCancelled(params.data);
+          return (
+            <IconButton
+              size="small"
+              onClick={(event) => handleMenuClick(event, params.data)}
+              className="hover:bg-gray-100"
+              disabled={isCancelled}
+            >
+              <MoreVertIcon className="h-4 w-4" />
+            </IconButton>
+          );
+        },
       },
       {
         headerName: "#",
@@ -152,8 +169,14 @@ const ManageSalesOrder: React.FC = () => {
         valueGetter: (params) => params.data?.sku ?? params.data?.partcode ?? "",
       },
       {
-        headerName: "Qty",
+        headerName: "Total Qty",
         field: "qty",
+        sortable: true,
+        filter: true,
+      },
+      {
+        headerName: "Pending Qty",
+        field: "pendingQty",
         sortable: true,
         filter: true,
       },
@@ -171,6 +194,12 @@ const ManageSalesOrder: React.FC = () => {
         valueGetter: (params) =>
           params.data?.amount ??
           Number(params.data?.qty ?? 0) * Number(params.data?.rate ?? 0),
+      },
+      {
+        headerName: "Status",
+        field: "status",
+        sortable: true,
+        filter: true,
       },
     ],
     [],
@@ -253,7 +282,6 @@ const ManageSalesOrder: React.FC = () => {
 
   const handleCloseCancelModal = () => {
     setOpenCancelModal(false);
-    setCancelRemark("");
   };
 
   const handleSubmitCancel = async () => {
@@ -263,15 +291,10 @@ const ManageSalesOrder: React.FC = () => {
       return;
     }
 
-    if (!cancelRemark.trim()) {
-      showToast("Please enter remarks", "error");
-      return;
-    }
-
     const response: any = await dispatch(
       cancelSalesOrder({
         salesOrder,
-        remark: cancelRemark.trim(),
+        salesStatus: "Active",
       }),
     );
 
@@ -482,16 +505,8 @@ const ManageSalesOrder: React.FC = () => {
         >
           <DialogTitle>Cancel Sales Order</DialogTitle>
           <DialogContent>
-            <div className="mt-4">
-              <TextField
-                fullWidth
-                label="Remarks"
-                multiline
-                rows={4}
-                value={cancelRemark}
-                onChange={(event) => setCancelRemark(event.target.value)}
-                required
-              />
+            <div className="mt-4 text-sm text-slate-600">
+              Are you sure you want to update this sales order status?
             </div>
           </DialogContent>
           <DialogActions>

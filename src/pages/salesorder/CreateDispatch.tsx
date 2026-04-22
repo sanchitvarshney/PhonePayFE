@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { LoadingButton } from "@mui/lab";
-import { Paper, Step, StepLabel, Stepper, TextField, Typography } from "@mui/material";
+import { Divider, Paper, Step, StepLabel, Stepper, TextField, Typography } from "@mui/material";
 import * as XLSX from "xlsx";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import SerialNumberUpload from "@/components/procurement/SerialNumberUpload";
-import { createDispatch, fetchChallan } from "@/features/salesOrder/salesOrderSlice";
+import {
+  createDispatch,
+  fetchChallanDetails,
+} from "@/features/salesOrder/salesOrderSlice";
 import { showToast } from "@/utils/toasterContext";
 import { Icons } from "@/components/icons";
 
@@ -15,12 +18,41 @@ type ChallanRow = {
   salesOrder?: string;
   sales_order?: string;
   salesOrderNo?: string;
+  challanQty?: string | number;
   qty?: string | number;
   quantity?: string | number;
+  challanDate?: string;
+  challan_date?: string;
+  placeOfSupply?: string;
+  stateCode?: string;
+  sku?: string;
+  deviceModel?: string;
+  deviceModal?: string;
+  rate?: string | number;
   boxId?: string;
   box_id?: string;
-  challan_date?: string;
-  challanDate?: string;
+  billFromCompanyName?: string;
+  billFromAddressLine1?: string;
+  billFromAddressLine2?: string;
+  billFromCity?: string;
+  billFromPin?: string;
+  billFromGstin?: string;
+  shipFromCompanyName?: string;
+  shipFromAddressLine1?: string;
+  shipFromAddressLine2?: string;
+  shipFromCity?: string;
+  shipFromPin?: string;
+  shipFromGstin?: string;
+  billToLabel?: string;
+  billToAddressLine1?: string;
+  billToAddressLine2?: string;
+  billToPin?: string;
+  billToGst?: string;
+  shipToLabel?: string;
+  shipToAddressLine1?: string;
+  shipToAddressLine2?: string;
+  shipToCity?: string;
+  shipToPin?: string;
 };
 
 function getChallanNumber(rowData: ChallanRow | null): string {
@@ -34,7 +66,7 @@ function getChallanNumber(rowData: ChallanRow | null): string {
 
 function getChallanQty(rowData: ChallanRow | null): number {
   if (!rowData) return 0;
-  return Number(rowData.qty ?? rowData.quantity ?? 0) || 0;
+  return Number(rowData.challanQty ?? rowData.qty ?? rowData.quantity ?? 0) || 0;
 }
 
 function getSalesOrderNumber(rowData: ChallanRow | null): string {
@@ -61,7 +93,7 @@ const CreateDispatch: React.FC = () => {
   const location = useLocation();
   const { challanNo = "" } = useParams();
   const initialChallanNo = decodeURIComponent(challanNo || "");
-  const { challanLoading, dispatchLoading } = useAppSelector((state) => state.salesOrder);
+  const { dispatchLoading } = useAppSelector((state) => state.salesOrder);
 
   const [activeStep, setActiveStep] = useState<number>(0);
   const [challanDetails, setChallanDetails] = useState<ChallanRow | null>(null);
@@ -80,7 +112,7 @@ const CreateDispatch: React.FC = () => {
       return;
     }
     const result: any = await dispatch(
-      fetchChallan({ wise: "challanwise", data: initialChallanNo.trim() }),
+      fetchChallanDetails({ challanNo: initialChallanNo.trim() }),
     );
     const payload = result?.payload?.data ?? result?.payload;
     const row = normalizeChallanPayload(payload);
@@ -205,48 +237,92 @@ const CreateDispatch: React.FC = () => {
 
       {activeStep === 0 ? (
         <Paper variant="outlined" className="p-4 flex flex-col gap-4">
-          <div className="flex items-end gap-3">
-            <TextField
-              label="Challan Number"
-              value={initialChallanNo}
-              fullWidth
-              InputProps={{ readOnly: true }}
+          <div className="flex items-center w-full gap-3">
+            <div className="flex items-center gap-[5px]">
+              <Icons.documentDetail />
+              <h2 className="text-lg font-semibold">Challan Details</h2>
+            </div>
+            <Divider
+              sx={{
+                borderBottomWidth: 2,
+                borderColor: "#f59e0b",
+                flexGrow: 1,
+              }}
             />
-            <LoadingButton
-              variant="contained"
-              onClick={handleFetchChallan}
-              loading={challanLoading}
-              startIcon={<Icons.search />}
-            >
-              Fetch Challan
-            </LoadingButton>
+          </div>
+          <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[20px]">
+            <TextField label="Sales Order" value={getSalesOrderNumber(challanDetails)} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Challan No" value={getChallanNumber(challanDetails)} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Challan Date" value={challanDetails?.challanDate ?? challanDetails?.challan_date ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Qty" value={expectedQty || ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Place of Supply" value={challanDetails?.placeOfSupply ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="State Code" value={challanDetails?.stateCode ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="SKU" value={challanDetails?.sku ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Device Model" value={challanDetails?.deviceModel ?? challanDetails?.deviceModal ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Rate" value={challanDetails?.rate ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Box ID" value={challanDetails?.boxId ?? challanDetails?.box_id ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <TextField
-              label="Sales Order"
-              value={getSalesOrderNumber(challanDetails)}
-              InputProps={{ readOnly: true }}
-              fullWidth
-            />
-            <TextField
-              label="Challan No"
-              value={getChallanNumber(challanDetails)}
-              InputProps={{ readOnly: true }}
-              fullWidth
-            />
-            <TextField
-              label="Qty"
-              value={expectedQty || ""}
-              InputProps={{ readOnly: true }}
-              fullWidth
-            />
-            <TextField
-              label="Box ID"
-              value={challanDetails?.boxId ?? challanDetails?.box_id ?? ""}
-              InputProps={{ readOnly: true }}
-              fullWidth
-            />
+          <div className="flex items-center w-full gap-3">
+            <div className="flex items-center gap-[5px]">
+              <Icons.shipping />
+              <h2 className="text-lg font-semibold">Bill From</h2>
+            </div>
+            <Divider sx={{ borderBottomWidth: 2, borderColor: "#f59e0b", flexGrow: 1 }} />
+          </div>
+          <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[20px]">
+            <TextField label="Company" value={challanDetails?.billFromCompanyName ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Address Line 1" value={challanDetails?.billFromAddressLine1 ?? ""} InputProps={{ readOnly: true }} fullWidth multiline rows={2} variant="filled" />
+            <TextField label="Address Line 2" value={challanDetails?.billFromAddressLine2 ?? ""} InputProps={{ readOnly: true }} fullWidth multiline rows={2} variant="filled" />
+            <TextField label="City" value={challanDetails?.billFromCity ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Pin" value={challanDetails?.billFromPin ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="GSTIN" value={challanDetails?.billFromGstin ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+          </div>
+
+          <div className="flex items-center w-full gap-3">
+            <div className="flex items-center gap-[5px]">
+              <Icons.building />
+              <h2 className="text-lg font-semibold">Ship From</h2>
+            </div>
+            <Divider sx={{ borderBottomWidth: 2, borderColor: "#f59e0b", flexGrow: 1 }} />
+          </div>
+          <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[20px]">
+            <TextField label="Company" value={challanDetails?.shipFromCompanyName ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Address Line 1" value={challanDetails?.shipFromAddressLine1 ?? ""} InputProps={{ readOnly: true }} fullWidth multiline rows={2} variant="filled" />
+            <TextField label="Address Line 2" value={challanDetails?.shipFromAddressLine2 ?? ""} InputProps={{ readOnly: true }} fullWidth multiline rows={2} variant="filled" />
+            <TextField label="City" value={challanDetails?.shipFromCity ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Pin" value={challanDetails?.shipFromPin ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="GSTIN" value={challanDetails?.shipFromGstin ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+          </div>
+
+          <div className="flex items-center w-full gap-3">
+            <div className="flex items-center gap-[5px]">
+              <Icons.shipping />
+              <h2 className="text-lg font-semibold">Bill To</h2>
+            </div>
+            <Divider sx={{ borderBottomWidth: 2, borderColor: "#f59e0b", flexGrow: 1 }} />
+          </div>
+          <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[20px]">
+            <TextField label="Label" value={challanDetails?.billToLabel ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Address Line 1" value={challanDetails?.billToAddressLine1 ?? ""} InputProps={{ readOnly: true }} fullWidth multiline rows={2} variant="filled" />
+            <TextField label="Address Line 2" value={challanDetails?.billToAddressLine2 ?? ""} InputProps={{ readOnly: true }} fullWidth multiline rows={2} variant="filled" />
+            <TextField label="Pin" value={challanDetails?.billToPin ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="GSTIN" value={challanDetails?.billToGst ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+          </div>
+
+          <div className="flex items-center w-full gap-3">
+            <div className="flex items-center gap-[5px]">
+              <Icons.building />
+              <h2 className="text-lg font-semibold">Ship To</h2>
+            </div>
+            <Divider sx={{ borderBottomWidth: 2, borderColor: "#f59e0b", flexGrow: 1 }} />
+          </div>
+          <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[20px]">
+            <TextField label="Label" value={challanDetails?.shipToLabel ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Address Line 1" value={challanDetails?.shipToAddressLine1 ?? ""} InputProps={{ readOnly: true }} fullWidth multiline rows={2} variant="filled" />
+            <TextField label="Address Line 2" value={challanDetails?.shipToAddressLine2 ?? ""} InputProps={{ readOnly: true }} fullWidth multiline rows={2} variant="filled" />
+            <TextField label="City" value={challanDetails?.shipToCity ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+            <TextField label="Pin" value={challanDetails?.shipToPin ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
           </div>
 
           <div className="flex justify-end">

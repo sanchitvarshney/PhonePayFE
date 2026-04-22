@@ -40,7 +40,7 @@ export const createSalesOrder = createAsyncThunk<AxiosResponse<unknown>, unknown
 export const updateSalesOrder = createAsyncThunk<AxiosResponse<unknown>, unknown>(
   "salesOrder/updateSalesOrder",
   async (payload) => {
-    const response = await axiosInstance.post(
+    const response = await axiosInstance.put(
       "/salesorder/updateSalesOrder",
       payload,
     );
@@ -72,11 +72,14 @@ export const fetchSalesOrderDetails = createAsyncThunk<
   return response;
 });
 
-export const cancelSalesOrder = createAsyncThunk<AxiosResponse<unknown>, unknown>(
+export const cancelSalesOrder = createAsyncThunk<
+  AxiosResponse<unknown>,
+  { salesOrder: string; salesStatus: string }
+>(
   "salesOrder/cancelSalesOrder",
   async (payload) => {
     const response = await axiosInstance.post(
-      "/salesorder/cancel-salesOrder",
+      "/salesorder/update-salesOrder-status",
       payload,
     );
     return response;
@@ -117,6 +120,16 @@ export const fetchChallan = createAsyncThunk<
     `/salesorder/fetch-challan?wise=${encodeURIComponent(payload.wise)}&data=${encodeURIComponent(
       payload.data,
     )}`,
+  );
+  return response;
+});
+
+export const fetchChallanDetails = createAsyncThunk<
+  AxiosResponse<unknown>,
+  { challanNo: string }
+>("salesOrder/fetchChallanDetails", async (payload) => {
+  const response = await axiosInstance.get(
+    `/salesorder/fetch-challan-details?challanNo=${encodeURIComponent(payload.challanNo)}`,
   );
   return response;
 });
@@ -266,6 +279,17 @@ const salesOrderSlice = createSlice({
       .addCase(fetchChallan.rejected, (state, action) => {
         state.challanLoading = false;
         state.error = action.error.message || "Failed to fetch challan";
+      })
+      .addCase(fetchChallanDetails.pending, (state) => {
+        state.challanLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchChallanDetails.fulfilled, (state) => {
+        state.challanLoading = false;
+      })
+      .addCase(fetchChallanDetails.rejected, (state, action) => {
+        state.challanLoading = false;
+        state.error = action.error.message || "Failed to fetch challan details";
       })
       .addCase(createDispatch.pending, (state) => {
         state.dispatchLoading = true;
