@@ -28,7 +28,7 @@ import { Icons } from "@/components/icons";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import {
   cancelSalesOrder,
-  createSalesOrder,
+  createChallan,
   fetchSalesOrder,
   fetchSalesOrderDetails,
   setSalesOrderDateRange,
@@ -55,9 +55,8 @@ const ManageSalesOrder: React.FC = () => {
   const [challanQty, setChallanQty] = useState<string>("");
   const [placeOfSupply, setPlaceOfSupply] = useState<string>("");
   const [stateCode, setStateCode] = useState<string>("");
-  const [challanNo, setChallanNo] = useState<string>("");
   const [challanDate, setChallanDate] = useState<Dayjs | null>(null);
-  const [boxNo, setBoxNo] = useState<string>("");
+  const [boxId, setBoxId] = useState<string>("");
 
   const getSalesOrderNumber = (rowData: any): string => {
     return (
@@ -241,9 +240,8 @@ const ManageSalesOrder: React.FC = () => {
     setChallanQty(String(details?.qty ?? selectedRow?.qty ?? ""));
     setPlaceOfSupply("");
     setStateCode("");
-    setChallanNo("");
     setChallanDate(null);
-    setBoxNo("");
+    setBoxId("");
     setOpenChallanModal(true);
     closeMenu();
   };
@@ -304,9 +302,8 @@ const ManageSalesOrder: React.FC = () => {
     setChallanQty("");
     setPlaceOfSupply("");
     setStateCode("");
-    setChallanNo("");
     setChallanDate(null);
-    setBoxNo("");
+    setBoxId("");
   };
 
   const handleSubmitCreateChallan = async () => {
@@ -324,16 +321,12 @@ const ManageSalesOrder: React.FC = () => {
       showToast("Please enter state code", "error");
       return;
     }
-    if (!challanNo.trim()) {
-      showToast("Please enter challan number", "error");
-      return;
-    }
     if (!challanDate) {
       showToast("Please select challan date", "error");
       return;
     }
-    if (!boxNo.trim()) {
-      showToast("Please enter box number", "error");
+    if (!boxId.trim()) {
+      showToast("Please enter box ID", "error");
       return;
     }
     if (!challanQty.trim() || Number(challanQty) <= 0) {
@@ -343,15 +336,14 @@ const ManageSalesOrder: React.FC = () => {
 
     const payload = {
       salesOrder,
-      qty: Number(challanQty),
+      qty: String(challanQty).trim(),
       placeOfSupply: placeOfSupply.trim(),
       stateCode: stateCode.trim(),
-      challanNo: challanNo.trim(),
-      challanDate: dayjs(challanDate).format("DD-MM-YYYY"),
-      boxNo: boxNo.trim(),
+      challan_date: dayjs(challanDate).format("DD-MM-YYYY"),
+      boxId: boxId.trim(),
     };
 
-    const response: any = await dispatch(createSalesOrder(payload));
+    const response: any = await dispatch(createChallan(payload));
     if (response?.payload?.data?.success) {
       showToast(response.payload.data.message ?? "Challan created successfully", "success");
       handleCloseChallanModal();
@@ -591,13 +583,6 @@ const ManageSalesOrder: React.FC = () => {
                 fullWidth
                 required
               />
-              <TextField
-                label="Challan Number"
-                value={challanNo}
-                onChange={(event) => setChallanNo(event.target.value)}
-                fullWidth
-                required
-              />
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   enableAccessibleFieldDOMStructure={false}
@@ -609,9 +594,9 @@ const ManageSalesOrder: React.FC = () => {
                 />
               </LocalizationProvider>
               <TextField
-                label="Box Number"
-                value={boxNo}
-                onChange={(event) => setBoxNo(event.target.value)}
+                label="Box ID"
+                value={boxId}
+                onChange={(event) => setBoxId(event.target.value)}
                 fullWidth
                 required
               />
