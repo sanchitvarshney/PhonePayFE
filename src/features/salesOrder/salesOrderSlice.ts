@@ -6,6 +6,7 @@ type SalesOrderState = {
   loading: boolean;
   cancelLoading: boolean;
   challanLoading: boolean;
+  dispatchLoading: boolean;
   error: string | null;
   formData: unknown;
   manageSalesOrderData: any;
@@ -17,6 +18,7 @@ const initialState: SalesOrderState = {
   loading: false,
   cancelLoading: false,
   challanLoading: false,
+  dispatchLoading: false,
   error: null,
   formData: null,
   manageSalesOrderData: null,
@@ -90,13 +92,22 @@ export type CreateChallanPayload = {
   boxId: string;
 };
 
-export const createChallan = createAsyncThunk<AxiosResponse<unknown>, CreateChallanPayload>(
-  "salesOrder/createChallan",
-  async (payload) => {
+export const createChallan = createAsyncThunk<
+  AxiosResponse<unknown>,
+  CreateChallanPayload,
+  { rejectValue: { success: false; message: string } }
+>("salesOrder/createChallan", async (payload, { rejectWithValue }) => {
+  try {
     const response = await axiosInstance.post("/salesorder/create-challan", payload);
     return response;
-  },
-);
+  } catch (error: unknown) {
+    const message =
+      (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+      (error as Error)?.message ||
+      "Failed to create challan";
+    return rejectWithValue({ success: false, message: String(message) });
+  }
+});
 
 export const fetchChallan = createAsyncThunk<
   AxiosResponse<unknown>,
@@ -139,6 +150,31 @@ export const challanPrint = createAsyncThunk<
       (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
       (error as Error)?.message ||
       "Failed to print challan";
+    return rejectWithValue({ success: false, message: String(message) });
+  }
+});
+
+export type CreateDispatchPayload = {
+  challanNo: string;
+  qty: number;
+  serialNo: string[];
+  salesOrder?: string;
+  boxId?: string;
+};
+
+export const createDispatch = createAsyncThunk<
+  AxiosResponse<unknown>,
+  CreateDispatchPayload,
+  { rejectValue: { success: false; message: string } }
+>("salesOrder/createDispatch", async (payload, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post("/salesorder/create-dispatch", payload);
+    return response;
+  } catch (error: unknown) {
+    const message =
+      (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+      (error as Error)?.message ||
+      "Failed to create dispatch";
     return rejectWithValue({ success: false, message: String(message) });
   }
 });
@@ -230,6 +266,17 @@ const salesOrderSlice = createSlice({
       .addCase(fetchChallan.rejected, (state, action) => {
         state.challanLoading = false;
         state.error = action.error.message || "Failed to fetch challan";
+      })
+      .addCase(createDispatch.pending, (state) => {
+        state.dispatchLoading = true;
+        state.error = null;
+      })
+      .addCase(createDispatch.fulfilled, (state) => {
+        state.dispatchLoading = false;
+      })
+      .addCase(createDispatch.rejected, (state, action) => {
+        state.dispatchLoading = false;
+        state.error = action.error.message || "Failed to create dispatch";
       });
   },
 });

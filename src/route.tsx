@@ -40,6 +40,7 @@ import SalesOrderLayout from "@/layouts/SalesOrderLayout";
 import CreateSalesOrder from "@/pages/salesorder/CreateSalesOrder";
 import ManageSalesOrder from "@/pages/salesorder/ManageSalesOrder";
 import ManageChallan from "@/pages/salesorder/ManageChallan";
+import CreateDispatch from "@/pages/salesorder/CreateDispatch";
 import Consumption from "@/pages/warehouse/Consumption";
 import GoodSpareInwardv2 from "@/pages/warehouse/GoodSpareInwardv2";
 
@@ -265,6 +266,16 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/sales-order/manage-challan",
+      },
+      {
+        element: (
+          <MainLayout>
+            <SalesOrderLayout>
+              <CreateDispatch />
+            </SalesOrderLayout>
+          </MainLayout>
+        ),
+        path: "/sales-order/create-dispatch/:challanNo",
       },
       {
         element: (

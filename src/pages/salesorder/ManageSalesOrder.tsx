@@ -145,17 +145,6 @@ const ManageSalesOrder: React.FC = () => {
           "",
       },
       {
-        headerName: "Party / Customer",
-        field: "customerName",
-        sortable: true,
-        filter: true,
-        valueGetter: (params) =>
-          params.data?.customerName ??
-          params.data?.customer_name ??
-          params.data?.vendor_name ??
-          "",
-      },
-      {
         headerName: "SKU",
         field: "sku",
         sortable: true,
@@ -344,12 +333,36 @@ const ManageSalesOrder: React.FC = () => {
     };
 
     const response: any = await dispatch(createChallan(payload));
-    if (response?.payload?.data?.success) {
-      showToast(response.payload.data.message ?? "Challan created successfully", "success");
-      handleCloseChallanModal();
+
+    if (createChallan.fulfilled.match(response)) {
+      const responseBody: any = response?.payload?.data ?? response?.payload ?? {};
+      const isSuccess =
+        Boolean(responseBody?.success) ||
+        String(responseBody?.status ?? "").toLowerCase() === "success";
+      const message = responseBody?.message || "Challan created successfully";
+
+      if (isSuccess) {
+        showToast(message, "success");
+        handleCloseChallanModal();
+        return;
+      }
+
+      showToast(responseBody?.message || "Failed to create challan", "error");
       return;
     }
-    showToast(response?.payload?.data?.message || "Failed to create challan", "error");
+
+    if (createChallan.rejected.match(response)) {
+      const rejectedPayload: any = response?.payload;
+      const message =
+        rejectedPayload?.message ||
+        rejectedPayload?.data?.message ||
+        response?.error?.message ||
+        "Failed to create challan";
+      showToast(String(message), "error");
+      return;
+    }
+
+    showToast("Failed to create challan", "error");
   };
 
   return (

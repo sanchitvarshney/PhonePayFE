@@ -1,9 +1,13 @@
 import React, { useCallback, useMemo, useState } from "react";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import dayjs, { Dayjs } from "dayjs";
 import SearchIcon from "@mui/icons-material/Search";
 import { ColDef } from "@ag-grid-community/core";
 import { AgGridReact } from "@ag-grid-community/react";
 import LoadingButton from "@mui/lab/LoadingButton";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { FormControl, IconButton, Menu, MenuItem, Select, TextField } from "@mui/material";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
 import CustomLoadingOverlay from "@/components/reusable/CustomLoadingOverlay";
@@ -12,6 +16,7 @@ import { Icons } from "@/components/icons";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { challanPrint, fetchChallan } from "@/features/salesOrder/salesOrderSlice";
 import { showToast } from "@/utils/toasterContext";
+import { useNavigate } from "react-router-dom";
 
 const getChallanNumber = (rowData: any): string => {
   return (
@@ -26,11 +31,13 @@ const getChallanNumber = (rowData: any): string => {
 };
 
 const ManageChallan: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { challanLoading, manageChallanData } = useAppSelector((state) => state.salesOrder);
   const [colapse, setcolapse] = useState<boolean>(false);
   const [wise, setWise] = useState<string>("challanwise");
   const [challanRef, setChallanRef] = useState("");
+  const [date, setDate] = useState<Dayjs | null>(null);
   const [lastQuery, setLastQuery] = useState<string | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<any>(null);
@@ -53,6 +60,17 @@ const ManageChallan: React.FC = () => {
   }, [manageChallanData]);
 
   const handleSearch = () => {
+    if (wise === "datewise") {
+      if (!date) {
+        showToast("Please select date", "error");
+        return;
+      }
+      const formattedDate = dayjs(date).format("DD-MM-YYYY");
+      setLastQuery(formattedDate);
+      dispatch(fetchChallan({ wise, data: formattedDate }));
+      return;
+    }
+
     if (!challanRef.trim()) {
       showToast("Please enter challan number or reference", "error");
       return;
@@ -80,6 +98,17 @@ const ManageChallan: React.FC = () => {
         "Failed to open challan PDF";
       showToast(String(msg), "error");
     }
+    closeMenu();
+  };
+
+  const handleCreateDispatch = () => {
+    const challanNo = getChallanNumber(selectedRow);
+    if (!challanNo) {
+      showToast("Challan number not found on this row", "error");
+      closeMenu();
+      return;
+    }
+    navigate(`/sales-order/create-dispatch/${encodeURIComponent(challanNo)}`);
     closeMenu();
   };
 
@@ -190,18 +219,33 @@ const ManageChallan: React.FC = () => {
           <div className="flex items-center gap-[10px] p-[10px] mt-[20px]">
             <FormControl fullWidth>
               <Select value={wise} onChange={(e) => setWise(e.target.value)} label="Search by">
+                <MenuItem value="datewise">Date</MenuItem>
                 <MenuItem value="challanwise">Challan</MenuItem>
               </Select>
             </FormControl>
           </div>
           <div className="p-[10px] flex flex-col gap-[20px]">
-            <TextField
-              label="Challan / reference"
-              value={challanRef}
-              onChange={(e) => setChallanRef(e.target.value)}
-              placeholder="e.g. SO_CH/26-27/0001"
-              fullWidth
-            />
+            {wise === "datewise" ? (
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  enableAccessibleFieldDOMStructure={false}
+                  format="DD-MM-YYYY"
+                  maxDate={dayjs()}
+                  slots={{ textField: TextField }}
+                  slotProps={{ textField: { fullWidth: true, label: "Date" } }}
+                  value={date}
+                  onChange={(value) => setDate(value)}
+                />
+              </LocalizationProvider>
+            ) : (
+              <TextField
+                label="Challan / reference"
+                value={challanRef}
+                onChange={(e) => setChallanRef(e.target.value)}
+                placeholder="e.g. SO_CH/26-27/0001"
+                fullWidth
+              />
+            )}
             <LoadingButton
               className="max-w-max"
               variant="contained"
@@ -237,6 +281,7 @@ const ManageChallan: React.FC = () => {
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           transformOrigin={{ vertical: "top", horizontal: "right" }}
         >
+          <MenuItem onClick={handleCreateDispatch}>Create Dispatch</MenuItem>
           <MenuItem onClick={handlePrint} disabled={printLoading}>
             Print
           </MenuItem>
