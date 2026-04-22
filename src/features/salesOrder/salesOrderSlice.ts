@@ -101,7 +101,7 @@ export const createChallan = createAsyncThunk<
   { rejectValue: { success: false; message: string } }
 >("salesOrder/createChallan", async (payload, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post("/salesorder/create-challan", payload);
+    const response = await axiosInstance.post("/challan/create-challan", payload);
     return response;
   } catch (error: unknown) {
     const message =
@@ -117,7 +117,7 @@ export const fetchChallan = createAsyncThunk<
   { wise: string; data: string }
 >("salesOrder/fetchChallan", async (payload) => {
   const response = await axiosInstance.get(
-    `/salesorder/fetch-challan?wise=${encodeURIComponent(payload.wise)}&data=${encodeURIComponent(
+    `/challan/fetch-challan?wise=${encodeURIComponent(payload.wise)}&data=${encodeURIComponent(
       payload.data,
     )}`,
   );
@@ -129,7 +129,7 @@ export const fetchChallanDetails = createAsyncThunk<
   { challanNo: string }
 >("salesOrder/fetchChallanDetails", async (payload) => {
   const response = await axiosInstance.get(
-    `/salesorder/fetch-challan-details?challanNo=${encodeURIComponent(payload.challanNo)}`,
+    `/challan/fetch-challan-details?challanNo=${encodeURIComponent(payload.challanNo)}`,
   );
   return response;
 });
@@ -181,7 +181,7 @@ export const createDispatch = createAsyncThunk<
   { rejectValue: { success: false; message: string } }
 >("salesOrder/createDispatch", async (payload, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post("/salesorder/create-dispatch", payload);
+    const response = await axiosInstance.post("/dispatch/create-dispatch", payload);
     return response;
   } catch (error: unknown) {
     const message =
