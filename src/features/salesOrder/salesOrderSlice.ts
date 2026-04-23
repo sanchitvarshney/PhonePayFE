@@ -50,12 +50,19 @@ export const updateSalesOrder = createAsyncThunk<AxiosResponse<unknown>, unknown
 
 export const fetchSalesOrder = createAsyncThunk<
   AxiosResponse<unknown>,
-  { wise: string; data: string }
+  { wise: string; data?: string; from?: string; to?: string }
 >("salesOrder/fetchSalesOrder", async (payload) => {
+  const queryParams = new URLSearchParams({
+    wise: payload.wise,
+  });
+  if (payload.wise === "datewise") {
+    if (payload.from) queryParams.set("from", payload.from);
+    if (payload.to) queryParams.set("to", payload.to);
+  } else if (payload.data) {
+    queryParams.set("data", payload.data);
+  }
   const response = await axiosInstance.get(
-    `/salesorder/fetchSalesOrder?wise=${encodeURIComponent(
-      payload.wise,
-    )}&data=${encodeURIComponent(payload.data)}`,
+    `/salesorder/fetchSalesOrder?${queryParams.toString()}`,
   );
   return response;
 });
@@ -114,12 +121,19 @@ export const createChallan = createAsyncThunk<
 
 export const fetchChallan = createAsyncThunk<
   AxiosResponse<unknown>,
-  { wise: string; data: string }
+  { wise: string; data?: string; from?: string; to?: string }
 >("salesOrder/fetchChallan", async (payload) => {
+  const queryParams = new URLSearchParams({
+    wise: payload.wise,
+  });
+  if (payload.wise === "datewise") {
+    if (payload.from) queryParams.set("from", payload.from);
+    if (payload.to) queryParams.set("to", payload.to);
+  } else if (payload.data) {
+    queryParams.set("data", payload.data);
+  }
   const response = await axiosInstance.get(
-    `/challan/fetch-challan?wise=${encodeURIComponent(payload.wise)}&data=${encodeURIComponent(
-      payload.data,
-    )}`,
+    `/challan/fetch-challan?${queryParams.toString()}`,
   );
   return response;
 });

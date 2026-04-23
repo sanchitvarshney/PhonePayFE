@@ -5,12 +5,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import { ColDef } from "@ag-grid-community/core";
 import { AgGridReact } from "@ag-grid-community/react";
 import LoadingButton from "@mui/lab/LoadingButton";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { FormControl, IconButton, Menu, MenuItem, Select, TextField } from "@mui/material";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
 import CustomLoadingOverlay from "@/components/reusable/CustomLoadingOverlay";
+import RangeSelect from "@/components/reusable/antSelecters/RangeSelect";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
@@ -37,7 +35,8 @@ const ManageChallan: React.FC = () => {
   const [colapse, setcolapse] = useState<boolean>(false);
   const [wise, setWise] = useState<string>("datewise");
   const [challanRef, setChallanRef] = useState("");
-  const [date, setDate] = useState<Dayjs | null>(dayjs());
+  const [fromDate, setFromDate] = useState<Dayjs | null>(dayjs());
+  const [toDate, setToDate] = useState<Dayjs | null>(dayjs());
   const [lastQuery, setLastQuery] = useState<string | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<any>(null);
@@ -61,13 +60,18 @@ const ManageChallan: React.FC = () => {
 
   const handleSearch = () => {
     if (wise === "datewise") {
-      if (!date) {
-        showToast("Please select date", "error");
+      if (!fromDate || !toDate) {
+        showToast("Please select from and to dates", "error");
         return;
       }
-      const formattedDate = dayjs(date).format("DD-MM-YYYY");
-      setLastQuery(formattedDate);
-      dispatch(fetchChallan({ wise, data: formattedDate }));
+      if (dayjs(fromDate).isAfter(dayjs(toDate), "day")) {
+        showToast("From date cannot be after to date", "error");
+        return;
+      }
+      const from = dayjs(fromDate).format("DD-MM-YYYY");
+      const to = dayjs(toDate).format("DD-MM-YYYY");
+      setLastQuery(`${from} to ${to}`);
+      dispatch(fetchChallan({ wise, from, to }));
       return;
     }
 
@@ -219,24 +223,25 @@ const ManageChallan: React.FC = () => {
           <div className="flex items-center gap-[10px] p-[10px] mt-[20px]">
             <FormControl fullWidth>
               <Select value={wise} onChange={(e) => setWise(e.target.value)} label="Search by">
-                <MenuItem value="datewise">Date</MenuItem>
+                <MenuItem value="datewise">Date Range</MenuItem>
                 <MenuItem value="challanwise">Challan</MenuItem>
               </Select>
             </FormControl>
           </div>
           <div className="p-[10px] flex flex-col gap-[20px]">
             {wise === "datewise" ? (
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  enableAccessibleFieldDOMStructure={false}
-                  format="DD-MM-YYYY"
-                  maxDate={dayjs()}
-                  slots={{ textField: TextField }}
-                  slotProps={{ textField: { fullWidth: true, label: "Date" } }}
-                  value={date}
-                  onChange={(value) => setDate(value)}
-                />
-              </LocalizationProvider>
+              <RangeSelect
+                value={{ from: fromDate, to: toDate }}
+                onChange={(dates) => {
+                  setFromDate(dates.from);
+                  setToDate(dates.to);
+                }}
+                format="DD-MM-YYYY"
+                placeholder={["From Date", "To Date"]}
+                disabledDate={(current) =>
+                  Boolean(current && current.isAfter(dayjs(), "day"))
+                }
+              />
             ) : (
               <TextField
                 label="Challan / reference"
