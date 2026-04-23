@@ -23,6 +23,7 @@ import {
 } from "@mui/material";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
 import CustomLoadingOverlay from "@/components/reusable/CustomLoadingOverlay";
+import RangeSelect from "@/components/reusable/antSelecters/RangeSelect";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
@@ -45,7 +46,8 @@ const ManageSalesOrder: React.FC = () => {
   const [colapse, setcolapse] = useState<boolean>(false);
   const [type, setType] = useState<string>("datewise");
   const [salesOrderNo, setSalesOrderNo] = useState("");
-  const [date, setDate] = useState<Dayjs | null>(null);
+  const [fromDate, setFromDate] = useState<Dayjs | null>(null);
+  const [toDate, setToDate] = useState<Dayjs | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [openCancelModal, setOpenCancelModal] = useState<boolean>(false);
@@ -102,18 +104,22 @@ const ManageSalesOrder: React.FC = () => {
     setAnchorEl(null);
   };
 
-  const buildSearchData = () => {
+  const buildSearchPayload = () => {
     if (type === "datewise") {
-      if (date) return dayjs(date).format("DD-MM-YYYY");
-      return dateRange;
+      if (!fromDate || !toDate) return null;
+      const from = dayjs(fromDate).format("DD-MM-YYYY");
+      const to = dayjs(toDate).format("DD-MM-YYYY");
+      return { wise: "datewise", from, to } as const;
     }
-    return salesOrderNo.trim() || dateRange;
+    const data = salesOrderNo.trim() || dateRange;
+    if (!data) return null;
+    return { wise: "salesorderwise", data } as const;
   };
 
   const refetchList = () => {
-    const data = buildSearchData();
-    if (!data) return;
-    dispatch(fetchSalesOrder({ wise: type, data }));
+    const payload = buildSearchPayload();
+    if (!payload) return;
+    dispatch(fetchSalesOrder(payload));
   };
 
   const rowData = useMemo(() => {
@@ -231,13 +237,18 @@ const ManageSalesOrder: React.FC = () => {
 
   const handleSearch = () => {
     if (type === "datewise") {
-      if (!date) {
-        showToast("Please select date", "error");
+      if (!fromDate || !toDate) {
+        showToast("Please select from and to dates", "error");
         return;
       }
-      const data = dayjs(date).format("DD-MM-YYYY");
-      dispatch(setSalesOrderDateRange(data));
-      dispatch(fetchSalesOrder({ wise: "datewise", data }));
+      if (dayjs(fromDate).isAfter(dayjs(toDate), "day")) {
+        showToast("From date cannot be after to date", "error");
+        return;
+      }
+      const from = dayjs(fromDate).format("DD-MM-YYYY");
+      const to = dayjs(toDate).format("DD-MM-YYYY");
+      dispatch(setSalesOrderDateRange(`${from} to ${to}`));
+      dispatch(fetchSalesOrder({ wise: "datewise", from, to }));
       return;
     }
 
@@ -430,7 +441,7 @@ const ManageSalesOrder: React.FC = () => {
           <div className="flex items-center gap-[10px] p-[10px] mt-[20px]">
             <FormControl fullWidth>
               <Select value={type} onChange={(e) => setType(e.target.value)}>
-                <MenuItem value="datewise">Date</MenuItem>
+                <MenuItem value="datewise">Date Range</MenuItem>
                 <MenuItem value="salesorderwise">Sales Order</MenuItem>
               </Select>
             </FormControl>
@@ -438,17 +449,18 @@ const ManageSalesOrder: React.FC = () => {
           <div className="p-[10px]">
             {type === "datewise" ? (
               <div className="flex flex-col gap-[20px]">
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    enableAccessibleFieldDOMStructure={false}
-                    format="DD-MM-YYYY"
-                    maxDate={dayjs()}
-                    slots={{ textField: TextField }}
-                    slotProps={{ textField: { fullWidth: true, label: "Date" } }}
-                    value={date}
-                    onChange={(value) => setDate(value)}
-                  />
-                </LocalizationProvider>
+                <RangeSelect
+                  value={{ from: fromDate, to: toDate }}
+                  onChange={(dates) => {
+                    setFromDate(dates.from);
+                    setToDate(dates.to);
+                  }}
+                  format="DD-MM-YYYY"
+                  placeholder={["From Date", "To Date"]}
+                  disabledDate={(current) =>
+                    Boolean(current && current.isAfter(dayjs(), "day"))
+                  }
+                />
                 <LoadingButton
                   loadingPosition="start"
                   onClick={handleSearch}
