@@ -221,6 +221,12 @@ const ManageSalesOrder: React.FC = () => {
         sortable: true,
         filter: true,
       },
+      {
+        headerName: "Dispatch Status",
+        field: "dispatchStatus",
+        sortable: true,
+        filter: true,
+      },
     ],
     [],
   );
