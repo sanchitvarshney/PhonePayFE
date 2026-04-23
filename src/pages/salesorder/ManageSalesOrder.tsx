@@ -216,12 +216,6 @@ const ManageSalesOrder: React.FC = () => {
         filter: true,
       },
       {
-        headerName: "Is Dispatched",
-        field: "isDispatched",
-        sortable: true,
-        filter: true,
-      },
-      {
         headerName: "Dispatch Status",
         field: "dispatchStatus",
         sortable: true,
