@@ -186,6 +186,12 @@ const ManageChallan: React.FC = () => {
         valueGetter: (params) =>
           params.data?.boxId ?? params.data?.box_id ?? params.data?.boxNo ?? "",
       },
+      {
+        headerName: "Is Dispatched",
+        field: "isDispatched",
+        sortable: true,
+        filter: true,
+      },
     ],
     [handleMenuClick],
   );
