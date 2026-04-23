@@ -79,7 +79,7 @@ export const cancelSalesOrder = createAsyncThunk<
   "salesOrder/cancelSalesOrder",
   async (payload) => {
     const response = await axiosInstance.post(
-      "/salesorder/update-salesOrder-status",
+      "/salesorder/cancel-salesOrder",
       payload,
     );
     return response;
@@ -173,6 +173,7 @@ export type CreateDispatchPayload = {
   serialNo: string[];
   salesOrder?: string;
   boxId?: string;
+  remarks?: string;
 };
 
 export const createDispatch = createAsyncThunk<
