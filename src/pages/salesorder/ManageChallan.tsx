@@ -76,7 +76,12 @@ const ManageChallan: React.FC = () => {
     }
 
     if (!challanRef.trim()) {
-      showToast("Please enter challan number or reference", "error");
+      showToast(
+        wise === "salesorderwise"
+          ? "Please enter sales order number"
+          : "Please enter challan number or reference",
+        "error",
+      );
       return;
     }
     setLastQuery(challanRef.trim());
@@ -231,6 +236,7 @@ const ManageChallan: React.FC = () => {
               <Select value={wise} onChange={(e) => setWise(e.target.value)} label="Search by">
                 <MenuItem value="datewise">Date Range</MenuItem>
                 <MenuItem value="challanwise">Challan</MenuItem>
+                <MenuItem value="salesorderwise">Sales Order</MenuItem>
               </Select>
             </FormControl>
           </div>
@@ -250,10 +256,14 @@ const ManageChallan: React.FC = () => {
               />
             ) : (
               <TextField
-                label="Challan / reference"
+                label={wise === "salesorderwise" ? "Sales Order Number" : "Challan / reference"}
                 value={challanRef}
                 onChange={(e) => setChallanRef(e.target.value)}
-                placeholder="e.g. SO_CH/26-27/0001"
+                placeholder={
+                  wise === "salesorderwise"
+                    ? "e.g. SO/26-27/0001"
+                    : "e.g. SO_CH/26-27/0001"
+                }
                 fullWidth
               />
             )}
