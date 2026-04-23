@@ -8,6 +8,8 @@ export interface SerialNumberUploadProps {
   onSerialNumbersChange: (serials: string[]) => void;
   disabled?: boolean;
   disabledMessage?: string;
+  /** Tailwind classes for the serial preview table wrapper (e.g. max height + scroll). */
+  serialPreviewWrapperClassName?: string;
 }
 
 function normalizeHeader(v: unknown): string {
@@ -21,6 +23,7 @@ export default function SerialNumberUpload({
   onSerialNumbersChange,
   disabled = false,
   disabledMessage = "",
+  serialPreviewWrapperClassName,
 }: SerialNumberUploadProps) {
   const [error, setError] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
@@ -122,7 +125,13 @@ export default function SerialNumberUpload({
         )}
 
         {serials.length > 0 && (
-          <div className="overflow-x-auto">
+          <div
+            className={
+              serialPreviewWrapperClassName
+                ? `overflow-auto ${serialPreviewWrapperClassName}`
+                : "overflow-x-auto"
+            }
+          >
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr>

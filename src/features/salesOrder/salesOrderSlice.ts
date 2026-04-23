@@ -173,6 +173,7 @@ export type CreateDispatchPayload = {
   serialNo: string[];
   salesOrder?: string;
   boxId?: string;
+  remarks?: string;
 };
 
 export const createDispatch = createAsyncThunk<
