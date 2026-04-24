@@ -83,14 +83,6 @@ const ManageSalesOrder: React.FC = () => {
     return getSalesOrderStatus(rowData).trim().toLowerCase() === "cancel";
   };
 
-  const isSalesOrderDispatched = (rowData: any): boolean => {
-    const raw =
-      rowData?.isDispatched ?? rowData?.is_dispatched ?? rowData?.dispatched ?? "";
-    if (raw === true || raw === 1) return true;
-    const s = String(raw).trim().toLowerCase();
-    return s === "yes" || s === "y" || s === "true" || s === "1";
-  };
-
   const handleMenuClick = (
     event: React.MouseEvent<HTMLElement>,
     rowData: any,
@@ -290,11 +282,6 @@ const ManageSalesOrder: React.FC = () => {
   };
 
   const handleEdit = async () => {
-    if (isSalesOrderDispatched(selectedRow)) {
-      showToast("This sales order is dispatched and cannot be edited", "error");
-      closeMenu();
-      return;
-    }
     const salesOrder = getSalesOrderNumber(selectedRow);
     if (!salesOrder) {
       showToast("Sales order number not found", "error");
@@ -530,12 +517,7 @@ const ManageSalesOrder: React.FC = () => {
           }}
         >
           <MenuItem onClick={handleCreateChallan}>Create Challan</MenuItem>
-          <MenuItem
-            onClick={handleEdit}
-            // disabled={isSalesOrderDispatched(selectedRow)}
-          >
-            Edit
-          </MenuItem>
+          <MenuItem onClick={handleEdit}>Edit</MenuItem>
           <MenuItem onClick={handleCancelClick}>Cancel</MenuItem>
         </Menu>
 
