@@ -532,7 +532,7 @@ const ManageSalesOrder: React.FC = () => {
           <MenuItem onClick={handleCreateChallan}>Create Challan</MenuItem>
           <MenuItem
             onClick={handleEdit}
-            disabled={isSalesOrderDispatched(selectedRow)}
+            // disabled={isSalesOrderDispatched(selectedRow)}
           >
             Edit
           </MenuItem>
