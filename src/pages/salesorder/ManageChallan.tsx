@@ -233,7 +233,14 @@ const ManageChallan: React.FC = () => {
         <div className="overflow-x-hidden overflow-y-auto">
           <div className="flex items-center gap-[10px] p-[10px] mt-[20px]">
             <FormControl fullWidth>
-              <Select value={wise} onChange={(e) => setWise(e.target.value)} label="Search by">
+              <Select
+                value={wise}
+                onChange={(e) => {
+                  setWise(e.target.value);
+                  setChallanRef("");
+                }}
+                label="Search by"
+              >
                 <MenuItem value="datewise">Date Range</MenuItem>
                 <MenuItem value="challanwise">Challan</MenuItem>
                 <MenuItem value="salesorderwise">Sales Order</MenuItem>

@@ -440,7 +440,13 @@ const ManageSalesOrder: React.FC = () => {
         <div className="overflow-x-hidden overflow-y-auto">
           <div className="flex items-center gap-[10px] p-[10px] mt-[20px]">
             <FormControl fullWidth>
-              <Select value={type} onChange={(e) => setType(e.target.value)}>
+              <Select
+                value={type}
+                onChange={(e) => {
+                  setType(e.target.value);
+                  setSalesOrderNo("");
+                }}
+              >
                 <MenuItem value="datewise">Date Range</MenuItem>
                 <MenuItem value="salesorderwise">Sales Order</MenuItem>
               </Select>
@@ -526,7 +532,7 @@ const ManageSalesOrder: React.FC = () => {
           <MenuItem onClick={handleCreateChallan}>Create Challan</MenuItem>
           <MenuItem
             onClick={handleEdit}
-            disabled={isSalesOrderDispatched(selectedRow)}
+            // disabled={isSalesOrderDispatched(selectedRow)}
           >
             Edit
           </MenuItem>
