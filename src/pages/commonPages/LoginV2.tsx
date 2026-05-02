@@ -11,9 +11,12 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
+//@ts-ignore
 import "swiper/css";
+//@ts-ignore
 import "swiper/css/pagination";
 import { Pagination, EffectFade, Autoplay } from "swiper/modules";
+//@ts-ignore
 import "swiper/css/effect-fade";
 import LoadingButton from "@mui/lab/LoadingButton";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";

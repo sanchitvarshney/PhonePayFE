@@ -5,11 +5,15 @@ import type { R1ApiResponse, ReportStateType, R1ReportApiResponse } from "./repo
 
 const initialState: ReportStateType = {
   r1Data: null,
+
   getR1DataLoading: false,
   r1Report: null,
   wrongDeviceReport: null,
   r1ReportLoading: false,
   wrongDeviceReportLoading: false,
+  r2Report: null,
+  r2ReportLoading: false,
+
 };
 
 export const getR1Data = createAsyncThunk<
@@ -40,6 +44,28 @@ export const getR1Report = createAsyncThunk<
   return response;
 });
 
+
+
+export const getr2Report = createAsyncThunk<
+  AxiosResponse<any>,
+  {
+    from?: string;
+    to?: string;
+    wise: string;
+    page?: number;
+    limit?: number;
+    data?: any;
+  }
+>("report/getr2Report", async (query) => {
+  const response = await axiosInstance.get(
+`/report/r2?from=${query.from}&to=${query.to}&page=${query.page}&limit=${query.limit}&wise=${query.wise}&data=${query.data?.sku}`
+  );
+  return response;
+});
+
+
+
+
 export const getWrongDeviceReport = createAsyncThunk<
   AxiosResponse<R1ReportApiResponse>,
   { type: string; from: string; to: string; limit: number; page: number }
@@ -63,6 +89,21 @@ const reportSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+     
+      .addCase(getr2Report.pending, (state) => {
+        state.r2ReportLoading = true;
+        // state.r5report = null;
+      })
+      .addCase(getr2Report.fulfilled, (state, action) => {
+        state.r2ReportLoading = false;
+        if (action.payload.data.success) {
+          state.r2Report = action.payload.data;
+        }
+      })
+      .addCase(getr2Report.rejected, (state) => {
+        state.r2ReportLoading = false;
+        // state.r5report = null;
+      })
       .addCase(getR1Data.pending, (state) => {
         state.getR1DataLoading = true;
       })

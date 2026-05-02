@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaCircleUser } from "react-icons/fa6";
 import styled from "styled-components";
 import { FavoriteMenuLinkListType, MainUIStateType } from "@/types/MainLayout";
@@ -8,13 +8,16 @@ import SidebarMenues from "@/components/shared/SidebarMenues";
 import FavoriteSidebar from "@/components/shared/FavoriteSidebar";
 import ProfileSidebar from "@/components/shared/ProfileSidebar";
 import MainLayoutPopovers from "@/components/shared/MainLayoutPopovers";
-// import { SiSocketdotio } from "react-icons/si";
+import { SiSocketdotio } from "react-icons/si";
 import { IconButton } from "@mui/material";
 import MuiTooltip from "@/components/reusable/MuiTooltip";
+import { useSocketContext } from "@/components/context/SocketContext";
+import DownloadIndecator from "@/components/shared/DownloadIndecator";
+import NotificationPnnel from "@/components/shared/NotificationPanel";
 // import { useSocketContext } from "@/components/context/SocketContext";
 
 function MainLayout(props: { children: React.ReactNode }) {
-  // const { isConnected, refreshConnection, isLoading } = useSocketContext();
+    const { isConnected,emitGetNotification,refreshConnection, isLoading } = useSocketContext();
   const [sheetOpen, setSheetOpen] = useState<boolean>(false);
   const [sheet2Open, setSheet2Open] = useState<boolean>(false);
   const [favoriteSheet, setFavoriteSheet] = useState<boolean>(false);
@@ -42,6 +45,13 @@ function MainLayout(props: { children: React.ReactNode }) {
     setFavoriteLinkList,
   };
 
+
+    useEffect(() => {
+    if (isConnected) {
+      emitGetNotification();
+    }
+  }, [isConnected]);
+
   const handleSheetOpen = () => {
     setSheetOpen(!sheetOpen);
     setSheet2Open(false);
@@ -67,13 +77,21 @@ function MainLayout(props: { children: React.ReactNode }) {
             
           </div>
           <div className="flex items-center gap-[20px]">
-            {/* <MuiTooltip title={isConnected ? "Socket Connected" : "Socket Disconnected"} placement="left">
+               <MuiTooltip title={`Socket ${isConnected ? "Connected" : "Disconnected"}`} placement="right">
               <IconButton onClick={() => refreshConnection()}>
-                <SiSocketdotio
-                  className={`h-[25px] w-[25px] ${isConnected ? "text-green-500" : "text-red-500"} ${isLoading ? "animate-spin" : ""}`}
-                />
+                <SiSocketdotio className={`h-[25px] w-[25px] ${isConnected ? "text-green-500" : "text-red-500"}  ${isLoading ? "animate-spin" : ""}`} />
               </IconButton>
-            </MuiTooltip> */}
+            </MuiTooltip>
+             <div className="flex items-center gap-[20px]">
+            <div className="toggle"></div>
+            <div className="download">
+              <DownloadIndecator   />
+            </div>
+ 
+             
+
+            <NotificationPnnel  />
+          </div>
             <MuiTooltip title="Account" placement="left">
               <IconButton
                 onClick={() => {

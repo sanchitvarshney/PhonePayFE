@@ -21,6 +21,7 @@ export const visibaleArr: any[] = [
 
 export const navSliderData: NavSliderData[] = [
   { path: "/report/R1", name: "R1", content: <p>Raw MIN Report</p> },
+   { path: "/report/R2", name: "R2", content: <p>Dispatch Report</p> },
   // { path: "/report/R2", name: "R2", content: <p>TRC Report</p> },
   // { path: "/report/R3", name: "R3", content: <p>Battery QC Report</p> },
   // { path: "/report/R4", name: "R4", content: <p>Production Report</p> },

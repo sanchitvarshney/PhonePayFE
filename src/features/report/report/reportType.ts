@@ -87,5 +87,8 @@ export type ReportStateType = {
   wrongDeviceReport: any;
   r1ReportLoading: boolean;
   wrongDeviceReportLoading: boolean;
+  r2Report: any;
+  r2ReportLoading: boolean;
+
 };
 
