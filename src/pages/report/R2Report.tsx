@@ -5,7 +5,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import dayjs, { Dayjs } from "dayjs";
 import { AgGridReact } from "@ag-grid-community/react";
 
-import SelectSku, { DeviceType } from "@/components/reusable/SelectSku";
+import SelectSku from "@/components/reusable/SelectSku";
 import {
   Divider,
   Drawer,
@@ -23,12 +23,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import { rangePresets } from "@/utils/rangePresets";
 import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import MuiTooltip from "@/components/reusable/MuiTooltip";
 
 dayjs.extend(customParseFormat);
 const { RangePicker } = DatePicker;
-
-import { useSocketContext } from "@/components/context/SocketContext";
 import R2ReportTable from "@/table/report/R2ReportTable";
 
 
