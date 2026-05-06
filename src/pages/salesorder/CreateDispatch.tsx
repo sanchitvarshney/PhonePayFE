@@ -20,6 +20,7 @@ import {
 } from "@/features/salesOrder/salesOrderSlice";
 import { showToast } from "@/utils/toasterContext";
 import { Icons } from "@/components/icons";
+import SelectLocation from "@/components/reusable/SelectLocation";
 
 type ChallanRow = {
   challanNo?: string;
@@ -127,11 +128,13 @@ const CreateDispatch: React.FC = () => {
   const initialChallanNo = decodeURIComponent(challanNo || "");
   const { dispatchLoading, challanLoading } = useAppSelector((state) => state.salesOrder);
   const showChallanSkeleton = Boolean(initialChallanNo.trim()) && challanLoading;
+  
 
   const [activeStep, setActiveStep] = useState<number>(0);
   const [challanDetails, setChallanDetails] = useState<ChallanRow | null>(null);
   const [serialNumbers, setSerialNumbers] = useState<string[]>([]);
   const [serialUploadKey, setSerialUploadKey] = useState<number>(0);
+  const [pickLocation, setPickLocation] = useState<any>({});
   const [remarks, setRemarks] = useState<string>("");
 
   const effectiveChallanNo = useMemo(
@@ -186,6 +189,8 @@ const CreateDispatch: React.FC = () => {
     XLSX.writeFile(wb, "dispatch_serial_sample.xlsx");
   };
 
+
+
   const handleSubmit = async () => {
     if (!challanDetails) {
       showToast("Challan details not loaded", "error");
@@ -217,6 +222,7 @@ const CreateDispatch: React.FC = () => {
       serialNo: normalizedSerials,
       salesOrder: getSalesOrderNumber(challanDetails),
       boxId: challanDetails?.boxId ?? challanDetails?.box_id ?? "",
+      pickLocation: pickLocation?.id,
       remarks: remarks.trim(),
     };
 
@@ -300,6 +306,9 @@ const CreateDispatch: React.FC = () => {
                 <TextField label="Device Model" value={challanDetails?.deviceModel ?? challanDetails?.deviceModal ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
                 <TextField label="Rate" value={challanDetails?.rate ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
                 <TextField label="Box ID" value={challanDetails?.boxId ?? challanDetails?.box_id ?? ""} InputProps={{ readOnly: true }} fullWidth variant="filled" />
+                   
+               <SelectLocation label="Pick Location" varient="outlined" size="medium" value={pickLocation?.id} onChange={setPickLocation} />
+             
               </div>
 
               <div className="flex items-center w-full gap-3">

@@ -13,6 +13,10 @@ const initialState: ReportStateType = {
   wrongDeviceReportLoading: false,
   r2Report: null,
   r2ReportLoading: false,
+    r3report: null,
+  r3reportLoading: false,
+  r3ReportDetail: null,
+  r3ReportDetailLoading: false,
 
 };
 
@@ -72,6 +76,30 @@ export const getWrongDeviceReport = createAsyncThunk<
 >("report/getWrongDeviceReport", async (payload) => {
   const response = await axiosInstance.get(
     `/wrongDevice/fetch/?fromDate=${payload.from}&toDate=${payload.to}&deliveryPartner=${payload.type}&page=${payload.page}&limit=${payload.limit}`
+  );
+  return response;
+});
+
+
+
+export const getr3Report = createAsyncThunk<
+  AxiosResponse<any>,
+  any
+>("report/getr3Report", async (query) => {
+  const response = await axiosInstance.get(
+  
+    `/report/r4/DATE?from=${query.from}&to=${query.to}&page=${query.page}&limit=${query.limit}`
+  );
+  return response;
+});
+
+
+export const r3ReportDetail = createAsyncThunk<
+  AxiosResponse<any>,
+  { query: string }
+>("report/r4ReportDetail", async (query) => {
+  const response = await axiosInstance.get(
+    `/report/r4/consumed/${query.query}`
   );
   return response;
 });

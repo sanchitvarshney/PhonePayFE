@@ -77,6 +77,11 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
     socketService.emit("getNotification", "");
   };
 
+   const emitDownloadReport = (payload: any) => {
+  
+    socketService.emit("inwardReport", payload);
+  };
+
   const onnotification = (callback: (data: NotificationData[]) => void) => {
     socketService.on("socket_receive_notification", callback);
   };
@@ -109,6 +114,7 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
       emitGetNotification,
       onnotification,
       onDownloadReport,
+      emitDownloadReport,
       off,
      emitDownloadr2Report
     }),

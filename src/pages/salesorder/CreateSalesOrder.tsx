@@ -151,7 +151,7 @@ const normalizeCompareText = (value: unknown): string => {
     .toLowerCase();
 };
 
-const isOptionMatchedByCodeOrLabel = (option: any, selectedValue: unknown): boolean => {
+export const isOptionMatchedByCodeOrLabel = (option: any, selectedValue: unknown): boolean => {
   const selected = normalizeCompareText(selectedValue);
   if (!selected) return false;
   const optionCode = normalizeCompareText(option?.code ?? option?.id);
@@ -163,7 +163,7 @@ const findAddressOptionByCodeOrLabel = (options: any[], selectedValue: unknown) 
   return options.find((item: any) => isOptionMatchedByCodeOrLabel(item, selectedValue)) ?? null;
 };
 
-const resolveAddressAutocompleteValue = (options: any[], selectedValue: unknown) => {
+export const resolveAddressAutocompleteValue = (options: any[], selectedValue: unknown) => {
   const matched = findAddressOptionByCodeOrLabel(options, selectedValue);
   if (matched) return matched;
   const normalized = normalizeCompareText(selectedValue);
@@ -523,7 +523,7 @@ const CreateSalesOrder: React.FC = () => {
   useEffect(() => {
     dispatch(getDispatchFromDetail());
     dispatch(getShippingAddress());
-  }, [dispatch]);
+  }, []);
 
   useEffect(() => {
     const fetchSkuOptions = async () => {
