@@ -88,7 +88,7 @@ export const getr3Report = createAsyncThunk<
 >("report/getr3Report", async (query) => {
   const response = await axiosInstance.get(
   
-    `/report/r4/DATE?from=${query.from}&to=${query.to}&page=${query.page}&limit=${query.limit}`
+    `/report/r3?from=${query.from}&to=${query.to}&page=${query.page}&limit=${query.limit}&wise=${query.type}&data=${query.data}`
   );
   return response;
 });

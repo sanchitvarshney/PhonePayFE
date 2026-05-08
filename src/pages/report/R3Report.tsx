@@ -31,7 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import MuiTooltip from "@/components/reusable/MuiTooltip";
 import { useSocketContext } from "@/components/context/SocketContext";
-import SelectComponent from "@/components/reusable/SelectComponent";
+import SelectComponent, { ComponentType } from "@/components/reusable/SelectComponent";
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
     children: React.ReactElement<unknown>;
@@ -49,7 +49,7 @@ const R3Report: React.FC = () => {
   const { r3reportLoading, r3ReportDetail, r3ReportDetailLoading, r3report } =
     useAppSelector((state) => state.report);
   const [filter, setFilter] = useState<string>("partwise");
-const [component, setComponent] = useState<any>("");
+const [component, setComponent] = useState<ComponentType | null>(null);
   const { emitDownloadR3Report, isConnected } = useSocketContext();
   const [date, setDate] = useState<{ from: Dayjs | null; to: Dayjs | null }>({
     from: null,
@@ -306,7 +306,7 @@ const [component, setComponent] = useState<any>("");
             {filter === "partwise" && (
               <SelectComponent value={component} onChange={setComponent} />
             )}
-            {filter === "DATE" && (
+            {filter === "datewise" && (
               <RangePicker
                 className="w-full h-[55px] border-2 rounded-lg border-neutral-300 rounded-0 "
                 presets={rangePresets}
@@ -334,7 +334,7 @@ const [component, setComponent] = useState<any>("");
                       } else {
                         dispatch(
                           getr3Report({
-                            type: "PART",
+                            type: "partwise",
                             data: component?.id,
                             limit: pageSize,
                             page: 1,
@@ -342,13 +342,13 @@ const [component, setComponent] = useState<any>("");
                         );
                       }
                     }
-                    if (filter === "DATE") {
+                    if (filter === "datewise") {
                       if (!date.from || !date.to) {
                         showToast("Please select a date", "error");
                       } else {
                         dispatch(
                           getr3Report({
-                            type: "DATE",
+                            type: "datewise",
                             from: dayjs(date.from).format("DD-MM-YYYY"),
                             to: dayjs(date.to).format("DD-MM-YYYY"),
                             limit: pageSize,

@@ -3,10 +3,10 @@ import { ColDef } from "@ag-grid-community/core";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
 import { AgGridReact } from "@ag-grid-community/react";
 import CustomLoadingOverlay from "@/components/reusable/CustomLoadingOverlay";
-import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
-import { Button } from "@mui/material";
-import FullscreenIcon from "@mui/icons-material/Fullscreen";
-import { r3ReportDetail } from "@/features/report/report/reportSlice";
+import { useAppSelector } from "@/hooks/useReduxHook";
+// import { Button } from "@mui/material";
+// import FullscreenIcon from "@mui/icons-material/Fullscreen";
+// import { r3ReportDetail } from "@/features/report/report/reportSlice";
 import CustomPagination from "@/components/reusable/CustomPagination";
 type Props = {
   gridRef: RefObject<AgGridReact<any>>;
@@ -21,12 +21,12 @@ type Props = {
 // Generate dummy data according to pagination needs
 const R3ReportTable: React.FC<Props> = ({
   gridRef,
-  setOpen,
+  // setOpen,
   handlePageChange,
   handlePageSizeChange,
   pageSize,
 }) => {
-  const dispatch = useAppDispatch();
+  // const dispatch = useAppDispatch();
   const columnDefs: ColDef[] = [
     {
       headerName: "#",
@@ -37,92 +37,56 @@ const R3ReportTable: React.FC<Props> = ({
       valueGetter: "node.rowIndex+1",
     },
     {
-      headerName: "Production ID",
-      field: "prodductionId",
+      headerName: "Component Name",
+      field: "componentName",
       sortable: true,
       filter: true,
     },
     {
-      headerName: "SR No.",
-      field: "productSrlNo",
+      headerName: "Part Code",
+      field: "partName",
       sortable: true,
       filter: true,
     },
     {
-      headerName: "IMEI 1",
-      field: "productImei1",
+      headerName: "QTY",
+      field: "qty",
       sortable: true,
       filter: true,
     },
     {
-      headerName: "IMEI 2",
-      field: "productImei2",
+      headerName: "Transaction ID",
+      field: "transactionId",
       sortable: true,
       filter: true,
     },
-    { headerName: "SKU", field: "sku", sortable: true, filter: true },
-    { headerName: "SKU Name", field: "skuName", sortable: true, filter: true },
-    {
-      headerName: "Device Move ID",
-      field: "device_mov_id",
-      sortable: true,
-      filter: true,
-    },
-    {
-      headerName: "Requested Date",
-      field: "insertDate",
-      sortable: true,
-      filter: true,
-    },
-    {
-      headerName: "Requested By",
-      field: "insertBy",
-      sortable: true,
-      filter: true,
-    },
-    {
-      headerName: "Pick Location",
-      field: "productionLocation",
-      sortable: true,
-      filter: true,
-    },
-    {
-      headerName: "Drop Location",
-      field: "dropLocation",
-      sortable: true,
-      filter: true,
-    },
-    {
-      headerName: "",
-      field: "prodductionId",
-      sortable: true,
-      filter: true,
-      hide: true,
-    },
-    {
-      headerName: "",
-      pinned: "right",
-      sortable: false,
-      filter: false,
-      cellRenderer: (params: any) => (
-        <Button
-          onClick={() => {
-            setOpen(true);
-            dispatch(
-              r3ReportDetail({
-                query: params.data.prodductionId,
-              })
-            );
-          }}
-          variant="contained"
-          size="small"
-          startIcon={<FullscreenIcon fontSize="small" />}
-        >
-          Detail
-        </Button>
-      ),
-      width: 150,
-    },
+    { headerName: "Location", field: "location", sortable: true, filter: true },
+    { headerName: "Consumed Date", field: "consumedDate", sortable: true, filter: true },
+   
+    // {
+    //   headerName: "",
+    //   pinned: "right",
+    //   sortable: false,
+    //   filter: false,
+    //   cellRenderer: (params: any) => (
+    //     <Button
+    //       onClick={() => {
+    //         setOpen(true);
+    //         dispatch(
+    //           r3ReportDetail({
+    //             query: params.data.prodductionId,
+    //           })
+    //         );
+    //       }}
+    //       variant="contained"
+    //       size="small"
+    //       startIcon={<FullscreenIcon fontSize="small" />}
+    //     >
+    //       Detail
+    //     </Button>
+    //   ),
+    //   width: 150,
+    // },
   ];
   const { r3report, r3reportLoading } = useAppSelector((state) => state.report);
 
