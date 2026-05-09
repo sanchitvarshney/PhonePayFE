@@ -402,12 +402,12 @@ const BulkDeviceInward: React.FC = () => {
             "success"
           );
           const ref =
-            body?.data?.po_id ??
+            body?.data?.min_no ??
             body?.data?.id ??
             body?.data?.dc_id ??
             body?.dc_id ??
             body?.data?.challan_no ??
-            body?.challan_no ??
+            body?.min_no ??
             "";
           resetall();
           setMinno(ref ? String(ref) : "");
