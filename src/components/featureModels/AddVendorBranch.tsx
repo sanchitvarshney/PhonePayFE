@@ -56,7 +56,7 @@ const AddVendorBranch: React.FC<Props> = ({ open, handleClose }) => {
     const payload: AddVendorBranchPayload = {
       vendor: id || "",
       branch: data.branch,
-      state: data.state?.Code || "",
+      state: data.state?.code || "",
       city: data.city,
       address: data.address,
       pincode: data.pincode,
