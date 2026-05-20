@@ -1,7 +1,8 @@
 import useAuth from "@/hooks/useAuth";
+import { storeCurrentPathAsReturnTo } from "@/utils/authRedirect";
 import { LinearProgress } from "@mui/material";
 import React, { useEffect, useState, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface ProtectedProps {
   children: ReactNode;
@@ -12,19 +13,21 @@ const Protected: React.FC<ProtectedProps> = ({ children, authentication = true }
   const [isLoading, setIsLoading] = useState(true);
   const authStatus: boolean = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const checkAuth = async () => {
       await new Promise((resolve) => setTimeout(resolve, 300));
       if (authentication && !authStatus) {
-        navigate("/login");
+        storeCurrentPathAsReturnTo();
+        navigate("/login", { replace: true });
       } else if (!authentication && authStatus) {
-        navigate("/");
+        navigate("/", { replace: true });
       }
       setIsLoading(false);
     };
     checkAuth();
-  }, [authStatus, authentication, navigate]);
+  }, [authStatus, authentication, navigate, location.pathname, location.search, location.hash]);
 
   if (isLoading) {
     return (

@@ -61,6 +61,18 @@ export const createPO = createAsyncThunk<AxiosResponse<unknown>, unknown>(
   }
 );
 
+/** Bulk Device Inward / delivery-challan style create — not under `/po/`. */
+export const createBulkDeviceInward = createAsyncThunk<
+  AxiosResponse<unknown>,
+  unknown
+>("bulkDeviceInward/create", async (payload) => {
+  const response = await axiosInstance.post(
+    "/inward/deviceInward",
+    payload
+  );
+  return response;
+});
+
 export const updatePO = createAsyncThunk<AxiosResponse<unknown>, unknown>(
   "po/updatePO",
   async (payload) => {
@@ -251,6 +263,19 @@ const procurementPoSlice = createSlice({
         state.managePoData = (action.payload as AxiosResponse<{ data?: unknown }>)?.data ?? action.payload;
       })
       .addCase(createPO.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(createBulkDeviceInward.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(createBulkDeviceInward.fulfilled, (state, action) => {
+        state.loading = false;
+        state.managePoData =
+          (action.payload as AxiosResponse<{ data?: unknown }>)?.data ??
+          action.payload;
+      })
+      .addCase(createBulkDeviceInward.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
       })

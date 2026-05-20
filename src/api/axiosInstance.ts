@@ -1,4 +1,5 @@
 import axios from "axios";
+import { storeCurrentPathAsReturnTo } from "@/utils/authRedirect";
 import { getToken } from "@/utils/tokenUtills";
 import { getApiBaseUrl } from "@/utils/apiSettings";
 import { showToast } from "@/utils/toasterContext";
@@ -41,14 +42,15 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      storeCurrentPathAsReturnTo();
       localStorage.clear();
-      window.location.href = "/login";
+      globalThis.window.location.href = "/login";
     }
     const message =
       error.response?.data?.message?.msg ??
       error.response?.data?.message ??
       "An unexpected error occurred";
-    if (typeof window !== "undefined" && message) {
+    if (globalThis.window !== undefined && message) {
       showToast(message, "error");
     }
     return Promise.reject(error);

@@ -21,6 +21,28 @@ export type VendorAddressApiResponse = {
   data: VendoAddressData;
 };
 
+export type UploadFileData = {
+  fileName: string;
+  fileReference: string;
+};
+
+export type UploadSerialFileResponse = {
+  success: boolean;
+  message: string;
+  data: UploadFileData;
+};
+
+export type InvoiceFileData = {
+  originalFileName: string;
+  fileID: string;
+};
+
+export type UploadInvoiceFileApiResponse = {
+  success: boolean;
+  message: string;
+  data: InvoiceFileData[];
+};
+
 export type DeviceMinSate = {
   getLocationLoading: boolean;
   locationData: Location[] | null;
@@ -30,4 +52,8 @@ export type DeviceMinSate = {
   VendorBranchData: Location[] | null;
   venderaddressloading: boolean;
   venderaddressdata: VendoAddressData | null;
+  uploadSerialFileLoading: boolean;
+  serialFiledata: UploadFileData | null;
+  uploadInvoiceFileLoading: boolean;
+  invociceFiledata: InvoiceFileData[] | null;
 };

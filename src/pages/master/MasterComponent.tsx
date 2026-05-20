@@ -59,6 +59,9 @@ const MasterComponent: React.FC = () => {
     id: item.code,
     text: item.name,
   }));
+  const selectedModule = watch("module");
+  const isPhonePaySelected =
+    selectedModule?.id?.toLowerCase() === "phonepay" || selectedModule?.text?.toLowerCase() === "phonepay";
 
   const { UOM, getUOMloading } = useAppSelector((state) => state.uom);
   const { createComponentLoading, component } = useAppSelector((state) => state.component);
@@ -126,7 +129,7 @@ const MasterComponent: React.FC = () => {
                 {errors.module && <span className=" text-[12px] text-red-500">{errors.module.message}</span>}
               </div>
               <div>
-                <TextField disabled={watch("module")?.id !== "BPE"} placeholder="Part Code" fullWidth label="Part Code"{...register("part")} />
+                <TextField disabled={!isPhonePaySelected} placeholder="Part Code" fullWidth label="Part Code"{...register("part")} />
                 {errors.part && <span className=" text-[12px] text-red-500">{errors.part.message}</span>}
               </div>
               

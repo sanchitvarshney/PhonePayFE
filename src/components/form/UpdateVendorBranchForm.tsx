@@ -54,7 +54,7 @@ const UpdateVendorBranchForm: React.FC<Props> = ({ branch, setEditBranchId, scro
     mode: "all",
     defaultValues: {
       branch: branch.branch,
-      state: { Name: branch.state.name, Code: branch.state.state },
+      state: { name: branch.state.name, code: branch.state.state },
       city: branch.city,
       address: replaceBrWithNewLine(branch.address) || "",
       pincode: branch.pincode,
@@ -69,7 +69,7 @@ const UpdateVendorBranchForm: React.FC<Props> = ({ branch, setEditBranchId, scro
       code: branch.code,
       vendor_code: id || "",
       label: data.branch,
-      state: data.state?.Code || "",
+      state: data.state?.code || "",
       city: data.city,
       address: data.address,
       pincode: data.pincode,

@@ -3,8 +3,8 @@ import { Autocomplete, CircularProgress, TextField } from "@mui/material";
 import axiosInstance from "@/api/axiosInstance";
 
 export type StateData = {
-  Name: string;
-  Code: string;
+  name: string;
+  code: string;
 };
 
 type StateApiResponse = {
@@ -67,10 +67,10 @@ const SelectState: React.FC<Props> = ({
       value={value}
       size={size}
       options={stateList || []}
-      getOptionLabel={(option) => `${option.Name} (${option.Code})`}
+      getOptionLabel={(option) => `${option.name} (${option.code})`}
       onChange={(_, val) => onChange(val)}
       loading={loading}
-      isOptionEqualToValue={(option, val) => option.Code === val?.Code}
+      isOptionEqualToValue={(option, val) => option.code === val?.code}
       renderInput={(params) => (
         <TextField
           required={required}
@@ -93,7 +93,7 @@ const SelectState: React.FC<Props> = ({
       renderOption={(props, option) => (
         <li {...props}>
           <div>
-            <p className="text-[13px]">{`${option.Name} (${option.Code})`}</p>
+            <p className="text-[13px]">{`${option.name} (${option.code})`}</p>
           </div>
         </li>
       )}

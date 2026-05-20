@@ -11,9 +11,12 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
+//@ts-ignore
 import "swiper/css";
+//@ts-ignore
 import "swiper/css/pagination";
 import { Pagination, EffectFade, Autoplay } from "swiper/modules";
+//@ts-ignore
 import "swiper/css/effect-fade";
 import LoadingButton from "@mui/lab/LoadingButton";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -27,6 +30,7 @@ import { loginUserAsync } from "@/features/authentication/authSlice";
 import type { LoginCredentials } from "@/features/authentication/authType";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { showToast } from "@/utils/toasterContext";
+import { getPostLoginRedirectPath } from "@/utils/authRedirect";
 import { useNavigate } from "react-router-dom";
 import ImageCaptcha from "@/components/ImageCaptcha/ImageCaptcha";
 
@@ -56,7 +60,8 @@ const LoginV2: React.FC = () => {
       const body = a?.payload?.data;
       if (body?.success) {
         showToast(body.message || "Login successful", "success");
-        navigate("/");
+        const redirectPath = getPostLoginRedirectPath("/");
+        navigate(redirectPath, { replace: true });
       } else {
         const errorMessage = body?.message ?? (a?.payload as { message?: string })?.message;
         if (errorMessage) showToast(errorMessage, "error");

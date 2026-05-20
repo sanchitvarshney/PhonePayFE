@@ -34,6 +34,15 @@ import QueryLayout from "@/layouts/QueryLayout";
 import ProductionModuleLayout from "./layouts/ProductionModuleLayout";
 import ProductionAddDataPage from "./pages/production/ProductionAddDataPage";
 import ProductionReportPage from "./pages/production/ProductionReportPage";
+import BulkDeviceInwardLayout from "@/layouts/BulkDeviceInwardLayout";
+import BulkDeviceInward from "@/pages/bulkDeviceInward/BulkDeviceInward";
+import SalesOrderLayout from "@/layouts/SalesOrderLayout";
+import CreateSalesOrder from "@/pages/salesorder/CreateSalesOrder";
+import ManageSalesOrder from "@/pages/salesorder/ManageSalesOrder";
+import ManageChallan from "@/pages/salesorder/ManageChallan";
+import CreateDispatch from "@/pages/salesorder/CreateDispatch";
+import Consumption from "@/pages/warehouse/Consumption";
+import GoodSpareInwardv2 from "@/pages/warehouse/GoodSpareInwardv2";
 
 export const router = createBrowserRouter([
   {
@@ -197,6 +206,92 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/report/:id",
+      },
+      {
+        element: (
+          <MainLayout>
+            <BulkDeviceInwardLayout>
+              <BulkDeviceInward />
+            </BulkDeviceInwardLayout>
+          </MainLayout>
+        ), 
+        path: "/bulk-device-inward/create",
+      },
+      {
+        element: (
+          <MainLayout>
+            <SalesOrderLayout>
+              <CreateSalesOrder />
+            </SalesOrderLayout>
+          </MainLayout>
+        ),
+        path: "/sales-order/create",
+      },
+      {
+        element: (
+          <MainLayout>
+            <SalesOrderLayout>
+              <CreateSalesOrder />
+            </SalesOrderLayout>
+          </MainLayout>
+        ),
+        path: "/sales-order/create/:salesOrderId",
+      },
+      {
+        element: (
+          <MainLayout>
+            <SalesOrderLayout>
+              <CreateSalesOrder />
+            </SalesOrderLayout>
+          </MainLayout>
+        ),
+        path: "/sales-order/edit/:salesOrderId",
+      },
+      {
+        element: (
+          <MainLayout>
+            <SalesOrderLayout>
+              <ManageSalesOrder />
+            </SalesOrderLayout>
+          </MainLayout>
+        ),
+        path: "/sales-order/manage",
+      },
+      {
+        element: (
+          <MainLayout>
+            <SalesOrderLayout>
+              <ManageChallan />
+            </SalesOrderLayout>
+          </MainLayout>
+        ),
+        path: "/sales-order/manage-challan",
+      },
+      {
+        element: (
+          <MainLayout>
+            <SalesOrderLayout>
+              <CreateDispatch />
+            </SalesOrderLayout>
+          </MainLayout>
+        ),
+        path: "/sales-order/create-dispatch/:challanNo",
+      },
+      {
+        element: (
+          <MainLayout>
+            <Consumption />
+          </MainLayout>
+        ),
+        path: "/warehouse/consumption",
+      },
+      {
+        element: (
+          <MainLayout>
+            <GoodSpareInwardv2 />
+          </MainLayout>
+        ),
+        path: "/warehouse/good-spare-inward",
       },
       {
         element: (

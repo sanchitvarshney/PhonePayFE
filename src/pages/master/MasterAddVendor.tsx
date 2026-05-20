@@ -119,7 +119,7 @@ const MasterAddVendor: React.FC = () => {
       cinno: data.cin,
       gstin: data.gst,
       mobile: data.mobile,
-      state: data.state?.Code || "",
+      state: data.state?.code || "",
       city: data.city,
       address: data.address,
       pincode: data.pincode,
@@ -134,7 +134,7 @@ const MasterAddVendor: React.FC = () => {
     };
     const branch: Branch = {
       branch: data.branch,
-      state: data.state?.Code || "",
+      state: data.state?.code || "",
       city: data.city,
       address: data.address,
       pincode: data.pincode,

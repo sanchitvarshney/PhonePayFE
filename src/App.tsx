@@ -1,6 +1,5 @@
 import { Outlet } from "react-router-dom";
 import "./App.css";
-
 import OtpPage from "./pages/commonPages/OtpPage";
 
 function App() {
