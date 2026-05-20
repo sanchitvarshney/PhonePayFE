@@ -6,7 +6,7 @@ function App() {
   const showOtpPage = localStorage.getItem("showOtpPage");
 
   // if (user?.other) {
-  //   if (!user.other.e_v) {
+  //   if (user.other.e_v) {
   //     return <MailVerifyPage />;
   //   }
   //   if (!user.other.c_p) {

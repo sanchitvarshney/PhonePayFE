@@ -5,7 +5,6 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { AgGridReact } from "ag-grid-react";
 import { ModuleRegistry } from "@ag-grid-community/core";
-//@ts-ignore
 import { ExcelExportModule } from "@ag-grid-enterprise/excel-export";
 import LoadingButton from "@mui/lab/LoadingButton";
 import SearchIcon from "@mui/icons-material/Search";
