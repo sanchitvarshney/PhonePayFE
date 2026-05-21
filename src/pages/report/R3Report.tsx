@@ -96,50 +96,50 @@ const [component, setComponent] = useState<ComponentType | null>(null);
   }, []);
 
   const handlePageChange = (page: number) => {
-    if(filter === "DATE"){
-    dispatch(
-      getr3Report({
-        type: "DATE",
-        from: dayjs(date.from).format("DD-MM-YYYY"),
-        to: dayjs(date.to).format("DD-MM-YYYY"),
-        limit: pageSize,
-        page: page,
-      })
-    );
-  }
-  else{
-    dispatch(
-      getr3Report({
-        type: "partwise",
-        limit: pageSize,
-        page: page,
-      })
-    );
-  }
+    if (filter === "datewise") {
+      dispatch(
+        getr3Report({
+          type: "datewise",
+          from: dayjs(date.from).format("DD-MM-YYYY"),
+          to: dayjs(date.to).format("DD-MM-YYYY"),
+          limit: pageSize,
+          page: page,
+        })
+      );
+    } else {
+      dispatch(
+        getr3Report({
+          type: "partwise",
+          data: component?.id,
+          limit: pageSize,
+          page: page,
+        })
+      );
+    }
   };
 
   const handlePageSizeChange = (pageSize: number) => {
     setPageSize(pageSize);
-    if(filter === "DATE"){
-    dispatch(
-      getr3Report({
-        type: "DATE",
-        from: dayjs(date.from).format("DD-MM-YYYY"),
-        to: dayjs(date.to).format("DD-MM-YYYY"),
-        page: 1,
-        limit: pageSize,
-      })
-    );
-  }
-  else{
-    dispatch(
-      getr3Report({
-        type: "partwise",
-        page: 1,
-        limit: pageSize,
-      })
-    );
-  }
+    if (filter === "datewise") {
+      dispatch(
+        getr3Report({
+          type: "datewise",
+          from: dayjs(date.from).format("DD-MM-YYYY"),
+          to: dayjs(date.to).format("DD-MM-YYYY"),
+          page: 1,
+          limit: pageSize,
+        })
+      );
+    } else {
+      dispatch(
+        getr3Report({
+          type: "partwise",
+          data: component?.id,
+          page: 1,
+          limit: pageSize,
+        })
+      );
+    }
   };
   return (
     <>

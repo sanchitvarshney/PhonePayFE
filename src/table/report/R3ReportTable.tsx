@@ -118,9 +118,9 @@ const R3ReportTable: React.FC<Props> = ({
       </div>
       {r3report && (
         <CustomPagination
-          currentPage={r3report?.pagination?.currentPage}
+          currentPage={r3report?.pagination?.page}
           totalPages={r3report?.pagination?.totalPages}
-          totalRecords={r3report?.pagination?.totalRecords}
+          totalRecords={Number(r3report?.pagination?.total ?? 0)}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
           pageSize={pageSize}

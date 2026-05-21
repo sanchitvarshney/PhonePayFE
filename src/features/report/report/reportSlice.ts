@@ -1,7 +1,12 @@
 import axiosInstance from "@/api/axiosInstance";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AxiosResponse } from "axios";
-import type { R1ApiResponse, ReportStateType, R1ReportApiResponse } from "./reportType";
+import type {
+  R1ApiResponse,
+  ReportStateType,
+  R1ReportApiResponse,
+  R3ReportApiResponse,
+} from "./reportType";
 
 const initialState: ReportStateType = {
   r1Data: null,
@@ -83,8 +88,15 @@ export const getWrongDeviceReport = createAsyncThunk<
 
 
 export const getr3Report = createAsyncThunk<
-  AxiosResponse<any>,
-  any
+  AxiosResponse<R3ReportApiResponse>,
+  {
+    type: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    limit?: number;
+    data?: string | number;
+  }
 >("report/getr3Report", async (query) => {
   const response = await axiosInstance.get(
   
@@ -167,6 +179,30 @@ const reportSlice = createSlice({
       })
       .addCase(getWrongDeviceReport.rejected, (state) => {
         state.wrongDeviceReportLoading = false;
+      })
+      .addCase(getr3Report.pending, (state) => {
+        state.r3reportLoading = true;
+      })
+      .addCase(getr3Report.fulfilled, (state, action) => {
+        state.r3reportLoading = false;
+        if (action.payload.data.success) {
+          state.r3report = action.payload.data;
+        }
+      })
+      .addCase(getr3Report.rejected, (state) => {
+        state.r3reportLoading = false;
+      })
+      .addCase(r3ReportDetail.pending, (state) => {
+        state.r3ReportDetailLoading = true;
+      })
+      .addCase(r3ReportDetail.fulfilled, (state, action) => {
+        state.r3ReportDetailLoading = false;
+        if (action.payload.data.success) {
+          state.r3ReportDetail = action.payload.data.data;
+        }
+      })
+      .addCase(r3ReportDetail.rejected, (state) => {
+        state.r3ReportDetailLoading = false;
       });
   },
 });

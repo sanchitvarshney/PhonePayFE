@@ -23,7 +23,7 @@ export const navSliderData: NavSliderData[] = [
   { path: "/report/R1", name: "R1", content: <p>Raw MIN Report</p> },
    { path: "/report/R2", name: "R2", content: <p>Dispatch Report</p> },
   // { path: "/report/R2", name: "R2", content: <p>TRC Report</p> },
-  { path: "/report/R3", name: "R3", content: <p>Consumsion Report</p> },
+  { path: "/report/R3", name: "R3", content: <p>Consumption Report</p> },
   { path: "/report/R4", name: "R4", content: <p>Inward Report</p> },
   // { path: "/report/R5", name: "R5", content: <p>Dispatch Report</p> },
   // { path: "/report/R6", name: "R6", content: <p>Raw MIN Report</p> },

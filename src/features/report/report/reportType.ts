@@ -80,6 +80,30 @@ export type R1ReportApiResponse = {
   };
 };
 
+export type R3ReportRow = {
+  componentName: string;
+  partName: string;
+  qty: string;
+  transactionId: string;
+  location: string;
+  consumedDate: string;
+  insertBy: string;
+};
+
+export type R3ReportPagination = {
+  page: number;
+  limit: number;
+  total: string | number;
+  totalPages: number;
+};
+
+export type R3ReportApiResponse = {
+  success: boolean;
+  message: string;
+  data: R3ReportRow[];
+  pagination: R3ReportPagination;
+};
+
 export type ReportStateType = {
   r1Data: DocumentData | null;
   getR1DataLoading: boolean;
@@ -89,7 +113,7 @@ export type ReportStateType = {
   wrongDeviceReportLoading: boolean;
   r2Report: any;
   r2ReportLoading: boolean;
-  r3report: any;
+  r3report: R3ReportApiResponse | null;
   r3reportLoading: boolean;
   r3ReportDetail: any;
   r3ReportDetailLoading: boolean;
