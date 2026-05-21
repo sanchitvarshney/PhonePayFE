@@ -371,7 +371,7 @@ const GoodSpareInwardv2: React.FC = () => {
     const selectedPickLocation =
       getOptionValue(data.pickLocation) || getOptionValue(getValues("pickLocation"));
     if (!selectedPickLocation) {
-      showToast("Pick location is required", "error");
+      showToast("Drop location is required", "error");
       return;
     }
     dispatch(storeFormdata(data));
@@ -824,7 +824,7 @@ const GoodSpareInwardv2: React.FC = () => {
                 <Controller
                   name="pickLocation"
                   control={control}
-                  rules={{ required: "Pick location is required" }}
+                  rules={{ required: "Drop location is required" }}
                   render={({ field }) => (
                     <Autocomplete
                       options={pickLocationOptions}
@@ -844,7 +844,7 @@ const GoodSpareInwardv2: React.FC = () => {
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Pick Location"
+                          label="Drop Location"
                           variant="filled"
                           error={!!errors.pickLocation}
                           helperText={errors.pickLocation?.message}
