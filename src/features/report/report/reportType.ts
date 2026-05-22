@@ -85,9 +85,10 @@ export type R3ReportApiResponse = {
   message: string;
   data: unknown[];
   pagination?: {
-    currentPage: number;
+    page: number;
+    limit: number;
+    total: number | string;
     totalPages: number;
-    totalRecords: number;
   };
 };
 

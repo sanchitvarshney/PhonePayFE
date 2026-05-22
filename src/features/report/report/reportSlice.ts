@@ -187,7 +187,20 @@ const reportSlice = createSlice({
         state.r3reportLoading = false;
         const body = action.payload.data;
         const hasData = Array.isArray(body?.data) && body.data.length > 0;
-        state.r3report = hasData ? body : null;
+        if (!hasData) {
+          state.r3report = null;
+          return;
+        }
+        const p = body.pagination;
+        state.r3report = {
+          ...body,
+          pagination: {
+            page: Number(p?.page ?? 1),
+            limit: Number(p?.limit ?? 20),
+            total: Number(p?.total ?? 0),
+            totalPages: Number(p?.totalPages ?? 1),
+          },
+        };
       })
       .addCase(getr3Report.rejected, (state) => {
         state.r3reportLoading = false;
