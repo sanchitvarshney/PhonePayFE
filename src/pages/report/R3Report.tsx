@@ -57,6 +57,34 @@ const [component, setComponent] = useState<ComponentType | null>(null);
   });
   const [open, setOpen] = React.useState(false);
   const [pageSize, setPageSize] = useState<number>(20);
+  const hasReportData = (r3report?.data?.length ?? 0) > 0;
+
+  const handleR3SearchResponse = (action: unknown) => {
+    if (getr3Report.rejected.match(action)) {
+      const err = action as {
+        error?: { message?: string };
+        payload?: { message?: string };
+      };
+      showToast(
+        err.payload?.message || err.error?.message || "Failed to fetch report",
+        "error"
+      );
+      return;
+    }
+    if (getr3Report.fulfilled.match(action)) {
+      const body = action.payload?.data;
+      const hasData = Array.isArray(body?.data) && body.data.length > 0;
+      if (!hasData) {
+        showToast(body?.message || "Data not found", "error");
+      }
+    }
+  };
+
+  const fetchR3Report = (
+    params: Parameters<typeof getr3Report>[0]
+  ) => {
+    dispatch(getr3Report(params)).then(handleR3SearchResponse);
+  };
 
   const handleClose = () => {
     setOpen(false);
@@ -71,23 +99,25 @@ const [component, setComponent] = useState<ComponentType | null>(null);
     }
   };
   const downloadr3report = () => {
-    // if (filter === "DEVICE") {
-    //   if (!component)
-    //     return showToast("Please select a device and device type", "error");
-    //   emitDownloadR3Report({
-    //     deviceId: device?.id,
-    //     deviceType: deviceType === "soundbox" ? "soundBox" : "swipeMachine",
-    //   });
-    // } else {
-      if (!date.from || !date.to)
-        return showToast("Please select a date", "error");
+    if (filter === "partwise") {
+      if (!component) {
+        return showToast("Please select a device and device type", "error");
+      }
       emitDownloadR3Report({
-        type: "datewise",
-        fromDate: date.from?.format("DD-MM-YYYY"),
-        toDate: date.to?.format("DD-MM-YYYY"),
-       
+        type: filter,
+        data: component.id,
       });
-
+    } else {
+      if (!date.from || !date.to) {
+        return showToast("Please select a date", "error");
+      }
+      emitDownloadR3Report({
+        type: filter,
+        fromDate: date.from.format("DD-MM-YYYY"),
+        toDate: date.to.format("DD-MM-YYYY"),
+      });
+    }
+    showToast("Start downloading", "success");
   };
   const onBtExport = useCallback(() => {
     gridRef.current!.api.exportDataAsExcel({
@@ -96,50 +126,42 @@ const [component, setComponent] = useState<ComponentType | null>(null);
   }, []);
 
   const handlePageChange = (page: number) => {
-    if(filter === "DATE"){
-    dispatch(
-      getr3Report({
-        type: "DATE",
+    if (filter === "datewise") {
+      fetchR3Report({
+        type: "datewise",
         from: dayjs(date.from).format("DD-MM-YYYY"),
         to: dayjs(date.to).format("DD-MM-YYYY"),
         limit: pageSize,
-        page: page,
-      })
-    );
-  }
-  else{
-    dispatch(
-      getr3Report({
+        page,
+      });
+    } else {
+      fetchR3Report({
         type: "partwise",
+        data: component?.id,
         limit: pageSize,
-        page: page,
-      })
-    );
-  }
+        page,
+      });
+    }
   };
 
-  const handlePageSizeChange = (pageSize: number) => {
-    setPageSize(pageSize);
-    if(filter === "DATE"){
-    dispatch(
-      getr3Report({
-        type: "DATE",
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    if (filter === "datewise") {
+      fetchR3Report({
+        type: "datewise",
         from: dayjs(date.from).format("DD-MM-YYYY"),
         to: dayjs(date.to).format("DD-MM-YYYY"),
         page: 1,
-        limit: pageSize,
-      })
-    );
-  }
-  else{
-    dispatch(
-      getr3Report({
+        limit: newPageSize,
+      });
+    } else {
+      fetchR3Report({
         type: "partwise",
+        data: component?.id,
         page: 1,
-        limit: pageSize,
-      })
-    );
-  }
+        limit: newPageSize,
+      });
+    }
   };
   return (
     <>
@@ -332,29 +354,25 @@ const [component, setComponent] = useState<ComponentType | null>(null);
                           "error"
                         );
                       } else {
-                        dispatch(
-                          getr3Report({
-                            type: "partwise",
-                            data: component?.id,
-                            limit: pageSize,
-                            page: 1,
-                          })
-                        );
+                        fetchR3Report({
+                          type: "partwise",
+                          data: component?.id,
+                          limit: pageSize,
+                          page: 1,
+                        });
                       }
                     }
                     if (filter === "datewise") {
                       if (!date.from || !date.to) {
                         showToast("Please select a date", "error");
                       } else {
-                        dispatch(
-                          getr3Report({
-                            type: "datewise",
-                            from: dayjs(date.from).format("DD-MM-YYYY"),
-                            to: dayjs(date.to).format("DD-MM-YYYY"),
-                            limit: pageSize,
-                            page: 1,
-                          })
-                        );
+                        fetchR3Report({
+                          type: "datewise",
+                          from: dayjs(date.from).format("DD-MM-YYYY"),
+                          to: dayjs(date.to).format("DD-MM-YYYY"),
+                          limit: pageSize,
+                          page: 1,
+                        });
                       }
                     }
                   }}
@@ -362,7 +380,7 @@ const [component, setComponent] = useState<ComponentType | null>(null);
                   Search
                 </LoadingButton>
                 <LoadingButton
-                  disabled={!isConnected}
+                  disabled={!isConnected || !hasReportData}
                   onClick={downloadr3report}
                   variant="contained"
                   startIcon={<Icons.download fontSize="small" />}
@@ -373,7 +391,7 @@ const [component, setComponent] = useState<ComponentType | null>(null);
               <MuiTooltip title="Download" placement="right">
                 <LoadingButton
                   variant="contained"
-                  disabled={!r3report}
+                  disabled={!hasReportData}
                   onClick={onBtExport}
                   color="primary"
                   style={{

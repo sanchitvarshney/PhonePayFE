@@ -80,6 +80,17 @@ export type R1ReportApiResponse = {
   };
 };
 
+export type R3ReportApiResponse = {
+  success: boolean;
+  message: string;
+  data: unknown[];
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalRecords: number;
+  };
+};
+
 export type ReportStateType = {
   r1Data: DocumentData | null;
   getR1DataLoading: boolean;
