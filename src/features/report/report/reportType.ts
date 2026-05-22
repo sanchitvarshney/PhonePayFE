@@ -80,28 +80,15 @@ export type R1ReportApiResponse = {
   };
 };
 
-export type R3ReportRow = {
-  componentName: string;
-  partName: string;
-  qty: string;
-  transactionId: string;
-  location: string;
-  consumedDate: string;
-  insertBy: string;
-};
-
-export type R3ReportPagination = {
-  page: number;
-  limit: number;
-  total: string | number;
-  totalPages: number;
-};
-
 export type R3ReportApiResponse = {
   success: boolean;
   message: string;
-  data: R3ReportRow[];
-  pagination: R3ReportPagination;
+  data: unknown[];
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalRecords: number;
+  };
 };
 
 export type ReportStateType = {

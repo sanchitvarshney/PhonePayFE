@@ -185,12 +185,13 @@ const reportSlice = createSlice({
       })
       .addCase(getr3Report.fulfilled, (state, action) => {
         state.r3reportLoading = false;
-        if (action.payload.data.success) {
-          state.r3report = action.payload.data;
-        }
+        const body = action.payload.data;
+        const hasData = Array.isArray(body?.data) && body.data.length > 0;
+        state.r3report = hasData ? body : null;
       })
       .addCase(getr3Report.rejected, (state) => {
         state.r3reportLoading = false;
+        state.r3report = null;
       })
       .addCase(r3ReportDetail.pending, (state) => {
         state.r3ReportDetailLoading = true;
@@ -198,7 +199,7 @@ const reportSlice = createSlice({
       .addCase(r3ReportDetail.fulfilled, (state, action) => {
         state.r3ReportDetailLoading = false;
         if (action.payload.data.success) {
-          state.r3ReportDetail = action.payload.data.data;
+          state.r3ReportDetail = action.payload.data.data.data;
         }
       })
       .addCase(r3ReportDetail.rejected, (state) => {
