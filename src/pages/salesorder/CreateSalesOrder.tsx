@@ -608,7 +608,7 @@ const CreateSalesOrder: React.FC = () => {
   const handleBillAddressChange = (value: any) => {
     if (value) {
       setValue("billaddress.id", String(value.id ?? value.code ?? ""));
-      setValue("billaddress.label", value.label);
+      setValue("billaddress.label", value.name);
       setValue("billaddress.addressLine1", value.addressLine1);
       setValue("billaddress.addressLine2", value.addressLine2);
       setValue("billaddress.gst", value.gst);
