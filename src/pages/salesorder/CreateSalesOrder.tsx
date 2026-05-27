@@ -25,8 +25,10 @@ import { showToast } from "@/utils/toasterContext";
 import ConfirmationModel from "@/components/reusable/ConfirmationModel";
 import axiosInstance from "@/api/axiosInstance";
 import {
+  getClient,
+  getClientShipping,
   getDispatchFromDetail,
-  getShippingAddress,
+    getShippingAddress,
 } from "@/features/master/client/clientSlice";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import FullPageLoading from "@/components/shared/FullPageLoading";
@@ -412,7 +414,7 @@ const CreateSalesOrder: React.FC = () => {
     loading: boolean;
     formData: FormData | null;
   };
-  const { dispatchFromDetails, shippingAddress } = useAppSelector(
+  const { dispatchFromDetails, shippingAddress,clientdata, clientShippingdata } = useAppSelector(
     (state) => state.client,
   ) as any;
 
@@ -610,17 +612,19 @@ const CreateSalesOrder: React.FC = () => {
       setValue("billaddress.addressLine1", value.addressLine1);
       setValue("billaddress.addressLine2", value.addressLine2);
       setValue("billaddress.gst", value.gst);
-      setValue("billaddress.pin", value.pin);
+      setValue("billaddress.pin", value.pinCode);
     }
-  };
+      dispatch(getClientShipping({id: value.code}));
+    };
   const handleShipAddressChange = (value: any) => {
+    
     if (value) {
-      setValue("shipaddress.id", String(value.id ?? value.code ?? ""));
+      setValue("shipaddress.id", String(value.shipId ?? value.code ?? ""));
       setValue("shipaddress.label", value.label);
-      setValue("shipaddress.addressLine1", value.addressLine1);
-      setValue("shipaddress.addressLine2", value.addressLine2);
+      setValue("shipaddress.addressLine1", value.address1);
+      setValue("shipaddress.addressLine2", value.address2);
       setValue("shipaddress.city", value.city);
-      setValue("shipaddress.pin", value.pin);
+      setValue("shipaddress.pin", value.pincode);
     }
   };
 
@@ -658,6 +662,12 @@ const CreateSalesOrder: React.FC = () => {
       setValue("shipFrom.gstin", value.gst || "");
     }
   };
+
+  useEffect(() => {
+    dispatch(getClient());
+    
+  }, []);
+
   return (
     <>
       <ConfirmationModel
@@ -926,18 +936,18 @@ const CreateSalesOrder: React.FC = () => {
                   render={({ field }) => (
                     <Autocomplete
                       options={
-                        dispatchFromDetails?.data ||
-                        dispatchFromDetails ||
+                        clientdata?.data ||
+                        clientdata ||
                         []
                       }
-                      getOptionLabel={(option: any) => option.label || ""}
+                      getOptionLabel={(option: any) => option.name || ""}
                       isOptionEqualToValue={(option: any, value: any) =>
                         !!value && option.code === value.code
                       }
                       value={
                         (
-                          dispatchFromDetails?.data ||
-                          dispatchFromDetails ||
+                          clientdata?.data ||
+                          clientdata ||
                           []
                         ).find(
                           (item: any) => item.code === field.value,
@@ -1032,23 +1042,23 @@ const CreateSalesOrder: React.FC = () => {
                   render={({ field }) => (
                     <Autocomplete
                       options={
-                        shippingAddress?.data || shippingAddress || []
+                        clientShippingdata?.[0]?.shipAddress || clientShippingdata || []
                       }
                       getOptionLabel={(option: any) => option.label || ""}
                       isOptionEqualToValue={(option: any, value: any) =>
-                        !!value && option.code === value.code
+                        !!value && option.shipId === value.code
                       }
                       value={
                         (
-                          shippingAddress?.data ||
-                          shippingAddress ||
+                          clientShippingdata?.[0]?.shipAddress ||
+                          clientShippingdata ||
                           []
                         ).find(
-                          (item: any) => item.code === field.value,
+                          (item: any) => item.shipId === field.value,
                         ) ?? null
                       }
                       onChange={(_, newValue) => {
-                        field.onChange(newValue?.code ?? "");
+                        field.onChange(newValue?.shipId ?? "");
                         handleShipAddressChange(newValue);
                       }}
                       disablePortal

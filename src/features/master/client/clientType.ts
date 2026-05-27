@@ -84,4 +84,6 @@ export type ClientState = {
   dispatchFromDetails: DispatchFromDetail[] | null;
   getShippingAddressLoading: boolean;
   shippingAddress: unknown[] | null;
+  getClientShippingLoading: boolean;
+  clientShippingdata: unknown[] | null;
 };
