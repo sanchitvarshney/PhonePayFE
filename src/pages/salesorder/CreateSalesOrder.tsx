@@ -620,7 +620,7 @@ const CreateSalesOrder: React.FC = () => {
     
     if (value) {
       setValue("shipaddress.id", String(value.shipId ?? value.code ?? ""));
-      setValue("shipaddress.label", value.label);
+      setValue("shipaddress.label", value.company);
       setValue("shipaddress.addressLine1", value.address1);
       setValue("shipaddress.addressLine2", value.address2);
       setValue("shipaddress.city", value.city);
@@ -1044,7 +1044,7 @@ const CreateSalesOrder: React.FC = () => {
                       options={
                         clientShippingdata?.[0]?.shipAddress || clientShippingdata || []
                       }
-                      getOptionLabel={(option: any) => option.label || ""}
+                      getOptionLabel={(option: any) => option.company || ""}
                       isOptionEqualToValue={(option: any, value: any) =>
                         !!value && option.shipId === value.code
                       }
