@@ -9,6 +9,7 @@ import { NotificationData, useSocketContext } from "../context/SocketContext";
 import { Icons } from "../icons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { showToast } from "@/utils/toasterContext";
+import { getSocketUrl } from "@/utils/socketSettings";
 import ProgressWithParcentage from "../reusable/ProgressWithParcentage";
 const progressRowId = (n: { notificationId?: unknown; reactNotificationId?: unknown }) =>
   String(n.notificationId ?? n.reactNotificationId ?? "");
@@ -210,7 +211,7 @@ const DownloadIndecator = () => {
                             const fileUrl = raw?.fileUrl;
                             if (!fileUrl) return;
                             const baseUrl =
-                              import.meta.env.VITE_SOCKET_URL.replace(/:\d+$/, "");
+                              getSocketUrl().replace(/:\d+$/, "");
                             const finalUrl = new URL(fileUrl, baseUrl).href;
                             window.open(
                               finalUrl,
