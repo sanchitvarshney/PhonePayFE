@@ -96,7 +96,7 @@ const Settings: React.FC = () => {
               onChange={(e) => setApiUrl(e.target.value)}
               variant="outlined"
               size="small"
-              helperText="e.g. https://localhost:3001 or https://your-api.example.com (no trailing slash)"
+              helperText="e.g. http://localhost:3001 or https://your-api.example.com (no trailing slash)"
               InputProps={{
                 className: "bg-white",
               }}
@@ -130,7 +130,7 @@ const Settings: React.FC = () => {
               onChange={(e) => setSocketUrlState(e.target.value)}
               variant="outlined"
               size="small"
-              helperText="e.g. https://localhost:3001 or https://your-socket.example.com (no trailing slash)"
+              helperText="e.g. http://localhost:3000 or wss://your-socket.example.com (no trailing slash)"
               InputProps={{
                 className: "bg-white",
               }}
