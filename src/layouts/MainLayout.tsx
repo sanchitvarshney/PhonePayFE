@@ -13,7 +13,7 @@ import { IconButton } from "@mui/material";
 import MuiTooltip from "@/components/reusable/MuiTooltip";
 import { useSocketContext } from "@/components/context/SocketContext";
 import DownloadIndecator from "@/components/shared/DownloadIndecator";
-import NotificationPnnel from "@/components/shared/NotificationPanel";
+// import NotificationPnnel from "@/components/shared/NotificationPanel";
 import useVersionCheck from "@/hooks/useVersionCheck";
 import UpdateVersionPopup from "@/components/UpdateVersionPopup";
 // import { useSocketContext } from "@/components/context/SocketContext";
@@ -106,7 +106,7 @@ function MainLayout(props: { children: React.ReactNode }) {
                 <DownloadIndecator />
               </div>
 
-              <NotificationPnnel />
+              {/* <NotificationPnnel /> */}
             </div>
             <MuiTooltip title="Account" placement="left">
               <IconButton

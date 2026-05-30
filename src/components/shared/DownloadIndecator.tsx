@@ -48,10 +48,8 @@ const DownloadIndecator = () => {
         "data" in data
       ) {
         // Filter out notifications where type === 'notification', keep only download-related ones
-        if (data.type === "notification") {
-          // Clear download notifications when receiving general notifications
-          setNotification([]);
-        } else {
+        if (data.type === "notification" && Array.isArray(data.data)) {
+      
           // For download-related types, show the notifications
           setNotification(Array.isArray(data.data) ? data.data : []);
         }
