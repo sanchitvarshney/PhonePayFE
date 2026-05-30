@@ -26,3 +26,17 @@ export const setSocketUrl = (url: string): void => {
 export const getStoredSocketUrl = (): string => {
   return localStorage.getItem(SOCKET_URL_KEY) || "";
 };
+
+/** Resolve a socket file path/URL and drop the port (e.g. :3025) for browser downloads. */
+export const resolveDownloadUrl = (fileUrl: string): string => {
+  const baseUrl = getSocketUrl().replace(/:\d+$/, "");
+  try {
+    const resolved = new URL(fileUrl, baseUrl);
+    if (resolved.port) {
+      resolved.port = "";
+    }
+    return resolved.href;
+  } catch {
+    return fileUrl;
+  }
+};
