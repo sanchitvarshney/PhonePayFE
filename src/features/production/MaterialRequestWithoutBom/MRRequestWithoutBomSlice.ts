@@ -1,11 +1,42 @@
 import axiosInstance from "@/api/axiosInstance";
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AxiosResponse } from "axios";
-import { PartCodeDataresponse } from "./MRRequestWithoutBomType";
+import {
+  AvailbleQtyItem,
+  AvailbleQtyResponse,
+  CreateProductRequestResponse,
+  CreateProductRequestType,
+  MRRequestWithoutBomState,
+  PartCodeDataresponse,
+} from "./MRRequestWithoutBomType";
 
-const initialState = {
+const initialState: MRRequestWithoutBomState = {
   getPartCodeLoading: false,
-  partCodeData: null as PartCodeDataresponse["data"] | null,
+  partCodeData: null,
+  type: "part",
+  createProductRequestLoading: false,
+  locationData: null,
+  craeteRequestData: null,
+  availbleQtyData: null,
+  getSkuLoading: false,
+  skuCodeData: null,
+};
+
+const upsertAvailbleQty = (
+  state: MRRequestWithoutBomState,
+  data: AvailbleQtyItem,
+) => {
+  if (!state.availbleQtyData) {
+    state.availbleQtyData = [];
+  }
+  const existingIndex = state.availbleQtyData.findIndex(
+    (item) => item.location === data.location && item.item === data.item,
+  );
+  if (existingIndex >= 0) {
+    state.availbleQtyData[existingIndex] = data;
+  } else {
+    state.availbleQtyData.push(data);
+  }
 };
 
 export const getPertCodesync = createAsyncThunk<
@@ -16,10 +47,61 @@ export const getPertCodesync = createAsyncThunk<
   return response;
 });
 
+export const createProductRequest = createAsyncThunk<
+  AxiosResponse<CreateProductRequestResponse>,
+  CreateProductRequestType
+>("/req/submit", async (value) => {
+  const response = await axiosInstance.post(
+    `/request/submit/${value.reqType}`,
+    value,
+  );
+  return response;
+});
+
+
+
+
+
+
+export const getAvailbleQty = createAsyncThunk<
+  AxiosResponse<AvailbleQtyResponse>,
+  { type: string; itemCode: string; location: { value?: string } | string }
+>("wearhouse/getAvailbleQty", async (params) => {
+  const locationValue =
+    typeof params.location === "string"
+      ? params.location
+      : params.location.value ?? "";
+  const response = await axiosInstance.get(
+    `/backend/stock/${params.type}/${params.itemCode}/${locationValue}`,
+  );
+  return response;
+});
+
+export const getSwipeAvailbleQty = createAsyncThunk<
+  AxiosResponse<AvailbleQtyResponse>,
+  { type: string; itemCode: string; location: { value?: string } | string }
+>("wearhouse/getSwipeAvailbleQty", async (params) => {
+  const locationValue =
+    typeof params.location === "string"
+      ? params.location
+      : params.location.value ?? "";
+  const response = await axiosInstance.get(
+    `/backend/stockv2/${params.type}/${params.itemCode}/${locationValue}`,
+  );
+  return response;
+});
+
 const mrRequestWithoutBomSlice = createSlice({
   name: "materialRequestWithoutBom",
   initialState,
-  reducers: {},
+  reducers: {
+    setType: (state, action: PayloadAction<string>) => {
+      state.type = action.payload;
+    },
+    clearAvailbleQtyData: (state) => {
+      state.availbleQtyData = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getPertCodesync.pending, (state) => {
@@ -33,8 +115,35 @@ const mrRequestWithoutBomSlice = createSlice({
       })
       .addCase(getPertCodesync.rejected, (state) => {
         state.getPartCodeLoading = false;
+      })
+      .addCase(createProductRequest.pending, (state) => {
+        state.createProductRequestLoading = true;
+      })
+      .addCase(createProductRequest.fulfilled, (state, action) => {
+        state.createProductRequestLoading = false;
+        if (action.payload?.data?.success) {
+          state.craeteRequestData = action.payload.data;
+        }
+      })
+      .addCase(createProductRequest.rejected, (state) => {
+        state.createProductRequestLoading = false;
+      })
+  
+
+ 
+      .addCase(getAvailbleQty.fulfilled, (state, action) => {
+        if (action.payload?.data?.success) {
+          upsertAvailbleQty(state, action.payload.data.data);
+        }
+      })
+      .addCase(getSwipeAvailbleQty.fulfilled, (state, action) => {
+        if (action.payload?.data?.success) {
+          upsertAvailbleQty(state, action.payload.data.data);
+        }
       });
   },
 });
 
+export const { setType, clearAvailbleQtyData } =
+  mrRequestWithoutBomSlice.actions;
 export default mrRequestWithoutBomSlice.reducer;
