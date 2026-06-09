@@ -15,6 +15,7 @@ import vendorReducer from "@/features/master/vendor/vendorSlice";
 import reportReducer from "@/features/report/report/reportSlice";
 import queryReducer from "@/features/query/query/querySlice";
 import salesOrderReducer from "@/features/salesOrder/salesOrderSlice";
+import bomReducer from "@/features/master/BOM/BOMSlice";
 
 export const store = configureStore({
   reducer: {
@@ -34,6 +35,7 @@ export const store = configureStore({
     vendor: vendorReducer,
     report: reportReducer,
     query: queryReducer,
+    bom: bomReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

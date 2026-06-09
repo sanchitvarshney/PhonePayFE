@@ -43,6 +43,12 @@ import ManageChallan from "@/pages/salesorder/ManageChallan";
 import CreateDispatch from "@/pages/salesorder/CreateDispatch";
 import Consumption from "@/pages/warehouse/Consumption";
 import GoodSpareInwardv2 from "@/pages/warehouse/GoodSpareInwardv2";
+import MasterBOMLayout from "./layouts/MasterBOMLayout";
+import MasterCraeteBOM from "./pages/master/MasterCreateBOM";
+import MasterFGBOM from "./pages/master/MasterFGBOM";
+import MasterSfgBOM from "./pages/master/MasterSfgBOM";
+import MasterBOMDisabled from "./pages/master/MasterBOMDisabled";
+import MasterBomDetailPage from "./pages/master/MasterBomDetailPage";
 
 export const router = createBrowserRouter([
   {
@@ -292,6 +298,54 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/warehouse/good-spare-inward",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterBOMLayout>
+              <MasterCraeteBOM />
+            </MasterBOMLayout>
+          </MainLayout>
+        ),
+        path: "/master-bom-create",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterBOMLayout>
+              <MasterFGBOM />
+            </MasterBOMLayout>
+          </MainLayout>
+        ),
+        path: "/master-fg-bom",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterBomDetailPage />
+          </MainLayout>
+        ),
+        path: "/master-fg-bom/:id",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterBOMLayout>
+              <MasterSfgBOM />
+            </MasterBOMLayout>
+          </MainLayout>
+        ),
+        path: "/master-sfg-bom",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterBOMLayout>
+              <MasterBOMDisabled />
+            </MasterBOMLayout>
+          </MainLayout>
+        ),
+        path: "/master-bom-disabled",
       },
       {
         element: (
