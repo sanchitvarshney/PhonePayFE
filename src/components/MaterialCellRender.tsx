@@ -1,5 +1,6 @@
 import AntCompSelect from "@/components/reusable/antSelecters/AntCompSelect";
 import AntLocationSelectAcordinttoModule from "@/components/reusable/antSelecters/AntLocationSelectAcordinttoModule";
+import AntSkuSelect from "@/components/reusable/antSelecters/AntSkuSelect";
 import {
   getAvailbleQty,
   getSwipeAvailbleQty,
@@ -59,6 +60,7 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
   module,
 }) => {
   const dispatch = useAppDispatch();
+  const { type } = useAppSelector((state) => state.materialRequestWithoutBom);
   const { value, colDef, data, api } = props;
 
   const refreshCell = (columns: string[]) => {
@@ -73,7 +75,15 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
   const renderContent = () => {
     switch (colDef.field) {
       case "code":
-        return (
+        return type === "device" ? (
+          <AntSkuSelect
+            onChange={(selectedValue) => {
+              data[colDef.field] = selectedValue;
+              refreshCell([colDef.field]);
+            }}
+            value={value}
+          />
+        ) : (
           <AntCompSelect
             getUom={(unitValue) => {
               data.unit = unitValue;
