@@ -99,7 +99,6 @@ const MasterSFGBOMEditTable: React.FC<{ data: any; header?: any; setOpen?: any }
   const defaultColDef = useMemo<ColDef>(() => {
     return {
       filter: true,
-      floatingFilter: true,
       cellStyle: { padding: "0 6px", display: "flex", alignItems: "center" },
     };
   }, []);
@@ -115,7 +114,6 @@ const MasterSFGBOMEditTable: React.FC<{ data: any; header?: any; setOpen?: any }
         defaultColDef={defaultColDef}
         rowHeight={45}
         headerHeight={40}
-        floatingFiltersHeight={36}
         components={{ EditBomCellRenderer }}
       />
       <div className="flex items-center justify-end px-[20px] h-[50px] border-t border-neutral-300">

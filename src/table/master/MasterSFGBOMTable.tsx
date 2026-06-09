@@ -81,7 +81,10 @@ const MasterSFGBOMTable: React.FC<Props> = ({ setEdit, setView }) => {
   ];
 
   const defaultColDef = useMemo<ColDef>(() => {
-    return { filter: true };
+    return {
+      filter: true,
+      cellStyle: { display: "flex", alignItems: "center", padding: "0 8px" },
+    };
   }, []);
 
   return (

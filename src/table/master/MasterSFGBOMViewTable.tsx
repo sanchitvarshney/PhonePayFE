@@ -26,7 +26,7 @@ const MasterSFGBOMViewTable: React.FC = () => {
   ];
 
   const defaultColDef = useMemo<ColDef>(() => {
-    return { filter: true, floatingFilter: true };
+    return { filter: true };
   }, []);
 
   return (
@@ -41,7 +41,6 @@ const MasterSFGBOMViewTable: React.FC = () => {
         defaultColDef={defaultColDef}
         rowHeight={40}
         headerHeight={40}
-        floatingFiltersHeight={36}
         pagination={true}
         paginationPageSize={20}
       />

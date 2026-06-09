@@ -75,9 +75,9 @@ const MasterFgBOMTable: React.FC<Props> = () => {
       filter: true,
       flex: 1,
       cellRenderer: (params: any) => (
-        <Link className="text-[#5F259F] font-medium flex items-center h-full" to={`/master-fg-bom/${params?.data?.subjectKey}`}>
+        <Link className="text-[#5F259F] font-medium flex items-center gap-1" to={`/master-fg-bom/${params?.data?.subjectKey}`}>
           {params?.value}
-          <Icons.followLink fontSize="small" sx={{ fontSize: "14px", ml: 0.5 }} />
+          <Icons.followLink sx={{ fontSize: "14px" }} />
         </Link>
       ),
     },
@@ -98,7 +98,10 @@ const MasterFgBOMTable: React.FC<Props> = () => {
   ];
 
   const defaultColDef = useMemo<ColDef>(() => {
-    return { filter: true, floatingFilter: true };
+    return {
+      filter: true,
+      cellStyle: { display: "flex", alignItems: "center", padding: "0 8px" },
+    };
   }, []);
 
   return (
@@ -113,7 +116,6 @@ const MasterFgBOMTable: React.FC<Props> = () => {
         defaultColDef={defaultColDef}
         rowHeight={40}
         headerHeight={40}
-        floatingFiltersHeight={36}
         pagination={true}
         paginationPageSize={20}
       />
