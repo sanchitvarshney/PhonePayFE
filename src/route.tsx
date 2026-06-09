@@ -46,7 +46,6 @@ import GoodSpareInwardv2 from "@/pages/warehouse/GoodSpareInwardv2";
 import MasterBOMLayout from "./layouts/MasterBOMLayout";
 import MasterCraeteBOM from "./pages/master/MasterCreateBOM";
 import MasterFGBOM from "./pages/master/MasterFGBOM";
-import MasterSfgBOM from "./pages/master/MasterSfgBOM";
 import MasterBOMDisabled from "./pages/master/MasterBOMDisabled";
 import MasterBomDetailPage from "./pages/master/MasterBomDetailPage";
 import MaterialRequisitionLayout from "./layouts/MaterialRequisitionLayout";
@@ -332,16 +331,6 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/master-fg-bom/:id",
-      },
-      {
-        element: (
-          <MainLayout>
-            <MasterBOMLayout>
-              <MasterSfgBOM />
-            </MasterBOMLayout>
-          </MainLayout>
-        ),
-        path: "/master-sfg-bom",
       },
       {
         element: (
