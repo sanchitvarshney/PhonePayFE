@@ -1,0 +1,6 @@
+Item_Code,usedQuantity,Ref,Remarks,Category
+P0711,10,"R1,R2",Main resistor,PART
+P0084,5,C1,Filter capacitor,PART
+P0145,1,PCB-A,Main PCB Board,PCB
+PP0729,1,PK1,Outer Box,PACKING
+P0104,2,O1,Misc item,OTHER

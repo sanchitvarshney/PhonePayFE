@@ -233,7 +233,7 @@ const MasterCraeteBOM: React.FC = () => {
                 <p className="text-muted-foreground text-[13px]">
                   <strong>Note:</strong> Kindly don't do any changes with columns of the sample file, it can lead to errors.
                 </p>
-                <a href={`${import.meta.env.VITE_REACT_APP_API_BASE_URL}/files/bomComponent.csv`} className="underline text-[#5F259F]">
+                <a href="/bomComponent.csv" download className="underline text-[#5F259F]">
                   Sample File
                 </a>
                 <FileUploader
