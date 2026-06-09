@@ -1,22 +1,37 @@
 import { CardContent, CardFooter } from "@/components/ui/card";
+import MaterialReqTable from "@/components/MaterialReqTable";
 import { useCallback, useEffect, useState } from "react";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import {
   createProductRequest,
   getPertCodesync,
+  setType,
 } from "@/features/production/MaterialRequestWithoutBom/MRRequestWithoutBomSlice";
 import styled from "styled-components";
 import { FaArrowRightLong } from "react-icons/fa6";
-import { Button, TextField, Typography } from "@mui/material";
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  FormControlLabel,
+  ListItemButton,
+  ListItemText,
+  Radio,
+  RadioGroup,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import { Icons } from "@/components/icons";
 import { showToast } from "@/utils/toasterContext";
-
 import SelectLocationAcordingModule, {
   LocationType,
 } from "@/components/reusable/SelectLocationAcordingModule";
-import MaterialReqTable from "@/components/MaterialReqTable";
 
 interface RowData {
   code: { lable: string; value: string } | null;
@@ -27,6 +42,7 @@ interface RowData {
   isNew: boolean;
   availableqty: string;
 }
+
 type Formstate = {
   location: LocationType | null;
   remarks: string;
@@ -38,15 +54,30 @@ const MaterialRequisition = () => {
   const [location, setLocation] = useState<LocationType | null>(null);
   const [locationdetail, setLocationdetail] = useState<string>("--");
   const [final, setFinal] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
+  const [reqType, setReqType] = useState<string>("");
   const { type, createProductRequestLoading, locationData, craeteRequestData } =
     useAppSelector((state) => state.materialRequestWithoutBom);
   const dispatch = useAppDispatch();
+
+  const handleTypeChange = (e: string) => {
+    if (rowData.length > 0) {
+      setReqType(e);
+      setOpen(true);
+    } else {
+      dispatch(setType(e));
+      setLocation(null);
+      setLocationdetail("--");
+      reset({ location: null });
+    }
+  };
 
   const {
     register,
     handleSubmit,
     reset,
     control,
+    watch,
     formState: { errors },
   } = useForm<Formstate>({
     defaultValues: {
@@ -55,6 +86,7 @@ const MaterialRequisition = () => {
       checkbox: false,
     },
   });
+
   const addRow = useCallback(() => {
     const newId = crypto.randomUUID();
     const newRow: RowData = {
@@ -73,77 +105,68 @@ const MaterialRequisition = () => {
     if (rowData.length === 0) {
       showToast("Please Add Material Details", "error");
       return;
-    } else {
-      let hasErrors = false;
+    }
 
-      rowData.forEach((row) => {
-        const missingFields: string[] = [];
-
-        if (!row.code?.value) {
-          missingFields.push("code");
-        }
-        if (!row.pickLocation?.value) {
-          missingFields.push("pickLocation");
-        }
-        if (!row.orderqty) {
-          missingFields.push("orderqty");
-        }
-        if (missingFields.length > 0) {
-          showToast(
-            `Row ${row.id}: Empty fields: ${missingFields.join(", ")}`,
-            "error",
-          );
-          hasErrors = true;
-        }
-      });
-
-      if (rowData.some((row) => row.availableqty < row.orderqty)) {
+    let hasErrors = false;
+    rowData.forEach((row) => {
+      const missingFields: string[] = [];
+      if (!row.code?.value) missingFields.push("code");
+      if (!row.pickLocation?.value) missingFields.push("pickLocation");
+      if (!row.orderqty) missingFields.push("orderqty");
+      if (missingFields.length > 0) {
         showToast(
-          "Order quantity should not be greater than available quantity",
+          `Row ${row.id}: Empty fields: ${missingFields.join(", ")}`,
           "error",
         );
-        return;
+        hasErrors = true;
       }
-      console.log(rowData,"rowData", data)
-if (
-  data.location?.code &&
-  rowData.some(
-    (row) => row.pickLocation?.value === data.location.code
-  )
-) {
-  showToast("Pick location should be different", "error");
-  return;
-}
+    });
 
-      if (!hasErrors) {
-        const itemKey = rowData.map((row) => row.code?.value || "");
-        const picLocation = rowData.map((row) => row.pickLocation?.value || "");
-        const qty = rowData.map((row) => row.orderqty);
-        const remark = rowData.map((row) => row.remarks);
+    if (rowData.some((row) => row.availableqty < row.orderqty)) {
+      showToast(
+        "Order quantity should not be greater than available quantity",
+        "error",
+      );
+      return;
+    }
 
-        dispatch(
-          createProductRequest({
-            itemKey,
-            picLocation,
-            qty,
-            remark,
-            reqType: type.toLocaleUpperCase(),
-            putLocation: data.location!.code,
-            comment: data.remarks,
-            cc: "",
-            forTrc: type === "device" ? "1" : data.checkbox ? "1" : "0",
-          }),
-        ).then((res: any) => {
-          if (res.payload?.data?.success) {
-            reset();
-            setRowData([]);
-            setFinal(true);
-            setLocationdetail("--");
-          }
-        });
-      }
+    if (
+      data.location?.code &&
+      rowData.some((row) => row.pickLocation?.value === data.location.code)
+    ) {
+      showToast("Pick location should be different", "error");
+      return;
+    }
+
+    if (!hasErrors) {
+      const itemKey = rowData.map((row) => row.code?.value || "");
+      const picLocation = rowData.map((row) => row.pickLocation?.value || "");
+      const qty = rowData.map((row) => row.orderqty);
+      const remark = rowData.map((row) => row.remarks);
+
+      dispatch(
+        createProductRequest({
+          itemKey,
+          picLocation,
+          qty,
+          remark,
+          reqType: type.toLocaleUpperCase(),
+          putLocation: data.location!.code,
+          comment: data.remarks,
+          cc: "",
+          forTrc: type === "device" ? "1" : data.checkbox ? "1" : "0",
+        }),
+      ).then((res: any) => {
+        if (res.payload?.data?.success) {
+          reset();
+          setRowData([]);
+          setFinal(true);
+          setLocationdetail("--");
+        }
+      });
     }
   };
+
   useEffect(() => {
     dispatch(getPertCodesync(null));
   }, [dispatch]);
@@ -151,21 +174,52 @@ if (
   useEffect(() => {
     setLocation(null);
     setLocationdetail("--");
-
     reset({ location: null });
-  }, [dispatch, reset]);
+  }, [type]);
 
   useEffect(() => {
     if (location) {
       const locationDetail = (locationData || []).find(
         (item) => item.id === location.code,
       )?.specification;
-      setLocationdetail(locationDetail || "--");
+      setLocationdetail(locationDetail || location.name || "--");
     }
   }, [location, locationData]);
 
   return (
     <div>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Are you absolutely sure?"}</DialogTitle>
+        <DialogContent sx={{ width: "600px" }}>
+          <DialogContentText id="alert-dialog-description">
+            If you change [Request Type] your whole data will be reset
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              dispatch(setType(reqType));
+              reset();
+              setRowData([]);
+              setLocation(null);
+              setLocationdetail("--");
+              setOpen(false);
+            }}
+            autoFocus
+          >
+            Continue
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {final ? (
         <div className="h-[calc(100vh-100px)] flex items-center justify-center bg-white">
           <div className="max-h-max max-w-max flex flex-col gap-[30px]">
@@ -217,7 +271,7 @@ if (
           <div className="h-full overflow-y-auto bg-white border-r border-neutral-300">
             <form onSubmit={handleSubmit(onSubmit)}>
               <div>
-                <div className="h-[41px] border-b border-neutral-300 p-0 flex flex-col justify-center px-[20px] bg-hbg">
+                <div className="h-[41px] border-b border-neutral-300 p-0 flex flex-col justify-center px-[20px] bg-slate-100">
                   <Typography
                     className="text-slate-600 font-[500]"
                     fontWeight={500}
@@ -226,31 +280,88 @@ if (
                   </Typography>
                 </div>
                 <CardContent className="flex flex-col gap-[20px] py-[20px]">
-                  <div>
+                  <RadioGroup value={type}>
+                    <div className="grid grid-cols-2 gap-[20px]">
+                      <ListItemButton
+                        sx={{
+                          border: "1px solid #5F259F",
+                          borderRadius: "5px",
+                          "&.Mui-selected": {
+                            backgroundColor: "#f3e8ff",
+                            color: "black",
+                          },
+                        }}
+                        onClick={() => handleTypeChange("part")}
+                        selected={type === "part"}
+                      >
+                        <FormControlLabel
+                          value={"part"}
+                          control={<Radio />}
+                          label={<ListItemText primary={"Material"} />}
+                          sx={{ width: "100%", margin: 0 }}
+                        />
+                      </ListItemButton>
+                      <ListItemButton
+                        sx={{
+                          borderRadius: "5px",
+                          border: "1px solid #5F259F",
+                          "&.Mui-selected": {
+                            backgroundColor: "#f3e8ff",
+                            color: "black",
+                          },
+                        }}
+                        onClick={() => handleTypeChange("device")}
+                        selected={type === "device"}
+                      >
+                        <FormControlLabel
+                          value={"device"}
+                          control={<Radio />}
+                          label={<ListItemText primary={"SKU"} />}
+                          sx={{ width: "100%", margin: 0 }}
+                        />
+                      </ListItemButton>
+                    </div>
+                  </RadioGroup>
+
+                  {type === "device" ? (
                     <Controller
                       name="location"
                       control={control}
                       rules={{ required: "Location is required" }}
-                      render={({ field }) => {
-                        return (
-                          <div>
-                            <span>Select Location</span>
-                            <SelectLocationAcordingModule
-                              key={`location-${type}`}
-                              endPoint={"/request/pickLocation"}
-                              error={!!errors.location}
-                              helperText={errors.location?.message}
-                              value={field.value}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                setLocation(e);
-                              }}
-                            />
-                          </div>
-                        );
-                      }}
+                      render={({ field }) => (
+                        <SelectLocationAcordingModule
+                          key={`device-${type}`}
+                          endPoint={"/preQc/pickLocation"}
+                          error={!!errors.location}
+                          helperText={errors.location?.message}
+                          value={field.value}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            setLocation(e);
+                          }}
+                        />
+                      )}
                     />
-                  </div>
+                  ) : (
+                    <Controller
+                      name="location"
+                      control={control}
+                      rules={{ required: "Location is required" }}
+                      render={({ field }) => (
+                        <SelectLocationAcordingModule
+                          key={`part-${type}`}
+                          endPoint={"/request/pickLocation"}
+                          error={!!errors.location}
+                          helperText={errors.location?.message}
+                          value={field.value}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            setLocation(e);
+                          }}
+                        />
+                      )}
+                    />
+                  )}
 
                   <div className="flex gap-[10px] items-center">
                     <Typography>Location Details :</Typography>
@@ -267,6 +378,21 @@ if (
                       label="Remark (if any)"
                       {...register("remarks")}
                     />
+                  </div>
+
+                  <div className="flex items-center">
+                    <Checkbox
+                      id="terms"
+                      {...register("checkbox")}
+                      checked={type === "device" || !!watch("checkbox")}
+                      disabled={type === "device"}
+                    />
+                    <label
+                      htmlFor="terms"
+                      className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-500"
+                    >
+                      Directly Move To TRC
+                    </label>
                   </div>
                 </CardContent>
                 <CardFooter className="h-[50px] p-0 flex items-center px-[20px] gap-[10px] justify-end">
@@ -335,31 +461,26 @@ const Success = styled.div`
     fill: #fff;
     animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
   }
-
   .checkmark__check {
     transform-origin: 50% 50%;
     stroke-dasharray: 48;
     stroke-dashoffset: 48;
     animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
   }
-
   @keyframes stroke {
     100% {
       stroke-dashoffset: 0;
     }
   }
-
   @keyframes scale {
     0%,
     100% {
       transform: none;
     }
-
     50% {
       transform: scale3d(1.1, 1.1, 1);
     }
   }
-
   @keyframes fill {
     100% {
       box-shadow: inset 0px 0px 0px 30px #4bb71b;
