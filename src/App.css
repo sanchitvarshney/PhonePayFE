@@ -290,6 +290,17 @@ input:-webkit-autofill {
   background-color: transparent !important;
 }
 
+
+
+.ag-theme-quartz.material-req-grid .ag-cell {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  overflow: visible;
+}
+
+
+
 .ant-select-dropdown {
   border-radius: 0 !important;
 }

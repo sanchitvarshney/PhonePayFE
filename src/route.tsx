@@ -49,6 +49,11 @@ import MasterFGBOM from "./pages/master/MasterFGBOM";
 import MasterSfgBOM from "./pages/master/MasterSfgBOM";
 import MasterBOMDisabled from "./pages/master/MasterBOMDisabled";
 import MasterBomDetailPage from "./pages/master/MasterBomDetailPage";
+import MaterialRequisitionLayout from "./layouts/MaterialRequisitionLayout";
+import MaterialRequisition from "./pages/materialRequisition/MaterialRequisition";
+import MRPendingApproval from "./pages/materialRequisition/MRPendingApproval";
+import MRRequest from "./pages/materialRequisition/MRRequest";
+import MRApprovalLayout from "./layouts/MRApprovalLayout";
 
 export const router = createBrowserRouter([
   {
@@ -243,6 +248,7 @@ export const router = createBrowserRouter([
         ),
         path: "/sales-order/create/:salesOrderId",
       },
+      
       {
         element: (
           <MainLayout>
@@ -354,6 +360,36 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/profile",
+      },
+         {
+        element: (
+          <MainLayout>
+            <MaterialRequisitionLayout>
+              <MaterialRequisition />
+            </MaterialRequisitionLayout>
+          </MainLayout>
+        ),
+        path: "/material-management/raw-material-request",
+      },
+           {
+        element: (
+          <MainLayout>
+            <MRApprovalLayout>
+              <MRPendingApproval />
+            </MRApprovalLayout>
+          </MainLayout>
+        ),
+        path: "/material-management/raw-material-approval",
+      },
+             {
+        element: (
+          <MainLayout>
+            <MRApprovalLayout>
+              <MRRequest />
+            </MRApprovalLayout>
+          </MainLayout>
+        ),
+        path: "/material-management/material-requisition-request",
       },
       {
         element: (

@@ -16,6 +16,8 @@ import reportReducer from "@/features/report/report/reportSlice";
 import queryReducer from "@/features/query/query/querySlice";
 import salesOrderReducer from "@/features/salesOrder/salesOrderSlice";
 import bomReducer from "@/features/master/BOM/BOMSlice";
+import pendingMrRequestReducer from "@/features/production/MaterialRequestWithoutBom/MRApprovalSlice";
+
 
 export const store = configureStore({
   reducer: {
@@ -36,6 +38,7 @@ export const store = configureStore({
     report: reportReducer,
     query: queryReducer,
     bom: bomReducer,
+     pendingMr: pendingMrRequestReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
