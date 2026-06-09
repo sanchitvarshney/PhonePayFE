@@ -102,7 +102,8 @@ const MasterCraeteBOM: React.FC = () => {
       const qty = uploadFileData.map((item) => item.quantity.toString());
       const reference = uploadFileData.map((item) => item.ref);
       const remark = uploadFileData.map((item) => item.remarks);
-      const items = { component, qty, remark, reference };
+      const category = uploadFileData.map((item) => item.category || "");
+      const items = { component, qty, remark, reference, category };
       dispatch(createBomAsync({ sku: data.sku!.id, type: data.type || "", remark: data.remark, subject: data.subject, items })).then((res: any) => {
         if (res.payload.data.success) {
           setRowData([]);
