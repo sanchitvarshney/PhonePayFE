@@ -50,7 +50,7 @@ const MaterialRequistionRequest: React.FC = () => {
       <div className="h-full overflow-y-auto bg-white border-r border-neutral-300">
         <form onSubmit={handleSubmit(onSubmit)}>
           <div>
-            <div className="h-[40px] p-0 flex flex-col justify-center px-[20px] bg-hbg">
+            <div className="h-[40px] p-0 flex flex-col justify-center px-[20px] bg-slate-100">
               <Typography fontSize={17} fontWeight={500} className="flex items-center text-slate-600 gap-[10px]">
                 <FilterAltIcon fontSize="small" className="text-slate-600" /> Filter
               </Typography>
