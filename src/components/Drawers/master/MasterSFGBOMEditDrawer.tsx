@@ -46,7 +46,7 @@ const MasterSFGBOMEditDrawer: React.FC<Props> = ({ open, setOpen }) => {
                 </CardContent>
               </Card>
             </div>
-            <MasterSFGBOMEditTable />
+            <MasterSFGBOMEditTable data={[]} />
           </div>
         </CustomDrawerContent>
       </CustomDrawer>
