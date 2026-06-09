@@ -12,7 +12,6 @@ import styled from "styled-components";
 import { FaArrowRightLong } from "react-icons/fa6";
 import {
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
@@ -46,7 +45,6 @@ interface RowData {
 type Formstate = {
   location: LocationType | null;
   remarks: string;
-  checkbox: boolean;
 };
 
 const MaterialRequisition = () => {
@@ -77,13 +75,11 @@ const MaterialRequisition = () => {
     handleSubmit,
     reset,
     control,
-    watch,
     formState: { errors },
   } = useForm<Formstate>({
     defaultValues: {
       location: null,
       remarks: "",
-      checkbox: false,
     },
   });
 
@@ -154,7 +150,6 @@ const MaterialRequisition = () => {
           putLocation: data.location!.code,
           comment: data.remarks,
           cc: "",
-          forTrc: type === "device" ? "1" : data.checkbox ? "1" : "0",
         }),
       ).then((res: any) => {
         if (res.payload?.data?.success) {
@@ -323,26 +318,7 @@ const MaterialRequisition = () => {
                     </div>
                   </RadioGroup>
 
-                  {type === "device" ? (
-                    <Controller
-                      name="location"
-                      control={control}
-                      rules={{ required: "Location is required" }}
-                      render={({ field }) => (
-                        <SelectLocationAcordingModule
-                          key={`device-${type}`}
-                          endPoint={"/preQc/pickLocation"}
-                          error={!!errors.location}
-                          helperText={errors.location?.message}
-                          value={field.value}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            setLocation(e);
-                          }}
-                        />
-                      )}
-                    />
-                  ) : (
+                  
                     <Controller
                       name="location"
                       control={control}
@@ -361,7 +337,6 @@ const MaterialRequisition = () => {
                         />
                       )}
                     />
-                  )}
 
                   <div className="flex gap-[10px] items-center">
                     <Typography>Location Details :</Typography>
@@ -380,20 +355,6 @@ const MaterialRequisition = () => {
                     />
                   </div>
 
-                  <div className="flex items-center">
-                    <Checkbox
-                      id="terms"
-                      {...register("checkbox")}
-                      checked={type === "device" || !!watch("checkbox")}
-                      disabled={type === "device"}
-                    />
-                    <label
-                      htmlFor="terms"
-                      className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-500"
-                    >
-                      Directly Move To TRC
-                    </label>
-                  </div>
                 </CardContent>
                 <CardFooter className="h-[50px] p-0 flex items-center px-[20px] gap-[10px] justify-end">
                   <LoadingButton

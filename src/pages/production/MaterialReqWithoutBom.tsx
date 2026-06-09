@@ -12,7 +12,6 @@ import styled from "styled-components";
 import { FaArrowRightLong } from "react-icons/fa6";
 import {
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
@@ -46,7 +45,6 @@ interface RowData {
 type Formstate = {
   location: LocationType | null;
   remarks: string;
-  checkbox: boolean;
 };
 
 const MaterialReqWithoutBom = () => {
@@ -75,13 +73,11 @@ const MaterialReqWithoutBom = () => {
     handleSubmit,
     reset,
     control,
-    watch,
     formState: { errors },
   } = useForm<Formstate>({
     defaultValues: {
       location: null,
       remarks: "",
-      checkbox: false,
     },
   });
 
@@ -132,7 +128,7 @@ const MaterialReqWithoutBom = () => {
           putLocation: data.location!.code,
           comment: data.remarks,
           cc: "",
-          forTrc: type === "device" ? "1" : data.checkbox ? "1" : "0",
+          forTrc: type === "device" ? "1" : "0",
         })
       ).then((res: any) => {
         if (res.payload?.data.success) {
@@ -343,20 +339,6 @@ const MaterialReqWithoutBom = () => {
                     />
                   </div>
 
-                  <div className="flex items-center">
-                    <Checkbox
-                      id="terms"
-                      {...register("checkbox")}
-                      checked={type === "device" || !!watch("checkbox")}
-                      disabled={type === "device"}
-                    />
-                    <label
-                      htmlFor="terms"
-                      className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-500"
-                    >
-                      Directly Move To TRC
-                    </label>
-                  </div>
                 </CardContent>
                 <CardFooter className="h-[50px] p-0 flex items-center px-[20px] gap-[10px] justify-end">
                   <LoadingButton
