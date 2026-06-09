@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { ColDef } from "ag-grid-community";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
+import CustomLoadingOverlay from "@/components/reusable/CustomLoadingOverlay";
 import EditBomCellRenderer from "@/table/Cellrenders/EditBomCellRenderer";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/features/Store";
@@ -59,42 +60,69 @@ const MasterFGBOMEditTable: React.FC<{ data: any; header?: any; setOpen?: any }>
 
   const columnDefs: ColDef[] = [
     {
-      headerName: "Components",
-      field: "componentName",
+      headerName: "#",
+      field: "rowIndex",
+      valueGetter: "node.rowIndex + 1",
       sortable: false,
       filter: false,
-      cellStyle: { textAlign: "center" },
+      width: 70,
+      maxWidth: 70,
+    },
+    {
+      headerName: "Components",
+      field: "componentName",
+      sortable: true,
+      filter: true,
+      flex: 2,
     },
     {
       headerName: "Part Code",
       field: "partCode",
-      sortable: false,
-      filter: false,
+      sortable: true,
+      filter: true,
+      flex: 1,
     },
     {
       headerName: "Status",
       field: "bomstatus",
       cellRenderer: EditBomCellRenderer,
+      width: 130,
     },
     {
       headerName: "Quantity",
       field: "requiredQty",
       cellRenderer: EditBomCellRenderer,
+      width: 130,
     },
     {
       headerName: "Category",
       field: "category",
       cellRenderer: EditBomCellRenderer,
+      flex: 1,
+      minWidth: 140,
     },
   ];
+
+  const defaultColDef = useMemo<ColDef>(() => {
+    return {
+      filter: true,
+      floatingFilter: true,
+      cellStyle: { padding: "0 6px", display: "flex", alignItems: "center" },
+    };
+  }, []);
 
   return (
     <div className="ag-theme-quartz h-[calc(100vh-100px)]">
       <AgGridReact
+        loadingOverlayComponent={CustomLoadingOverlay}
         overlayNoRowsTemplate={OverlayNoRowsTemplate}
         suppressCellFocus={true}
         rowData={rowData}
         columnDefs={columnDefs}
+        defaultColDef={defaultColDef}
+        rowHeight={45}
+        headerHeight={40}
+        floatingFiltersHeight={36}
         components={{ EditBomCellRenderer }}
       />
       <div className="flex items-center justify-end px-[20px] h-[50px] border-t border-neutral-300">

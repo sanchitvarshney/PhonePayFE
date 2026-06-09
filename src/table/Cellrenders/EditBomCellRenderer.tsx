@@ -29,7 +29,7 @@ const EditBomCellRenderer: React.FC<any> = ({ value, colDef, data, api, column, 
         style={{ width: "100%" }}
         onChange={(val) => handleChange(val)}
         options={statusOptions}
-        className="custom-select"
+        className="custom-input"
       />
     );
   }
@@ -58,7 +58,7 @@ const EditBomCellRenderer: React.FC<any> = ({ value, colDef, data, api, column, 
         style={{ width: "100%" }}
         onChange={(val) => handleChange(val)}
         options={categoryOptions}
-        className="custom-select"
+        className="custom-input"
       />
     );
   }

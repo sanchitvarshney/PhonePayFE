@@ -112,18 +112,29 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
 
   const columnDefs: ColDef[] = [
     {
-      headerName: "Action",
+      headerName: "#",
+      field: "rowIndex",
+      valueGetter: "node.rowIndex + 1",
+      sortable: false,
+      filter: false,
+      width: 70,
+      maxWidth: 70,
+    },
+    {
+      headerName: "",
       field: "action",
-      width: 120,
+      width: 90,
+      resizable: false,
+      sortable: false,
+      cellStyle: { padding: 0, display: "flex", alignItems: "center", justifyContent: "center" },
       headerComponent: () => (
         <div className="flex items-center justify-center w-full h-full">
           <Button
             onClick={() => setOpen(true)}
             variant="contained"
             color="primary"
-            style={{ borderRadius: "10%", width: 25, height: 25, minWidth: 0, padding: 0 }}
+            style={{ borderRadius: "8px", width: 28, height: 28, minWidth: 0, padding: 0 }}
             size="small"
-            sx={{ zIndex: 1 }}
           >
             <Icons.add fontSize="small" />
           </Button>
@@ -131,35 +142,30 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
       ),
       cellRenderer: (params: ICellRendererParams) => (
         <div className="flex items-center justify-center gap-1">
-          <Tooltip title="Add Alternative Component">
+          <Tooltip title="Add Alternative">
             <IconButton
               size="small"
               onClick={() => {
                 setSelectedPartCode(params.data.compKey);
                 setAltOpen(true);
               }}
-              sx={{ "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)", color: "primary.main" } }}
             >
               <Icons.add fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="View Alternative Components">
-            <IconButton
-              size="small"
-              sx={{ "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)", color: "primary.main" } }}
-              onClick={() => handleViewAlternative(params.data.compKey)}
-            >
+          <Tooltip title="View Alternatives">
+            <IconButton size="small" onClick={() => handleViewAlternative(params.data.compKey)}>
               <Icons.search fontSize="small" />
             </IconButton>
           </Tooltip>
         </div>
       ),
     },
-    { headerName: "Components", field: "componentName", sortable: true, filter: true, cellStyle: { textAlign: "center" } },
-    { headerName: "Part Code", field: "partCode", sortable: true, filter: true },
-    { headerName: "Status", field: "bomstatus", cellRenderer: "EditBomCellRenderer" },
-    { headerName: "Quantity", field: "requiredQty", cellRenderer: "EditBomCellRenderer" },
-    { headerName: "Category", field: "category", cellRenderer: "EditBomCellRenderer" },
+    { headerName: "Components", field: "componentName", sortable: true, filter: true, flex: 2 },
+    { headerName: "Part Code", field: "partCode", sortable: true, filter: true, flex: 1 },
+    { headerName: "Status", field: "bomstatus", cellRenderer: "EditBomCellRenderer", width: 130 },
+    { headerName: "Quantity", field: "requiredQty", cellRenderer: "EditBomCellRenderer", width: 130 },
+    { headerName: "Category", field: "category", cellRenderer: "EditBomCellRenderer", flex: 1, minWidth: 140 },
   ];
 
   return (
@@ -312,6 +318,14 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
         suppressCellFocus={true}
         rowData={rowData}
         columnDefs={columnDefs}
+        defaultColDef={{
+          filter: true,
+          floatingFilter: true,
+          cellStyle: { padding: "0 6px", display: "flex", alignItems: "center" },
+        }}
+        rowHeight={45}
+        headerHeight={40}
+        floatingFiltersHeight={36}
         components={{ EditBomCellRenderer: EditBomDetailCellRenderer }}
       />
       <div className="flex items-center justify-end px-[20px] h-[50px] border-t border-neutral-300">

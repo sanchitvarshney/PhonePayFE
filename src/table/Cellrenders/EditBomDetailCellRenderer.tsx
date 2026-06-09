@@ -35,7 +35,7 @@ const EditBomDetailCellRenderer: React.FC<any> = ({ value, colDef, data, api, co
           });
         }}
         options={statusOptions}
-        className="custom-select"
+        className="custom-input"
       />
     );
   }
@@ -70,7 +70,7 @@ const EditBomDetailCellRenderer: React.FC<any> = ({ value, colDef, data, api, co
           });
         }}
         options={categoryOptions}
-        className="custom-select"
+        className="custom-input"
       />
     );
   }

@@ -3,38 +3,48 @@ import { ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
 import CustomLoadingOverlay from "@/components/reusable/CustomLoadingOverlay";
-
-interface RowData {
-  id: number;
-  component: string;
-  partcode: string;
-  bomQty: number;
-  uom: string;
-}
-
-const columnDefs: ColDef[] = [
-  { headerName: "ID", field: "id", sortable: true, filter: true, width: 70 },
-  { headerName: "Component", field: "component", sortable: true, filter: true, flex: 1 },
-  { headerName: "Part Code", field: "partcode", sortable: true, filter: true, flex: 1 },
-  { headerName: "BOM Qty", field: "bomQty", sortable: true, filter: true, editable: true, cellEditor: "agNumberCellEditor", flex: 1 },
-  { headerName: "UOM", field: "uom", sortable: true, filter: true, flex: 1 },
-];
+import { useAppSelector } from "@/hooks/useReduxHook";
 
 const MasterSFGBOMViewTable: React.FC = () => {
-  const rowData: RowData[] = [
-    { id: 1, component: "Component A", partcode: "PC001", bomQty: 100, uom: "kg" },
-    { id: 2, component: "Component B", partcode: "PC002", bomQty: 50, uom: "pcs" },
+  const { bomItemList, fgBomListLoading } = useAppSelector((state) => state.bom);
+
+  const columnDefs: ColDef[] = [
+    {
+      headerName: "#",
+      field: "rowIndex",
+      valueGetter: "node.rowIndex + 1",
+      sortable: false,
+      filter: false,
+      width: 70,
+      maxWidth: 70,
+    },
+    { headerName: "Component", field: "cName", sortable: true, filter: true, flex: 2 },
+    { headerName: "Part Code", field: "cPartNo", sortable: true, filter: true, flex: 1 },
+    { headerName: "BOM Qty", field: "qty", sortable: true, filter: true, flex: 1 },
+    { headerName: "UOM", field: "cUom", sortable: true, filter: true, width: 100 },
+    { headerName: "Reference", field: "refrence", sortable: true, filter: true, flex: 1 },
   ];
 
   const defaultColDef = useMemo<ColDef>(() => {
-    return { filter: true };
+    return { filter: true, floatingFilter: true };
   }, []);
 
   return (
-    <div>
-      <div className="ag-theme-quartz h-[calc(100vh-50px)]">
-        <AgGridReact loadingOverlayComponent={CustomLoadingOverlay} overlayNoRowsTemplate={OverlayNoRowsTemplate} suppressCellFocus={true} rowData={rowData} columnDefs={columnDefs} defaultColDef={defaultColDef} pagination={true} paginationPageSize={20} />
-      </div>
+    <div className="ag-theme-quartz h-[calc(100vh-50px)]">
+      <AgGridReact
+        loadingOverlayComponent={CustomLoadingOverlay}
+        loading={fgBomListLoading}
+        overlayNoRowsTemplate={OverlayNoRowsTemplate}
+        suppressCellFocus={true}
+        rowData={bomItemList || []}
+        columnDefs={columnDefs}
+        defaultColDef={defaultColDef}
+        rowHeight={40}
+        headerHeight={40}
+        floatingFiltersHeight={36}
+        pagination={true}
+        paginationPageSize={20}
+      />
     </div>
   );
 };
