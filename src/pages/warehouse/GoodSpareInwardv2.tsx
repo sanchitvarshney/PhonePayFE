@@ -361,12 +361,6 @@ const GoodSpareInwardv2: React.FC = () => {
       showToast("Please Upload Invoice Documents", "error");
       return;
     }
-    const selectedCostCenter =
-      getOptionValue(data.costCenter) || getOptionValue(getValues("costCenter"));
-    if (!selectedCostCenter) {
-      showToast("Cost center is required", "error");
-      return;
-    }
 
     const selectedPickLocation =
       getOptionValue(data.pickLocation) || getOptionValue(getValues("pickLocation"));
