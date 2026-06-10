@@ -1,7 +1,6 @@
 import { Icons } from "@/components/icons";
 import SelectComponent, { ComponentType } from "@/components/reusable/SelectComponent";
 import { Button } from "@/components/ui/button";
-import { getCostCenter } from "@/features/common/commonSlice";
 import { getQ3DatA } from "@/features/query/query/querySlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { formatNumber } from "@/utils/numberFormatUtils";
@@ -12,7 +11,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs, { Dayjs } from "dayjs";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 const Q1query: React.FC = () => {
   const [colapse, setcolapse] = useState<boolean>(false);
@@ -23,9 +22,6 @@ const Q1query: React.FC = () => {
   const { q3data, q3DataLoading } = useAppSelector((state) => state.query);
   // const { costCenterData } = useAppSelector((state) => state.common);
 
-  useEffect(() => {
-    dispatch(getCostCenter());
-  }, [dispatch]);
 
   // const costCenterOptions = useMemo(() => {
   //   if (!costCenterData?.length) return [];

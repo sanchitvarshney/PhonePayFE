@@ -15,7 +15,6 @@ import {
 import { createRawMin, deletefile, resetDocumentFile, resetFormData, storeDocumentFile, storeFormdata } from "@/features/wearhouse/Rawmin/RawMinSlice";
 import { getPertCodesync } from "@/features/production/MaterialRequestWithoutBom/MRRequestWithoutBomSlice";
 import { CreateRawMinPayloadType } from "@/features/wearhouse/Rawmin/RawMinType";
-import { getCostCenter, getCurrency } from "@/features/common/commonSlice";
 import {
   Autocomplete,
   Divider,
@@ -53,6 +52,7 @@ import ConfirmationModel from "@/components/reusable/ConfirmationModel";
 import Success from "@/components/reusable/Success";
 import * as XLSX from "xlsx";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
+import { getCurrency } from "@/features/common/commonSlice";
 
 type FormData = {
   pickLocation: { label: string; value: string } | null;
@@ -659,7 +659,6 @@ const GoodSpareInwardv2: React.FC = () => {
     dispatch(getLocationAsync(null));
     dispatch(getPertCodesync(null));
     dispatch(getCurrency());
-    dispatch(getCostCenter());
   }, [dispatch]);
 
   useEffect(() => {

@@ -28,7 +28,6 @@ import { AgGridReact } from "ag-grid-react";
 import type { ColDef, GetRowIdParams } from "ag-grid-community";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { getLocationAsync } from "@/features/wearhouse/Divicemin/devaiceMinSlice";
-import { getCostCenter } from "@/features/common/commonSlice";
 import { showToast } from "@/utils/toasterContext";
 import { Icons } from "@/components/icons";
 import axiosInstance from "@/api/axiosInstance";
@@ -134,7 +133,7 @@ const Consumption: React.FC = () => {
 
   useEffect(() => {
     dispatch(getLocationAsync(null));
-    dispatch(getCostCenter());
+  
   }, [dispatch]);
 
   const locationOptions = useMemo<LocationOption[]>(() => {
