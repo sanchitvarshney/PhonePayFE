@@ -37,12 +37,12 @@ export const getBothComponentData = createAsyncThunk<AxiosResponse<componentApiR
 
 export const getQ3DatA = createAsyncThunk<
   AxiosResponse<Q3ApiResponse>,
-  { date: string; comp: string; costCenter?: string }
+  { date: string; comp: string;  }
 >(
   "query/getQ3DatA",
   async (payload) => {
     const response = await axiosInstance.get(
-      `/query/q1/${payload.comp}/${payload.date}/${payload.costCenter}`,
+      `/query/q1/${payload.comp}/${payload.date}`,
     );
     return response;
   }
