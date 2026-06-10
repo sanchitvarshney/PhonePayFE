@@ -67,6 +67,24 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
     api.refreshCells({ rowNodes: [props.node], columns });
   };
 
+  const getStockType = () =>
+    type === "device" && module !== "swipe" ? "SKU" : "RM";
+
+  const fetchAvailableQty = (
+    itemCode: string,
+    location: { value?: string } | string,
+  ) => {
+    const fetchQty =
+      module === "swipe" ? getSwipeAvailbleQty : getAvailbleQty;
+    dispatch(
+      fetchQty({
+        itemCode,
+        type: getStockType(),
+        location,
+      }),
+    );
+  };
+
   const handleInputChange = (e: any) => {
   data[colDef.field] = e?.target ? e.target.value : e;
     refreshCell([colDef.field]);
@@ -79,6 +97,13 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
           <AntSkuSelect
             onChange={(selectedValue) => {
               data[colDef.field] = selectedValue;
+
+              if (selectedValue && data?.pickLocation) {
+                fetchAvailableQty(
+                  selectedValue.value || "",
+                  data.pickLocation,
+                );
+              }
               refreshCell([colDef.field]);
             }}
             value={value}
@@ -94,14 +119,9 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
               data[colDef.field] = selectedValue;
 
               if (selectedValue && data?.pickLocation) {
-                const fetchQty =
-                  module === "swipe" ? getSwipeAvailbleQty : getAvailbleQty;
-                dispatch(
-                  fetchQty({
-                    itemCode: selectedValue.value || "",
-                    type: "RM",
-                    location: data.pickLocation,
-                  }),
+                fetchAvailableQty(
+                  selectedValue.value || "",
+                  data.pickLocation,
                 );
               }
               refreshCell([colDef.field]);
@@ -118,14 +138,9 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
               data[colDef.field] = locationValue;
 
               if (locationValue && data?.code) {
-                const fetchQty =
-                  module === "swipe" ? getSwipeAvailbleQty : getAvailbleQty;
-                dispatch(
-                  fetchQty({
-                    itemCode: data.code?.value ?? data.code,
-                    type: "RM",
-                    location: locationValue.value,
-                  }),
+                fetchAvailableQty(
+                  data.code?.value ?? data.code,
+                  locationValue.value,
                 );
               }
               refreshCell([colDef.field]);

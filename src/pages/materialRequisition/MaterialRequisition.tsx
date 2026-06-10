@@ -62,6 +62,7 @@ const MaterialRequisition = () => {
     if (rowData.length > 0) {
       setReqType(e);
       setOpen(true);
+        dispatch(setType(e));
     } else {
       dispatch(setType(e));
       setLocation(null);
@@ -192,7 +193,7 @@ const MaterialRequisition = () => {
         <DialogTitle id="alert-dialog-title">{"Are you absolutely sure?"}</DialogTitle>
         <DialogContent sx={{ width: "600px" }}>
           <DialogContentText id="alert-dialog-description">
-            If you change [Request Type] your whole data will be reset
+            If you change {reqType == "device" ? "SKU" : "Material"} your whole data will be reset
           </DialogContentText>
         </DialogContent>
         <DialogActions>
