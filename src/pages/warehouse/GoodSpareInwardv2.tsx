@@ -241,7 +241,7 @@ const GoodSpareInwardv2: React.FC = () => {
     (state) => state.divicemin
   );
   const { documnetFileData, createminLoading, formdata } = useAppSelector((state) => state.rawmin);
-  const { costCenterData, costCenterLoading } = useAppSelector((state) => state.common);
+  // const { costCenterData, costCenterLoading } = useAppSelector((state) => state.common);
 
   const {
     register,
@@ -316,20 +316,20 @@ const GoodSpareInwardv2: React.FC = () => {
     }));
   }, [locationData]);
 
-  const costCenterOptions = useMemo(() => {
-    if (!costCenterData?.length) return [];
-    return costCenterData.map((item) => ({
-      label: String((item as any).text ?? (item as any).name ?? (item as any).label ?? ""),
-      value: String(
-        (item as any).id ??
-          (item as any).code ??
-          (item as any).value ??
-          (item as any).key ??
-          (item as any).text ??
-          ""
-      ),
-    }));
-  }, [costCenterData]);
+  // const costCenterOptions = useMemo(() => {
+  //   if (!costCenterData?.length) return [];
+  //   return costCenterData.map((item) => ({
+  //     label: String((item as any).text ?? (item as any).name ?? (item as any).label ?? ""),
+  //     value: String(
+  //       (item as any).id ??
+  //         (item as any).code ??
+  //         (item as any).value ??
+  //         (item as any).key ??
+  //         (item as any).text ??
+  //         ""
+  //     ),
+  //   }));
+  // }, [costCenterData]);
 
   const handleNext = () => {
     setActiveStep((prevStep) => prevStep + 1);
@@ -566,16 +566,6 @@ const GoodSpareInwardv2: React.FC = () => {
     const docketNo = excelRows.map((row) => String(row.docketNo ?? "").trim());
     const recievedDate = excelRows.map((row) => String(row.receiveDate ?? "").trim());
 
-    const selectedCostCenter =
-      getOptionValue(formdata.costCenter) ||
-      getOptionValue(getValues("costCenter")) ||
-      costCenterOptions.find(
-        (item) =>
-          item.label ===
-          (getOptionValue(formdata.costCenter) || getOptionValue(getValues("costCenter")))
-      )?.value ||
-      "";
-
     // if (!selectedCostCenter) {
     //   showToast("Cost center is required", "error");
     //   return;
@@ -616,7 +606,7 @@ const GoodSpareInwardv2: React.FC = () => {
       doc_date: dayjs(formdata.doucmentDate).format("DD-MM-YYYY") || "",
       vendortype: formdata.vendorType || "",
       invoiceAttachment: invoicePath,
-      cc: selectedCostCenter,
+      // cc: selectedCostCenter,
       deliveryAddress: `MsCorpres Manufacturer and Refurbisher Pvt. Ltd.
                             2nd & 3rd Floor, B-88,Sec-83,
                             Noida Gautam Buddha Nagar, UP-201305`,
@@ -853,7 +843,7 @@ const GoodSpareInwardv2: React.FC = () => {
                     />
                   )}
                 />
-                <Controller
+                {/* <Controller
                   name="costCenter"
                   control={control}
                   render={({ field }) => (
@@ -884,7 +874,7 @@ const GoodSpareInwardv2: React.FC = () => {
                       )}
                     />
                   )}
-                />
+                /> */}
                 <Controller
                   name="doucmentDate"
                   control={control}
