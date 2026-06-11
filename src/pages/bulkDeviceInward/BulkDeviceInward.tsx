@@ -117,6 +117,14 @@ interface FormData {
   challanDate: string | dayjs.Dayjs;
 }
 
+const cloneFormData = (data: FormData): FormData => ({
+  ...data,
+  billFrom: { ...data.billFrom },
+  shipFrom: { ...data.shipFrom },
+  billaddress: { ...data.billaddress },
+  shipaddress: { ...data.shipaddress },
+});
+
 const defaultFormValues: FormData = {
   billaddressid: "",
   billaddress: {
@@ -249,11 +257,8 @@ const BulkDeviceInward: React.FC = () => {
     singleRow.rate <= 0;
 
   const handleBack = () => {
-    // Set form values from Redux state before going back
     if (formData) {
-      Object.entries(formData).forEach(([key, value]) => {
-        setValue(key as any, value);
-      });
+      reset(cloneFormData(formData as FormData));
     }
     setActiveStep((prevStep) => prevStep - 1);
   };
@@ -286,7 +291,7 @@ const BulkDeviceInward: React.FC = () => {
     }
 
     try {
-      dispatch(setFormData(data as any));
+      dispatch(setFormData(cloneFormData(data)));
       setActiveStep(1); // Directly set the step instead of using handleNext
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -1119,10 +1124,14 @@ const BulkDeviceInward: React.FC = () => {
                           if (newValue && dayjs(newValue).isValid()) {
                             field.onChange(newValue);
                             dispatch(
-                              setFormData({
-                                ...formData,
-                                challanDate: newValue,
-                              }),
+                              setFormData(
+                                formData
+                                  ? {
+                                      ...cloneFormData(formData as FormData),
+                                      challanDate: newValue,
+                                    }
+                                  : { ...defaultFormValues, challanDate: newValue },
+                              ),
                             );
                           }
                         }}
