@@ -6,11 +6,12 @@ import type {
   ReportStateType,
   R1ReportApiResponse,
   R3ReportApiResponse,
+  R5ReportQueryParams,
 } from "./reportType";
 
 const initialState: ReportStateType = {
   r1Data: null,
-
+  r5report: null,
   getR1DataLoading: false,
   r1Report: null,
   wrongDeviceReport: null,
@@ -18,18 +19,22 @@ const initialState: ReportStateType = {
   wrongDeviceReportLoading: false,
   r2Report: null,
   r2ReportLoading: false,
-    r3report: null,
+  r3report: null,
   r3reportLoading: false,
   r3ReportDetail: null,
   r3ReportDetailLoading: false,
-
+  r5ReportDetailLoading: false,
+  r5ReportDetail: null,
+  r5reportLoading: false,
 };
 
 export const getR1Data = createAsyncThunk<
   AxiosResponse<R1ApiResponse>,
   { type: string; data: string }
 >("report/getR1", async (date) => {
-  const response = await axiosInstance.get(`/report/r1/detail?type=${date.type}&data=${date.data}`);
+  const response = await axiosInstance.get(
+    `/report/r1/detail?type=${date.type}&data=${date.data}`,
+  );
   return response;
 });
 
@@ -48,12 +53,10 @@ export const getR1Report = createAsyncThunk<
   const response = await axiosInstance.get(
     payload.type === "MINNO"
       ? `/report/r1/MINNO?data=${payload.data}&module=${payload.module}&page=${payload.page}&limit=${payload.limit}`
-      : `/report/r1/DATE?startDate=${payload.from}&endDate=${payload.to}&module=${payload.module}&page=${payload.page}&limit=${payload.limit}`
+      : `/report/r1/DATE?startDate=${payload.from}&endDate=${payload.to}&module=${payload.module}&page=${payload.page}&limit=${payload.limit}`,
   );
   return response;
 });
-
-
 
 export const getr2Report = createAsyncThunk<
   AxiosResponse<any>,
@@ -67,25 +70,20 @@ export const getr2Report = createAsyncThunk<
   }
 >("report/getr2Report", async (query) => {
   const response = await axiosInstance.get(
-`/report/r2?from=${query.from}&to=${query.to}&page=${query.page}&limit=${query.limit}&wise=${query.wise}&data=${query.data?.sku}`
+    `/report/r2?from=${query.from}&to=${query.to}&page=${query.page}&limit=${query.limit}&wise=${query.wise}&data=${query.data?.sku}`,
   );
   return response;
 });
-
-
-
 
 export const getWrongDeviceReport = createAsyncThunk<
   AxiosResponse<R1ReportApiResponse>,
   { type: string; from: string; to: string; limit: number; page: number }
 >("report/getWrongDeviceReport", async (payload) => {
   const response = await axiosInstance.get(
-    `/wrongDevice/fetch/?fromDate=${payload.from}&toDate=${payload.to}&deliveryPartner=${payload.type}&page=${payload.page}&limit=${payload.limit}`
+    `/wrongDevice/fetch/?fromDate=${payload.from}&toDate=${payload.to}&deliveryPartner=${payload.type}&page=${payload.page}&limit=${payload.limit}`,
   );
   return response;
 });
-
-
 
 export const getr3Report = createAsyncThunk<
   AxiosResponse<R3ReportApiResponse>,
@@ -99,19 +97,38 @@ export const getr3Report = createAsyncThunk<
   }
 >("report/getr3Report", async (query) => {
   const response = await axiosInstance.get(
-  
-    `/report/r3?from=${query.from}&to=${query.to}&page=${query.page}&limit=${query.limit}&wise=${query.type}&data=${query.data}`
+    `/report/r3?from=${query.from}&to=${query.to}&page=${query.page}&limit=${query.limit}&wise=${query.type}&data=${query.data}`,
   );
   return response;
 });
-
 
 export const r3ReportDetail = createAsyncThunk<
   AxiosResponse<any>,
   { query: string }
 >("report/r4ReportDetail", async (query) => {
   const response = await axiosInstance.get(
-    `/report/r4/consumed/${query.query}`
+    `/report/r4/consumed/${query.query}`,
+  );
+  return response;
+});
+
+export const getr5ReportDetail = createAsyncThunk<
+  AxiosResponse<any>,
+  { productionId: any; deviceType: string }
+>("report/r5ReportDetail", async (query) => {
+  const response = await axiosInstance.get(
+    `/report/r5Detail/consumed?deviceType=${query.deviceType}&productionId=${query.productionId}`,
+  );
+  return response;
+});
+export const getr5Report = createAsyncThunk<
+  AxiosResponse<any>,
+  R5ReportQueryParams
+>("report/getr5Report", async (query) => {
+  const response = await axiosInstance.get(
+    query.type === "DEVICE"
+      ? `/report/r5/DEVICE?deviceId=${query.device}&deviceType=${query.deviceType}&page=${query.page}&limit=${query.limit}`
+      : `/report/r5/DATE?from=${query.from}&to=${query.to}&deviceType=${query.deviceType}&page=${query.page}&limit=${query.limit}`
   );
   return response;
 });
@@ -129,7 +146,7 @@ const reportSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-     
+
       .addCase(getr2Report.pending, (state) => {
         state.r2ReportLoading = true;
         // state.r5report = null;
@@ -217,7 +234,33 @@ const reportSlice = createSlice({
       })
       .addCase(r3ReportDetail.rejected, (state) => {
         state.r3ReportDetailLoading = false;
-      });
+      })
+      .addCase(getr5ReportDetail.pending, (state) => {
+        state.r5ReportDetailLoading = true;
+        state.r5ReportDetail = null;
+      })
+      .addCase(getr5ReportDetail.fulfilled, (state, action) => {
+        state.r5ReportDetailLoading = false;
+        if (action.payload.data.success) {
+          state.r5ReportDetail = action.payload.data.data;
+        }
+      })
+      .addCase(getr5ReportDetail.rejected, (state) => {
+        state.r5ReportDetailLoading = false;
+        state.r5ReportDetail = null;
+      })      .addCase(getr5Report.rejected, (state) => {
+        state.r5reportLoading = false;
+        state.r5report = null;
+      }) .addCase(getr5Report.pending, (state) => {
+        state.r5reportLoading = true;
+        // state.r4report = null;
+      })
+      .addCase(getr5Report.fulfilled, (state, action) => {
+        state.r5reportLoading = false;
+        if (action.payload.data.success) {
+          state.r5report = action.payload.data;
+        }
+      })
   },
 });
 

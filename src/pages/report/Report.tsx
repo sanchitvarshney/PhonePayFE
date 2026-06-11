@@ -4,6 +4,7 @@ import R1Report from "./R1Report";
 import R2Report from "./R2Report";
 import R4Report from "./R4Report";
 import R3Report from "./R3Report";
+import R5Report from "./R5Report";
 
 const Report: React.FC = () => {
   const { id } = useParams();
@@ -19,6 +20,9 @@ const Report: React.FC = () => {
   }
     if (id === "R4") {
     return <R4Report />;
+  }
+      if (id === "R5") {
+    return <R5Report />;
   }
 
   return <div className="p-4">This is {id} Report</div>;

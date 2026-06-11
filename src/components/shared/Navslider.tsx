@@ -25,7 +25,7 @@ export const navSliderData: NavSliderData[] = [
   // { path: "/report/R2", name: "R2", content: <p>TRC Report</p> },
   { path: "/report/R3", name: "R3", content: <p>Consumption Report</p> },
   { path: "/report/R4", name: "R4", content: <p>Inward Report</p> },
-  // { path: "/report/R5", name: "R5", content: <p>Dispatch Report</p> },
+  { path: "/report/R5", name: "R5", content: <p>Production Report</p> },
   // { path: "/report/R6", name: "R6", content: <p>Raw MIN Report</p> },
   // { path: "/report/R7", name: "R7", content: <p>Date Wise RM Report</p> },
   // { path: "/report/R8", name: "R8", content: <p>Material Issue Report</p> },

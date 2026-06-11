@@ -91,7 +91,15 @@ export type R3ReportApiResponse = {
     totalPages: number;
   };
 };
-
+export type R5ReportQueryParams = {
+  from?: string;
+  to?: string;
+  type: string;
+  device?: string;
+  deviceType?: string;
+  page?: number;
+  limit?: number;
+};
 export type ReportStateType = {
   r1Data: DocumentData | null;
   getR1DataLoading: boolean;
@@ -105,6 +113,9 @@ export type ReportStateType = {
   r3reportLoading: boolean;
   r3ReportDetail: any;
   r3ReportDetailLoading: boolean;
-
+  r5ReportDetailLoading: boolean
+  r5ReportDetail: any
+  r5reportLoading: boolean
+  r5report: any
 };
 

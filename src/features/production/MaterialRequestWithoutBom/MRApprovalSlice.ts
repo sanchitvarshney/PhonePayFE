@@ -24,7 +24,6 @@ const initialState: PendingMrRequestState = {
   serialLoading: false,
   swipeDeviceData: null,
   swipeDeviceLoading: false,
-  deviceData: null,
   deviceLoading: false,
 };
 
@@ -111,21 +110,12 @@ export const approveSwipeDeviceRequest = createAsyncThunk<
   return response;
 });
 
-export const validateScan = createAsyncThunk<AxiosResponse<any>, any>(
-  "master/validateScan",
-  async ({ id, type }) => {
-    const response = await axiosInstance.get(
-      `/backend/device?device=${id}&type=${type}`,
-    );
-    return response;
-  },
-);
 
 export const isExistItemOnLocation = createAsyncThunk<AxiosResponse<any>, any>(
   "master/existItem",
   async ({ id, type, location }) => {
     const query =
-      `/deviceMinV2/checkLocation?pickLocation=${location}&type=${type}` +
+      `/utils/checkLocation?pickLocation=${location}&type=${type}` +
       (type === "SOUNDBOX" ? `&serial_no=${id}` : `&serial=${id}`);
 
     const response = await axiosInstance.get(query);
@@ -199,19 +189,7 @@ const MrApprovalSlice = createSlice({
         state.getPendingMrRequestLoading = false;
         state.pendingMrRequestData = [];
       })
-      .addCase(validateScan.pending, (state) => {
-        state.deviceLoading = true;
-      })
-      .addCase(validateScan.fulfilled, (state, action) => {
-        state.deviceLoading = false;
-        if (action.payload.data.success) {
-          state.deviceData = action.payload.data;
-        }
-      })
-      .addCase(validateScan.rejected, (state) => {
-        state.deviceLoading = false;
-        state.deviceData = [];
-      })
+     
       .addCase(getPendingSwipeDeviceListsync.pending, (state) => {
         state.swipeDeviceLoading = true;
       })

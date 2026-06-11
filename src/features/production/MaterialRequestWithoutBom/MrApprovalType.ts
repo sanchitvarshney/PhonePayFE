@@ -160,5 +160,5 @@ export type PendingMrRequestState = {
   swipeDeviceLoading: boolean;
   swipeDeviceData:PendingRequests[]|null
   deviceLoading: boolean;
-  deviceData:any[]|null
+ 
 };

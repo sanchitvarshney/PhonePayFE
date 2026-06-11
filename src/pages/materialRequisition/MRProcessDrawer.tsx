@@ -56,9 +56,8 @@ import {
   getProcessMrReqeustAsync,
   isExistItemOnLocation,
   materialRequestReject,
-  validateScan,
 } from "@/features/production/MaterialRequestWithoutBom/MRApprovalSlice";
-import {  ProcessRequestDataBody } from "@/features/production/MaterialRequestWithoutBom/MrApprovalType";
+import { ProcessRequestDataBody } from "@/features/production/MaterialRequestWithoutBom/MrApprovalType";
 import { Delete, QrCodeScanner } from "@mui/icons-material";
 type Props = {
   open: boolean;
@@ -161,7 +160,7 @@ const MRProcessDrawer: React.FC<Props> = ({
     }
   };
   const onSubmit: SubmitHandler<Forstate> = (data) => {
-    const payload:any =
+    const payload: any =
       reqType === "DEVICE"
         ? {
             itemCode: itemkey,
@@ -184,7 +183,7 @@ const MRProcessDrawer: React.FC<Props> = ({
         setItemKey("");
         reset();
         approved ? setApproved([...approved, itemkey]) : setApproved([itemkey]);
-   setScanned(null);
+        setScanned(null);
         setIsueeQty("");
         setSelectedValue(null);
       }
@@ -194,7 +193,7 @@ const MRProcessDrawer: React.FC<Props> = ({
   useEffect(() => {
     if (!open) {
       setItemKey("");
-          setScanned(null);
+      setScanned(null);
       reset();
       setIsueeQty("");
       setRemarks("");
@@ -217,8 +216,6 @@ const MRProcessDrawer: React.FC<Props> = ({
 
   return (
     <>
-   
-
       <Dialog
         open={confirmIssueChange}
         onClose={() => setConfirmIssueChange(false)}
@@ -237,7 +234,7 @@ const MRProcessDrawer: React.FC<Props> = ({
               setConfirmIssueChange(false);
               setIsueeQty("");
               setValue("issueQty", "");
-               setScanned(null);
+              setScanned(null);
             }}
             type="submit"
             variant="contained"
@@ -294,7 +291,7 @@ const MRProcessDrawer: React.FC<Props> = ({
                 Requested Details
               </Typography>
             </div>
-            <List sx={{ width: "100%", bgcolor: "background.paper", }}>
+            <List sx={{ width: "100%", bgcolor: "background.paper" }}>
               <ListItem>
                 <ListItemAvatar>
                   <Avatar>
@@ -627,7 +624,7 @@ const MRProcessDrawer: React.FC<Props> = ({
                                         "error",
                                       );
                                     } else {
-                                       if (scanned && scanned?.length > 0) {
+                                      if (scanned && scanned?.length > 0) {
                                         setConfirmIssueChange(true);
                                       } else {
                                         field.onChange(e);
@@ -685,7 +682,7 @@ const MRProcessDrawer: React.FC<Props> = ({
                               fullWidth
                               onChange={(e) => setInput(e.target.value)}
                               inputProps={{ maxLength: 15 }}
-                              onKeyDown={(e) => {
+                              onKeyDown={ async (e) =>  {
                                 if (e.key === "Enter") {
                                   e.preventDefault();
                                   if (input) {
@@ -704,38 +701,22 @@ const MRProcessDrawer: React.FC<Props> = ({
                                           "error",
                                         );
                                       } else {
-                                        dispatch(
-                                          validateScan({
-                                            id: input,
-                                            type: "soundBox",
-                                          }),
-                                        ).then(async (response: any) => {
-                                          if (
-                                            response?.payload?.data?.success
-                                          ) {
-                                            const isExistingItem =
-                                              await getItemExists();
-                                            if (!isExistingItem) {
-                                              return;
-                                            }
+                                        const isExistingItem =
+                                          await getItemExists();
+                                        if (!isExistingItem) {
+                                          return;
+                                        }
 
-                                            scanned
-                                              ? setScanned([input, ...scanned])
-                                              : setScanned([input]);
-                                            setInput("");
-                                            if (
-                                              Number(isueeQty) ===
-                                              scanned?.length! + 1
-                                            ) {
-                                              e?.currentTarget?.blur();
-                                            }
-                                          } else {
-                                            showToast(
-                                              response?.payload?.data?.message,
-                                              "error",
-                                            );
-                                          }
-                                        });
+                                        scanned
+                                          ? setScanned([input, ...scanned])
+                                          : setScanned([input]);
+                                        setInput("");
+                                        if (
+                                          Number(isueeQty) ===
+                                          scanned?.length! + 1
+                                        ) {
+                                          e?.currentTarget?.blur();
+                                        }
                                       }
                                     }
                                   }
@@ -829,12 +810,15 @@ const MRProcessDrawer: React.FC<Props> = ({
                         type="submit"
                         startIcon={<DoneIcon fontSize="small" />}
                         variant="contained"
-                      disabled={
-                        reqType ==="DEVICE" ?   !(scanned
-                            ? parseInt(isueeQty) === scanned.length
-                            : true) ||
-                          approveItemLoading ||
-                          !scanned || !isueeQty : (approveItemLoading || !isueeQty)
+                        disabled={
+                          reqType === "DEVICE"
+                            ? !(scanned
+                                ? parseInt(isueeQty) === scanned.length
+                                : true) ||
+                              approveItemLoading ||
+                              !scanned ||
+                              !isueeQty
+                            : approveItemLoading || !isueeQty
                         }
                         loading={approveItemLoading}
                       >
