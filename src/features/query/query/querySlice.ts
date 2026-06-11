@@ -1,7 +1,7 @@
 import axiosInstance from "@/api/axiosInstance";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AxiosResponse } from "axios";
-import type { Q1ApiResponse, Q3ApiResponse, QueryStateType, componentApiResponse } from "./queryType";
+import type { Q1ApiResponse, Q3ApiResponse, QueryStateType, R2ApiResponse, componentApiResponse } from "./queryType";
 
 const initialState: QueryStateType = {
   getQ1DataLoading: false,
@@ -13,6 +13,9 @@ const initialState: QueryStateType = {
   q2Pagination: null,
   q3data: null,
   q3DataLoading: false,
+  q2StatementLoading: false,
+  q2Statement: null,
+
 };
 
 export const getQ1Data = createAsyncThunk<
@@ -47,6 +50,10 @@ export const getQ3DatA = createAsyncThunk<
     return response;
   }
 );
+export const getQ2Data = createAsyncThunk<AxiosResponse<R2ApiResponse>, { id: string; type: string }>("query/getQ2Data", async (payload) => {
+  const response = await axiosInstance.get(`/query/${payload.type === "swipe" ? `swipeMachineDetail?srlOrImei=${payload.id}` : `devicetimeline?srl=${payload.id}`}`);
+  return response;
+});
 
 const querySlice = createSlice({
   name: "query",
@@ -91,6 +98,20 @@ const querySlice = createSlice({
       .addCase(getQ3DatA.rejected, (state) => {
         state.q3DataLoading = false;
         state.q3data = null;
+      })
+         .addCase(getQ2Data.pending, (state) => {
+        state.q2StatementLoading = true;
+        state.q2Statement = null;
+      })
+      .addCase(getQ2Data.fulfilled, (state, action) => {
+        state.q2StatementLoading = false;
+        if (action.payload.data.success) {
+          state.q2Statement = action.payload.data.data;
+        }
+      })
+      .addCase(getQ2Data.rejected, (state) => {
+        state.q2StatementLoading = false;
+        state.q2Statement = null;
       });
   },
 });

@@ -21,6 +21,27 @@ interface TransactionType {
   txnID: string;
 }
 
+type TransactionData = {
+  transactionType: string;
+  refId: string;
+  minNo: string;
+  time: string;
+  location: string | null;
+  user: string | null;
+  serial: string;
+  imei: string;
+  locationOut:string;
+  method:string;
+  manufacturingMonth?:string
+  deviceMovId?:string
+  name?:string
+};
+export type R2ApiResponse = {
+  status: "success";
+  success: boolean;
+  data: TransactionData[];
+};
+
 export interface BodyItem {
   type: TransactionType;
   vendor: Vendor;
@@ -108,5 +129,7 @@ export type QueryStateType = {
   } | null;
   q3data: ComponentData | null;
   q3DataLoading: boolean;
+  q2StatementLoading: boolean;
+  q2Statement: TransactionData[] | null;
 };
 
