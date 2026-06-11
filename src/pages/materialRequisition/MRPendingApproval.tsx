@@ -47,6 +47,7 @@ const MRPendingApproval: React.FC = () => {
   const [approve, setApprove] = useState<boolean>(false);
   const [alert, setAlert] = useState<boolean>(false);
   const [approved, setApproved] = useState<string[] | null>(null);
+    const [requestType, setRequestType] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
   const {
     cancelItemLoading,
@@ -227,14 +228,19 @@ const MRPendingApproval: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      <MRProcessDrawer
+ 
+    
+           <MRProcessDrawer
         approved={approved}
         setApproved={setApproved}
         open={approve}
         setOpen={setApprove}
         alert={alert}
         setAlert={setAlert}
+        reqType={requestType}
       />
+   
+   
 
       <div className=" ag-theme-quartz h-[calc(100vh-100px)]">
         <AgGridReact
@@ -296,6 +302,7 @@ const MRPendingApproval: React.FC = () => {
       >
         <MenuItem
           onClick={() => {
+                setRequestType(params?.data?.transactionType || "");
             dispatch(
               setRequestDetail({
                 name: params?.data?.userName,

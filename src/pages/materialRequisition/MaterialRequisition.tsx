@@ -118,8 +118,8 @@ const MaterialRequisition = () => {
         hasErrors = true;
       }
     });
-
-    if (rowData.some((row) => row.availableqty < row.orderqty)) {
+console.log(rowData,"row data");
+    if (rowData.some((row) => Number(row.availableqty) < Number(row.orderqty))) {
       showToast(
         "Order quantity should not be greater than available quantity",
         "error",

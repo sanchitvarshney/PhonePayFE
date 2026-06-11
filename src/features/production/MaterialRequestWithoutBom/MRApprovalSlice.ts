@@ -91,8 +91,10 @@ export const approveSelectedItemAsync = createAsyncThunk<
   AxiosResponse<ApproveItemsResponse>,
   ApprovePayload
 >("master/approveSelectedItem", async (params) => {
+  const itemsCode = params.itemsCode ?? params.itemCode;
+  const transactionId = params.transactionId ?? params.txnID;
   const response = await axiosInstance.post(
-    `/request/approve/${params.itemsCode}/${params.transactionId}`,
+    `/request/approve/${itemsCode}/${transactionId}`,
     params,
   );
   return response;
@@ -124,7 +126,7 @@ export const isExistItemOnLocation = createAsyncThunk<AxiosResponse<any>, any>(
   async ({ id, type, location }) => {
     const query =
       `/deviceMinV2/checkLocation?pickLocation=${location}&type=${type}` +
-      (type === "SOUNDBOX" ? `&imei=${id}` : `&serial=${id}`);
+      (type === "SOUNDBOX" ? `&serial_no=${id}` : `&serial=${id}`);
 
     const response = await axiosInstance.get(query);
     return response;

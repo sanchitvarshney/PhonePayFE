@@ -110,7 +110,7 @@ const staticMenu: Menu[] = [
             menu_key: "approval-material-request",
             name: "Approve Request",
             parent_menu_key: "material-req-row",
-            url: "/material-management/material-requisition-request",
+            url: "/material-management/raw-material-approval",
             order: 1,
             is_active: 1,
             icon: "report",

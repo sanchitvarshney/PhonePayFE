@@ -60,6 +60,9 @@ export type ApprovePayload = {
   pickLocation: string;
   issueQty: string;
   remarks: string;
+  srlNumber?: string[];
+  txnID?: string;
+  itemCode?: string;
 };
 export type ApproveItemsResponse = {
   status: string;
