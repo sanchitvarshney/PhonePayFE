@@ -3,6 +3,7 @@ import { RouterProvider } from "react-router-dom";
 import "./index.css";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
+import "./config/agGridConfig";
 import { AllCommunityModule } from "ag-grid-community";
 import { AgGridProvider } from "ag-grid-react";
 import { router } from "./route";

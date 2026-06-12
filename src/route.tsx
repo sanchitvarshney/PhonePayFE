@@ -56,6 +56,7 @@ import MRApprovalLayout from "./layouts/MRApprovalLayout";
 import MaterialApprovalLayout from "./layouts/MaterialApprovalLayout";
 import ProductionMaterialRequisitionLayout from "./layouts/ProductionMaterialRequisitionLayout";
 import MaterialReqWithoutBom from "./pages/production/MaterialReqWithoutBom";
+import MRwithBom from "./pages/materialRequisition/MRwithBom";
 
 export const router = createBrowserRouter([
   {
@@ -393,16 +394,7 @@ export const router = createBrowserRouter([
         ),
         path: "/pending-material-approval",
       },
-      {
-        element: (
-          <MainLayout>
-            <MaterialApprovalLayout>
-              <MRRequest />
-            </MaterialApprovalLayout>
-          </MainLayout>
-        ),
-        path: "/material-requisition-request",
-      },
+     
       {
         element: (
           <MainLayout>
@@ -412,6 +404,16 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/production/material-req-without-bom",
+      },
+        {
+        element: (
+          <MainLayout>
+            <MaterialRequisitionLayout>
+              <MRwithBom />
+            </MaterialRequisitionLayout>
+          </MainLayout>
+        ),
+        path: "/material-management/raw-material-request/with-bom",
       },
       {
         element: (

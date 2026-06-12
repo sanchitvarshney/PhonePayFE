@@ -14,7 +14,7 @@ type Props = {
 const SalesOrderLayout: React.FC<Props> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const tabRoutes = ["/material-management/raw-material-request"];
+  const tabRoutes = ["/material-management/raw-material-request", "/material-management/raw-material-request/with-bom"];
   const currentTabIndex = tabRoutes.indexOf(location.pathname);
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -43,6 +43,15 @@ const SalesOrderLayout: React.FC<Props> = ({ children }) => {
               <div className="flex items-center gap-[10px]">
                 <WarehouseIcon fontSize="small" />
                 <span>Raw Material Request</span>
+              </div>
+            }
+          />
+            <Tab
+            sx={{ fontWeight: "500" }}
+            label={
+              <div className="flex items-center gap-[10px]">
+                <WarehouseIcon fontSize="small" />
+                <span>MR with BOM</span>
               </div>
             }
           />

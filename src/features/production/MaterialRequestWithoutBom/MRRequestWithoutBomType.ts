@@ -55,7 +55,6 @@ export type CreateProductRequestType = {
   qty: string[];
   remark: string[];
   comment: string;
-  cc: string;
   forTrc?: string;
 };
 

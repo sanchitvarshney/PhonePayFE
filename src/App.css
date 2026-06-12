@@ -28,6 +28,12 @@
   justify-content: center;
 }
 
+.ag-theme-quartz .ag-cell.ag-cell-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Workers report: different color per parent group, same color for children of that group */
 .ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-group-0,
 .ag-theme-quartz.workers-report-grid .ag-header-cell.wr-group-0 {
