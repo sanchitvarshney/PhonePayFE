@@ -46,7 +46,7 @@ export const serailList = createAsyncThunk<
   string
 >("master/serailList", async (id) => {
   const response = await axiosInstance.get(
-    `/req/data/approvalSerial?txnID=${id}`,
+    `/request/approvalSerial?txnID=${id}`,
   );
   return response;
 });

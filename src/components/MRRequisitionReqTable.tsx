@@ -140,10 +140,15 @@ const MrRequisitionReqTable: React.FC = () => {
   const columnDefsserial: ColDef[] = [
     {
       headerName: "Serial No.",
-      field: "srlNo",
+      field: "srlno",
       sortable: true,
       filter: false,
       flex: 1,
+      cellRenderer: (params: any) => (
+        <div className="flex items-center justify-center h-full">
+          <span>{params?.data?.srlno}</span>
+        </div>
+      )
     },
   ];
 
@@ -202,7 +207,7 @@ const MrRequisitionReqTable: React.FC = () => {
         </CustomDrawerContent>
       </CustomDrawer>
       <CustomDrawer open={detail} onOpenChange={setDetail}>
-        <CustomDrawerContent className="p-0 min-w-[75%]">
+        <CustomDrawerContent className="p-0 min-w-[calc(100%-200px)]">
           <CustomDrawerHeader className="h-[50px] p-0 flex flex-col justify-center px-[20px] bg-zinc-200 gap-0 border-b border-zinc-300 ">
             <CustomDrawerTitle className="text-slate-600 font-[500] p-0">
               <Typography
