@@ -1,10 +1,7 @@
 import axiosInstance from "@/api/axiosInstance";
 import {
   LocationAllotDetailResponse,
-  LocationAllotPayload,
-  LocationAllotResponse,
   LocationAllotState,
-  LocationAllotUpdatePayload,
   LocationAllotedApiItem,
   LocationAllotedListResponse,
   parseLocationsValue,
@@ -46,16 +43,16 @@ export const getAllotDetailAsync = createAsyncThunk<
 });
 
 export const allotLocationAsync = createAsyncThunk<
-  AxiosResponse<LocationAllotResponse>,
-  LocationAllotPayload
+  AxiosResponse<any>,
+  any
 >("locationAllot/allot", async (payload) => {
   const response = await axiosInstance.post("/location/location_allotted", payload);
   return response;
 });
 
 export const updateAllotLocationAsync = createAsyncThunk<
-  AxiosResponse<LocationAllotResponse>,
-  LocationAllotUpdatePayload
+  AxiosResponse<any>,
+  any
 >("locationAllot/updateAllot", async (payload) => {
   const response = await axiosInstance.put(
     "/location/location_allotted_update",

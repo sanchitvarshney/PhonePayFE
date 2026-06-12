@@ -107,8 +107,8 @@ const LocationAllotFormPanel: React.FC<Props> = ({
     }
 
     const payload = {
-      for_module: data.pageName,
-      module_desc: data.pageDescription,
+      module_name: data.pageName,
+      module_description: data.pageDescription,
       locations: formatLocationsValue(Array.from(selectedIds)),
     };
 
