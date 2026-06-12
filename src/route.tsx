@@ -4,6 +4,7 @@ import MainLayout from "./layouts/MainLayout";
 import ProcurementLayout from "./layouts/ProcurementLayout";
 import MasterVendorLayout from "./layouts/MasterVendorLayout";
 import Protected from "./components/shared/Protected";
+import LocationAllotementProtected from "./components/shared/LocationAllotementProtected";
 
 // Static imports – no lazy loading; use FullPageLoading elsewhere when needed (e.g. auth/data loading)
 import HomePage from "./pages/HomePage";
@@ -429,9 +430,11 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
-            <LocationAllotementLayout>
-              <LocationAllot />
-            </LocationAllotementLayout>
+            <LocationAllotementProtected>
+              <LocationAllotementLayout>
+                <LocationAllot />
+              </LocationAllotementLayout>
+            </LocationAllotementProtected>
           </MainLayout>
         ),
         path: "/location/location-allot",
@@ -439,9 +442,11 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
-            <LocationAllotementLayout>
-              <LocationAllotedList />
-            </LocationAllotementLayout>
+            <LocationAllotementProtected>
+              <LocationAllotementLayout>
+                <LocationAllotedList />
+              </LocationAllotementLayout>
+            </LocationAllotementProtected>
           </MainLayout>
         ),
         path: "/location/location-alloted-list",
