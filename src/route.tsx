@@ -57,6 +57,9 @@ import MaterialApprovalLayout from "./layouts/MaterialApprovalLayout";
 import ProductionMaterialRequisitionLayout from "./layouts/ProductionMaterialRequisitionLayout";
 import MaterialReqWithoutBom from "./pages/production/MaterialReqWithoutBom";
 import MRwithBom from "./pages/materialRequisition/MRwithBom";
+import LocationAllot from "./pages/locationAllotement/LocationAllot";
+import LocationAllotedList from "./pages/locationAllotement/LocationAllotedList";
+import LocationAllotementLayout from "./layouts/LocationAllotementLayout";
 
 export const router = createBrowserRouter([
   {
@@ -422,6 +425,26 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/profile/settings",
+      },
+      {
+        element: (
+          <MainLayout>
+            <LocationAllotementLayout>
+              <LocationAllot />
+            </LocationAllotementLayout>
+          </MainLayout>
+        ),
+        path: "/location/location-allot",
+      },
+      {
+        element: (
+          <MainLayout>
+            <LocationAllotementLayout>
+              <LocationAllotedList />
+            </LocationAllotementLayout>
+          </MainLayout>
+        ),
+        path: "/location/location-alloted-list",
       },
     ],
   },

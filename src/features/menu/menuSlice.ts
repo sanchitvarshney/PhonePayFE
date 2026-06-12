@@ -286,16 +286,38 @@ const staticMenu: Menu[] = [
     icon: "report",
     description: "Query",
   },
-  // {
-  //   menu_key: "production-module",
-  //   name: "Production Module",
-  //   parent_menu_key: null,
-  //   url: "/production-module",
-  //   order: 7,
-  //   is_active: 1,
-  //   icon: "report",
-  //   description: "Production Module",
-  // },
+ {
+    menu_key: "location-alloted",
+    name: "Location Allotement",
+    parent_menu_key: null,
+    url: null,
+    order: 3,
+    is_active: 1,
+    icon: "location",
+    description: "Here you can allot the location to the user and view the alloted list",
+   children: [
+       {
+        menu_key: "location-allot",
+        name: "Location Allot",
+        parent_menu_key: "location-allot",
+        url: "/location/location-allot",
+        order: 1,
+        is_active: 1,
+        icon: "location",
+        description: "Here you can allot the location to the user",
+      },
+        {
+        menu_key: "alloted-list",
+        name: "Location Alloted List",
+        parent_menu_key: "location",
+        url: "/location/location-alloted-list",
+        order: 2,
+        is_active: 1,
+        icon: "location",
+        description: "Location Alloted List",
+      },
+   ]
+  },
 ];
 
 export const getMenuData = createAsyncThunk("menu/getMenuData", async () => {

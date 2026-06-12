@@ -31,7 +31,9 @@
 .ag-theme-quartz .ag-cell.ag-cell-center {
   display: flex;
   align-items: center;
-  justify-content: center;
+  /* justify-content: center; */
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 /* Workers report: different color per parent group, same color for children of that group */
