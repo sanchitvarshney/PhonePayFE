@@ -1,7 +1,13 @@
 import axiosInstance from "@/api/axiosInstance";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AxiosResponse } from "axios";
-import type { Q1ApiResponse, Q3ApiResponse, QueryStateType, R2ApiResponse, componentApiResponse } from "./queryType";
+import type {
+  Q1ApiResponse,
+  Q3ApiResponse,
+  QueryStateType,
+  R2ApiResponse,
+  componentApiResponse,
+} from "./queryType";
 
 const initialState: QueryStateType = {
   getQ1DataLoading: false,
@@ -15,7 +21,9 @@ const initialState: QueryStateType = {
   q3DataLoading: false,
   q2StatementLoading: false,
   q2Statement: null,
-
+  q3Pagination: null,
+  getQ3DataLading: false,
+  q3Data: null,
 };
 
 export const getQ1Data = createAsyncThunk<
@@ -25,33 +33,55 @@ export const getQ1Data = createAsyncThunk<
   const response = await axiosInstance.get(
     params.location
       ? `/query/log/DV?data=${params.value}&location=${params.location}`
-      : `/query/log/DV?date=${params.date}&data=${params.value}`
+      : `/query/log/DV?date=${params.date}&data=${params.value}`,
   );
   return response;
 });
 
-export const getBothComponentData = createAsyncThunk<AxiosResponse<componentApiResponse>, string | null>(
-  "query/getComponentData",
-  async (inputs) => {
-    const response = await axiosInstance.get(`/backend/search/sku/${inputs}`);
-    return response;
-  }
-);
+export const getBothComponentData = createAsyncThunk<
+  AxiosResponse<componentApiResponse>,
+  string | null
+>("query/getComponentData", async (inputs) => {
+  const response = await axiosInstance.get(`/backend/search/sku/${inputs}`);
+  return response;
+});
 
 export const getQ3DatA = createAsyncThunk<
   AxiosResponse<Q3ApiResponse>,
-  { date: string; comp: string;  }
->(
-  "query/getQ3DatA",
-  async (payload) => {
-    const response = await axiosInstance.get(
-      `/query/q1/${payload.comp}/${payload.date}`,
-    );
-    return response;
+  { date: string; comp: string }
+>("query/getQ3DatA", async (payload) => {
+  const response = await axiosInstance.get(
+    `/query/q1/${payload.comp}/${payload.date}`,
+  );
+  return response;
+});
+export const getQ2Data = createAsyncThunk<
+  AxiosResponse<R2ApiResponse>,
+  { id: string; type: string }
+>("query/getQ2Data", async (payload) => {
+  const response = await axiosInstance.get(
+    `/query/${payload.type === "swipe" ? `swipeMachineDetail?srlOrImei=${payload.id}` : `devicetimeline?srl=${payload.id}`}`,
+  );
+  return response;
+});
+
+export const getQ3Data = createAsyncThunk<
+  AxiosResponse<Q1ApiResponse>,
+  {
+    date: string | null;
+    value: string;
+    location: string | null;
+    page?: number;
+    limit?: number;
   }
-);
-export const getQ2Data = createAsyncThunk<AxiosResponse<R2ApiResponse>, { id: string; type: string }>("query/getQ2Data", async (payload) => {
-  const response = await axiosInstance.get(`/query/${payload.type === "swipe" ? `swipeMachineDetail?srlOrImei=${payload.id}` : `devicetimeline?srl=${payload.id}`}`);
+>("query/getQ3", async (params) => {
+  const pageParam = params.page ? `&page=${params.page}` : "";
+  const limitParam = params.limit ? `&limit=${params.limit}` : "";
+  const response = await axiosInstance.get(
+    params.location
+      ? `/query/log/RM?data=${params.value}&location=${params.location}&type=location${pageParam}${limitParam}`
+      : `/query/log/RM?date=${params.date}&data=${params.value}&type=date${pageParam}${limitParam}`,
+  );
   return response;
 });
 
@@ -99,7 +129,7 @@ const querySlice = createSlice({
         state.q3DataLoading = false;
         state.q3data = null;
       })
-         .addCase(getQ2Data.pending, (state) => {
+      .addCase(getQ2Data.pending, (state) => {
         state.q2StatementLoading = true;
         state.q2Statement = null;
       })
@@ -112,9 +142,23 @@ const querySlice = createSlice({
       .addCase(getQ2Data.rejected, (state) => {
         state.q2StatementLoading = false;
         state.q2Statement = null;
+      })
+      .addCase(getQ3Data.pending, (state) => {
+        state.getQ3DataLading = true;
+      })
+      .addCase(getQ3Data.fulfilled, (state, action) => {
+        state.getQ3DataLading = false;
+        if (action.payload.data.success) {
+          state.q3Data = action.payload.data.response;
+          state.q3Pagination = action.payload.data.response?.pagination || null;
+        }
+      })
+      .addCase(getQ3Data.rejected, (state) => {
+        state.getQ3DataLading = false;
+        state.q3Data = null;
+        state.q3Pagination = null;
       });
   },
 });
 
 export default querySlice.reducer;
-

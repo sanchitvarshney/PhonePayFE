@@ -127,7 +127,6 @@ const MaterialReqWithoutBom = () => {
           reqType: type.toLocaleUpperCase(),
           putLocation: data.location!.code,
           comment: data.remarks,
-          cc: "",
           forTrc: type === "device" ? "1" : "0",
         })
       ).then((res: any) => {

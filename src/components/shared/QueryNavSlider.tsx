@@ -13,11 +13,12 @@ interface NavSliderData {
 
 export const queryNavSliderData: NavSliderData[] = [
   { path: "/queries/Q1", name: "Q1", content: <p>Component Stocks</p> },
-  // { path: "/queries/Q2", name: "Q2", content: <p>Raw Material Stocks</p> },
+
   // { path: "/queries/Q3", name: "Q3", content: <p>Component Stocks</p> },
   // { path: "/queries/Q4", name: "Q4", content: <p>SKU Stocks</p> },
   // { path: "/queries/Q5", name: "Q5", content: <p>SIM MIN Statement</p> },
   { path: "/queries/Q2", name: "Q2", content: <p>Device Statement</p> },
+    { path: "/queries/Q3", name: "Q3", content: <p>Raw Material Stocks</p> },
 ];
 
 const QueryNavSlider: React.FC = () => {

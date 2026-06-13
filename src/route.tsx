@@ -4,6 +4,7 @@ import MainLayout from "./layouts/MainLayout";
 import ProcurementLayout from "./layouts/ProcurementLayout";
 import MasterVendorLayout from "./layouts/MasterVendorLayout";
 import Protected from "./components/shared/Protected";
+import LocationAllotementProtected from "./components/shared/LocationAllotementProtected";
 
 // Static imports – no lazy loading; use FullPageLoading elsewhere when needed (e.g. auth/data loading)
 import HomePage from "./pages/HomePage";
@@ -56,6 +57,10 @@ import MRApprovalLayout from "./layouts/MRApprovalLayout";
 import MaterialApprovalLayout from "./layouts/MaterialApprovalLayout";
 import ProductionMaterialRequisitionLayout from "./layouts/ProductionMaterialRequisitionLayout";
 import MaterialReqWithoutBom from "./pages/production/MaterialReqWithoutBom";
+import MRwithBom from "./pages/materialRequisition/MRwithBom";
+import LocationAllot from "./pages/locationAllotement/LocationAllot";
+import LocationAllotedList from "./pages/locationAllotement/LocationAllotedList";
+import LocationAllotementLayout from "./layouts/LocationAllotementLayout";
 
 export const router = createBrowserRouter([
   {
@@ -393,16 +398,7 @@ export const router = createBrowserRouter([
         ),
         path: "/pending-material-approval",
       },
-      {
-        element: (
-          <MainLayout>
-            <MaterialApprovalLayout>
-              <MRRequest />
-            </MaterialApprovalLayout>
-          </MainLayout>
-        ),
-        path: "/material-requisition-request",
-      },
+     
       {
         element: (
           <MainLayout>
@@ -413,6 +409,16 @@ export const router = createBrowserRouter([
         ),
         path: "/production/material-req-without-bom",
       },
+        {
+        element: (
+          <MainLayout>
+            <MaterialRequisitionLayout>
+              <MRwithBom />
+            </MaterialRequisitionLayout>
+          </MainLayout>
+        ),
+        path: "/material-management/raw-material-request/with-bom",
+      },
       {
         element: (
           <MainLayout>
@@ -420,6 +426,30 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/profile/settings",
+      },
+      {
+        element: (
+          <MainLayout>
+            <LocationAllotementProtected>
+              <LocationAllotementLayout>
+                <LocationAllot />
+              </LocationAllotementLayout>
+            </LocationAllotementProtected>
+          </MainLayout>
+        ),
+        path: "/location/location-allot",
+      },
+      {
+        element: (
+          <MainLayout>
+            <LocationAllotementProtected>
+              <LocationAllotementLayout>
+                <LocationAllotedList />
+              </LocationAllotementLayout>
+            </LocationAllotementProtected>
+          </MainLayout>
+        ),
+        path: "/location/location-alloted-list",
       },
     ],
   },

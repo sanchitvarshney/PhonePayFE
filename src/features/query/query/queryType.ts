@@ -131,5 +131,12 @@ export type QueryStateType = {
   q3DataLoading: boolean;
   q2StatementLoading: boolean;
   q2Statement: TransactionData[] | null;
+  q3Pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalRecords: number;
+  } | null;
+q3Data: any | null;
+  getQ3DataLading: boolean;
 };
 

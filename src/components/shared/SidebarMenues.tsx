@@ -4,13 +4,15 @@ import { MdHome } from "react-icons/md";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import React from "react";
+import React, { useMemo } from "react";
 import { Props } from "@/types/MainLayout";
 import { CgArrowTopRight } from "react-icons/cg";
 import { Button } from "../ui/button";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { getMenuData } from "@/features/menu/menuSlice";
 import { Menu } from "@/features/menu/menuType";
+import { useUser } from "@/hooks/useUser";
+import { canAccessLocationAllotement } from "@/utils/locationAllotementAccess";
 import DynamicIcon from "../reusable/DynamicIcon";
 import { Box, CircularProgress } from "@mui/material";
 import { Icons } from "../icons";
@@ -48,10 +50,24 @@ const renderMenu = (menu: Menu[] | undefined, setSidemenu: React.Dispatch<React.
   );
 };
 
+const filterLocationAllotementMenu = (
+  menuItems: Menu[] | undefined,
+  hasAccess: boolean,
+): Menu[] | undefined => {
+  if (!menuItems || hasAccess) return menuItems;
+  return menuItems.filter((item) => item.menu_key !== "location-alloted");
+};
+
 const SidebarMenues: React.FC<Props> = ({ uiState }) => {
   const { sheetOpen, setSheetOpen, modalRef } = uiState;
   const dispatch = useAppDispatch();
   const { menu, menuLoading } = useAppSelector((state) => state.menu);
+  const { user } = useUser();
+  const hasLocationAllotementAccess = canAccessLocationAllotement(user?.crn_id);
+  const visibleMenu = useMemo(
+    () => filterLocationAllotementMenu(menu ?? [], hasLocationAllotementAccess),
+    [menu, hasLocationAllotementAccess],
+  );
 
   return (
     <div
@@ -91,7 +107,7 @@ const SidebarMenues: React.FC<Props> = ({ uiState }) => {
               Dashboard
             </NavLink>
           </li>
-          {menu?.map((item) =>
+          {visibleMenu?.map((item) =>
             item.children ? (
               <li className="group" key={item.menu_key}>
                 <div className="flex justify-between items-center py-[10px] hover:bg-[#4c1d99] p-[10px] group-hover:bg-[#4c1d99] cursor-pointer">

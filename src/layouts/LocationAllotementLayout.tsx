@@ -3,7 +3,8 @@ import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import { useNavigate, useLocation } from "react-router-dom";
-import WarehouseIcon from "@mui/icons-material/Warehouse";
+import AddLocationIcon from "@mui/icons-material/AddLocation";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 
 const PHONEPE_PURPLE = "#5F259F";
 
@@ -11,10 +12,13 @@ type Props = {
   children: React.ReactNode;
 };
 
-const SalesOrderLayout: React.FC<Props> = ({ children }) => {
+const LocationAllotementLayout: React.FC<Props> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const tabRoutes = ["/material-management/raw-material-request", "/material-management/raw-material-request/with-bom"];
+  const tabRoutes = [
+    "/location/location-allot",
+    "/location/location-alloted-list",
+  ];
   const currentTabIndex = tabRoutes.indexOf(location.pathname);
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -41,34 +45,27 @@ const SalesOrderLayout: React.FC<Props> = ({ children }) => {
             sx={{ fontWeight: "500" }}
             label={
               <div className="flex items-center gap-[10px]">
-                <WarehouseIcon fontSize="small" />
-                <span>Raw Material Request</span>
+                <AddLocationIcon color="primary" />
+                Location Allot
               </div>
             }
           />
-            <Tab
+          <Tab
             sx={{ fontWeight: "500" }}
             label={
               <div className="flex items-center gap-[10px]">
-                <WarehouseIcon fontSize="small" />
-                <span>MR with BOM</span>
+                <FormatListBulletedIcon color="primary" />
+                Location Alloted List
               </div>
             }
           />
         </Tabs>
       </div>
-      <Box
-        sx={{
-          height: "calc(100vh - 100px)",
-          display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
-        }}
-      >
+      <Box sx={{ height: "calc(100vh - 100px)", display: "flex", flexDirection: "column", minHeight: 0 }}>
         {children}
       </Box>
     </div>
   );
 };
 
-export default SalesOrderLayout;
+export default LocationAllotementLayout;

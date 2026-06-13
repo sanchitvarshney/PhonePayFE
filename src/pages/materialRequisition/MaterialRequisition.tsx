@@ -150,7 +150,7 @@ console.log(rowData,"row data");
           reqType: type.toLocaleUpperCase(),
           putLocation: data.location!.code,
           comment: data.remarks,
-          cc: "",
+
         }),
       ).then((res: any) => {
         if (res.payload?.data?.success) {
@@ -327,7 +327,7 @@ console.log(rowData,"row data");
                       render={({ field }) => (
                         <SelectLocationAcordingModule
                           key={`part-${type}`}
-                          endPoint={"/request/pickLocation"}
+                          endPoint={"/request/dropLocation"}
                           error={!!errors.location}
                           helperText={errors.location?.message}
                           value={field.value}

@@ -174,7 +174,7 @@ const MrRequisitionReqTable: React.FC = () => {
                   // Create worksheet
                   const ws = XLSX.utils.json_to_sheet(
                     serial?.map((item: any) => ({
-                      "Serial Number": item.srlNo,
+                      "Serial Number": item.srlno,
                     })) || []
                   );
 
