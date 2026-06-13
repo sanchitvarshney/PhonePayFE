@@ -294,7 +294,7 @@ const staticMenu: Menu[] = [
     order: 3,
     is_active: 1,
     icon: "location",
-    description: "Here you can allot the location to the user and view the alloted list",
+    description: "Location Allotement for perticular module",
    children: [
        {
         menu_key: "location-allot",
