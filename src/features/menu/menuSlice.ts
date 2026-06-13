@@ -22,6 +22,38 @@ const staticMenu: Menu[] = [
         icon: "report",
         description: "Master",
         children: [
+           {
+    menu_key: "location-alloted",
+    name: "Location Allotement",
+    parent_menu_key: null,
+    url: null,
+    order: 3,
+    is_active: 1,
+    icon: "location",
+    description: "Location Allotement for perticular module",
+   children: [
+       {
+        menu_key: "location-allot",
+        name: "Location Allot",
+        parent_menu_key: "location-allot",
+        url: "/location/location-allot",
+        order: 1,
+        is_active: 1,
+        icon: "location",
+        description: "Here you can allot the location to the user",
+      },
+        {
+        menu_key: "alloted-list",
+        name: "Location Alloted List",
+        parent_menu_key: "location",
+        url: "/location/location-alloted-list",
+        order: 2,
+        is_active: 1,
+        icon: "location",
+        description: "Location Alloted List",
+      },
+   ]
+  },
           {
             menu_key: "locations",
             name: "Locations",
@@ -86,7 +118,7 @@ const staticMenu: Menu[] = [
         children: [
           {
             menu_key: "raw-material-request",
-            name: "Raw Material Request",
+            name: "Material Request",
             parent_menu_key: "material-req-row",
             url: "/material-management/raw-material-request",
             order: 1,
@@ -286,38 +318,7 @@ const staticMenu: Menu[] = [
     icon: "report",
     description: "Query",
   },
- {
-    menu_key: "location-alloted",
-    name: "Location Allotement",
-    parent_menu_key: null,
-    url: null,
-    order: 3,
-    is_active: 1,
-    icon: "location",
-    description: "Location Allotement for perticular module",
-   children: [
-       {
-        menu_key: "location-allot",
-        name: "Location Allot",
-        parent_menu_key: "location-allot",
-        url: "/location/location-allot",
-        order: 1,
-        is_active: 1,
-        icon: "location",
-        description: "Here you can allot the location to the user",
-      },
-        {
-        menu_key: "alloted-list",
-        name: "Location Alloted List",
-        parent_menu_key: "location",
-        url: "/location/location-alloted-list",
-        order: 2,
-        is_active: 1,
-        icon: "location",
-        description: "Location Alloted List",
-      },
-   ]
-  },
+
 ];
 
 export const getMenuData = createAsyncThunk("menu/getMenuData", async () => {

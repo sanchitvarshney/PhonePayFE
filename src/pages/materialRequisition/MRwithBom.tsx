@@ -67,8 +67,7 @@ const MRwithBom: React.FC = () => {
   };
 
   const onSubmit: SubmitHandler<FormData> = (data) => {
-    console.log(rowData,"rowdata");
-    console.log(data,"data");
+
     if (bomCompDetail) {
       const itemKey = rowData.map((row) => row.compKey);
       const picLocation = rowData.map(() => data.pickLocation?.code || "");
@@ -144,9 +143,11 @@ const MRwithBom: React.FC = () => {
               name="bom"
               rules={{ required: "BOM is required" }}
               control={control}
+              disabled={!watch("bom")?.code }
               render={({ field }) => (
                 <SelectBom
                   {...field}
+                  disabled={!watch("device")}
                   label="Search BOM"
                   error={!!errors.bom}
                   helperText={errors?.bom?.message}

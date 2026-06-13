@@ -27,7 +27,7 @@ const SelectDevice: React.FC<Props> = ({ value, onChange, label = "Search Device
   const [deviceList, setDeviceList] = useState<DeviceType[]>([]);
 
   const fetchDevices = async (query: string | null) => {
-    if (!query) return;
+
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/product/bySku/${query}`);
@@ -42,6 +42,8 @@ const SelectDevice: React.FC<Props> = ({ value, onChange, label = "Search Device
   useEffect(() => {
     if (debouncedInputValue) {
       fetchDevices(debouncedInputValue);
+    } else {
+      fetchDevices(null);
     }
   }, [debouncedInputValue]);
 

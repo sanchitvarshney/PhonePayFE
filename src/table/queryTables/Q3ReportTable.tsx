@@ -61,7 +61,7 @@ const Q3ReportTable: React.FC<Props> = ({
     { headerName: "Type", field: "type", sortable: true, filter: true, },
     {
       headerName: "Transaction",
-      field: "type",
+      field: "transaction",
       sortable: true,
       filter: true,
     },

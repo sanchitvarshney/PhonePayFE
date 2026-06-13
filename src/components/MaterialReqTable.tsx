@@ -6,6 +6,7 @@ import { StatusPanelDef } from "@ag-grid-community/core";
 import MaterialCellRender from "./MaterialCellRender";
 import { Icons } from "@/components/icons";
 import { Button, IconButton } from "@mui/material";
+import { useAppSelector } from "@/hooks/useReduxHook";
 
 interface RowData {
   code: { lable: string; value: string } | null;
@@ -29,6 +30,7 @@ const MaterialReqTable: React.FC<Props> = ({
   module = "",
 }) => {
   const gridRef = useRef<AgGridReact<RowData>>(null);
+   const { type } = useAppSelector((state) => state.materialRequestWithoutBom);
   const getAllTableData = () => {
     const allData: RowData[] = [];
     const rowCount = gridRef.current?.api.getDisplayedRowCount() ?? 0;
@@ -114,7 +116,7 @@ const MaterialReqTable: React.FC<Props> = ({
       pinned: "left",
     },
     {
-      headerName: "Part Code",
+      headerName: type === "device" ? "Device Name" : "Part Code",
       field: "code",
       cellRenderer: "textInputCellRenderer",
       minWidth: 300,

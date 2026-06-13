@@ -328,20 +328,7 @@ const R5Report: React.FC = () => {
             </Button>
           </div>
           <div className="flex  gap-[20px] flex-col   p-[20px] overflow-hidden mt-[20px]">
-            <FormControl fullWidth>
-              <InputLabel id="demo-simple-select-label">Filter By</InputLabel>
-              <Select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
-                label="Filter By"
-              >
-                <MenuItem value={"DEVICE"}>SKU</MenuItem>
-                <MenuItem value={"DATE"}>Date</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth>
+                <FormControl fullWidth>
               <InputLabel id="device-type-label">Device Type</InputLabel>
               <Select
                 value={deviceType}
@@ -365,6 +352,20 @@ const R5Report: React.FC = () => {
                 <MenuItem value="scrapDevice">Scrap Device</MenuItem> */}
               </Select>
             </FormControl>
+            <FormControl fullWidth>
+              <InputLabel id="demo-simple-select-label">Filter By</InputLabel>
+              <Select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                label="Filter By"
+              >
+                <MenuItem value={"DEVICE"}>SKU</MenuItem>
+                <MenuItem value={"DATE"}>Date</MenuItem>
+              </Select>
+            </FormControl>
+        
             {filter === "DEVICE" && (
               <SelectSku
                 varient="outlined"

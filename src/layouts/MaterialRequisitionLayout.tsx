@@ -42,7 +42,7 @@ const SalesOrderLayout: React.FC<Props> = ({ children }) => {
             label={
               <div className="flex items-center gap-[10px]">
                 <WarehouseIcon fontSize="small" />
-                <span>Raw Material Request</span>
+                <span>Material Request</span>
               </div>
             }
           />
