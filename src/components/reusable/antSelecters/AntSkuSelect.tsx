@@ -28,8 +28,8 @@ const AntSkuSelect: React.FC<Props> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [skuList, setSkuList] = useState<SkuItem[]>([]);
 
-  const fetchSkus = async (query: string) => {
-    if (!query) return;
+  const fetchSkus = async (query: string | null) => {
+   
     setLoading(true);
     try {
       const response = await axiosInstance.get(
@@ -48,6 +48,8 @@ const AntSkuSelect: React.FC<Props> = ({
   useEffect(() => {
     if (debouncedInputValue) {
       fetchSkus(debouncedInputValue);
+    }else {
+      fetchSkus(null);
     }
   }, [debouncedInputValue]);
 
