@@ -14,8 +14,6 @@ import MuiTooltip from "@/components/reusable/MuiTooltip";
 import { useSocketContext } from "@/components/context/SocketContext";
 import DownloadIndecator from "@/components/shared/DownloadIndecator";
 // import NotificationPnnel from "@/components/shared/NotificationPanel";
-import useVersionCheck from "@/hooks/useVersionCheck";
-import UpdateVersionPopup from "@/components/UpdateVersionPopup";
 // import { useSocketContext } from "@/components/context/SocketContext";
 
 function MainLayout(props: { children: React.ReactNode }) {
@@ -32,14 +30,7 @@ function MainLayout(props: { children: React.ReactNode }) {
   const modalRef = useRef<HTMLDivElement>(null);
   const sidebaref = useRef<HTMLDivElement>(null);
   const favoriteref = useRef<HTMLDivElement>(null);
-  const { updateAvailable } = useVersionCheck();
-  const [showUpdatePopup, setShowUpdatePopup] = useState(false);
 
-  useEffect(() => {
-    if (updateAvailable) {
-      setShowUpdatePopup(true);
-    }
-  }, [updateAvailable]);
   const uiState: MainUIStateType = {
     sheetOpen,
     setSheetOpen,
@@ -169,10 +160,7 @@ function MainLayout(props: { children: React.ReactNode }) {
           </div>
         </div>
         <main className="ml-[60px] bg-[#faf5ff] h-full">{props.children}</main>
-        <UpdateVersionPopup
-          open={showUpdatePopup}
-          onRefresh={() => window.location.reload()}
-        />
+     
       </div>
     </Wrapper>
   );
