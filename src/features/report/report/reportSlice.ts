@@ -7,6 +7,7 @@ import type {
   R1ReportApiResponse,
   R3ReportApiResponse,
   R5ReportQueryParams,
+  R6ReportQueryParams,
 } from "./reportType";
 
 const initialState: ReportStateType = {
@@ -26,6 +27,8 @@ const initialState: ReportStateType = {
   r5ReportDetailLoading: false,
   r5ReportDetail: null,
   r5reportLoading: false,
+  r6report: null,
+  r6reportLoading: false,
 };
 
 export const getR1Data = createAsyncThunk<
@@ -129,6 +132,16 @@ export const getr5Report = createAsyncThunk<
     query.type === "DEVICE"
       ? `/report/r5/DEVICE?deviceId=${query.device}&deviceType=${query.deviceType}&page=${query.page}&limit=${query.limit}`
       : `/report/r5/DATE?from=${query.from}&to=${query.to}&deviceType=${query.deviceType}&page=${query.page}&limit=${query.limit}`
+  );
+  return response;
+});
+
+export const getr6Report = createAsyncThunk<
+  AxiosResponse<any>,
+  R6ReportQueryParams
+>("report/getr6Report", async (query) => {
+  const response = await axiosInstance.get(
+    `/report/r6?fromDate=${query.fromDate}&toDate=${query.toDate}&location=${query.location ?? ""}&page=${query.page ?? 1}&limit=${query.limit ?? 20}`
   );
   return response;
 });
@@ -261,6 +274,21 @@ const reportSlice = createSlice({
           state.r5report = action.payload.data;
         }
       })
+      .addCase(getr6Report.pending, (state) => {
+        state.r6reportLoading = true;
+        state.r6report = null;
+      })
+      .addCase(getr6Report.fulfilled, (state, action) => {
+        state.r6reportLoading = false;
+        const body = action.payload.data;
+        if (body?.success) {
+          state.r6report = body;
+        }
+      })
+      .addCase(getr6Report.rejected, (state) => {
+        state.r6reportLoading = false;
+        state.r6report = null;
+      });
   },
 });
 

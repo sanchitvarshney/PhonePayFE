@@ -100,6 +100,15 @@ export type R5ReportQueryParams = {
   page?: number;
   limit?: number;
 };
+
+export type R6ReportQueryParams = {
+  fromDate: string;
+  toDate: string;
+  location?: string | number;
+  page?: number;
+  limit?: number;
+};
+
 export type ReportStateType = {
   r1Data: DocumentData | null;
   getR1DataLoading: boolean;
@@ -113,9 +122,11 @@ export type ReportStateType = {
   r3reportLoading: boolean;
   r3ReportDetail: any;
   r3ReportDetailLoading: boolean;
-  r5ReportDetailLoading: boolean
-  r5ReportDetail: any
-  r5reportLoading: boolean
-  r5report: any
+  r5ReportDetailLoading: boolean;
+  r5ReportDetail: any;
+  r5reportLoading: boolean;
+  r5report: any;
+  r6report: any;
+  r6reportLoading: boolean;
 };
 

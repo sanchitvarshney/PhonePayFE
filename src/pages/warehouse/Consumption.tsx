@@ -1,14 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Controller,
-  SubmitHandler,
-  useForm,
-} from "react-hook-form";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import {
   Autocomplete,
   Box,
   Button,
-  Divider,
   Dialog,
   DialogActions,
   DialogContent,
@@ -21,6 +22,7 @@ import {
   TableRow,
   TextField,
   Typography,
+  Card,
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import * as XLSX from "xlsx";
@@ -32,6 +34,9 @@ import { showToast } from "@/utils/toasterContext";
 import { Icons } from "@/components/icons";
 import axiosInstance from "@/api/axiosInstance";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
+import { Save } from "@mui/icons-material";
+import AntSkuSelect from "@/components/reusable/antSelecters/AntSkuSelect";
+import SelectBom from "@/components/reusable/SelectBom";
 
 interface ExcelRow {
   lineNo: number;
@@ -39,6 +44,10 @@ interface ExcelRow {
   partcode: string;
   qty: number;
   availableQty: number;
+  reflocation: string;
+  category: string;
+  subcategory: string;
+  remark: string;
 }
 
 type LocationOption = { label: string; value: string };
@@ -103,11 +112,13 @@ const getOptionValue = (option: unknown): string => {
 
 interface FormValues {
   location: LocationOption | null;
-  costCenter: LocationOption | null;
+  skuValue: LocationOption | null;
+  bom: any | null;
+  qty: string;
 }
 
 const Consumption: React.FC = () => {
-  const [excelData, setExcelData] = useState<ExcelRow[]>([]);
+  const [excelData, setExcelData] = useState<any[]>([]);
   const [fileName, setFileName] = useState<string>("");
   const [fileError, setFileError] = useState<string>("");
   const [parseSuccess, setParseSuccess] = useState(false);
@@ -126,14 +137,14 @@ const Consumption: React.FC = () => {
     handleSubmit,
     reset,
     getValues,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
-    defaultValues: { location: null, costCenter: null },
+    defaultValues: { location: null, skuValue: null, bom: null, qty: "" },
   });
 
   useEffect(() => {
     dispatch(getLocationAsync(null));
-  
   }, [dispatch]);
 
   const locationOptions = useMemo<LocationOption[]>(() => {
@@ -150,43 +161,37 @@ const Consumption: React.FC = () => {
       };
       const label = String(raw.text ?? raw.name ?? raw.label ?? "");
       const value = String(
-        raw.id ?? raw.code ?? raw.value ?? raw.key ?? raw.text ?? raw.name ?? raw.label ?? "",
+        raw.id ??
+          raw.code ??
+          raw.value ??
+          raw.key ??
+          raw.text ??
+          raw.name ??
+          raw.label ??
+          "",
       );
       return { label, value };
     });
   }, [locationData]);
 
-  // const costCenterOptions = useMemo<LocationOption[]>(() => {
-  //   if (!costCenterData?.length) return [];
-  //   return costCenterData.map((item) => {
-  //     const raw = item as {
-  //       text?: string;
-  //       name?: string;
-  //       label?: string;
-  //       id?: string | number;
-  //       code?: string | number;
-  //       value?: string | number;
-  //       key?: string | number;
-  //     };
-  //     const label = String(raw.text ?? raw.name ?? raw.label ?? "");
-  //     const value = String(
-  //       raw.id ??
-  //         raw.code ??
-  //         raw.value ??
-  //         raw.key ??
-  //         raw.text ??
-  //         raw.name ??
-  //         raw.label ??
-  //         "",
-  //     );
-  //     return { label, value };
-  //   });
-  // }, [costCenterData]);
-
   const downloadSampleFile = () => {
     const sampleRows = [
-      { partcode: "PARTCODE001", qty: 10 },
-      { partcode: "PARTCODE002", qty: 5 },
+      {
+        Part_Code: "PARTCODE001",
+        Consmption_Qty: 10,
+        Ref_Location: "LOCATION001",
+        Remarks: "testing",
+        Category: "CATEGORY001",
+        Sub_Category: "SUBCATEGORY001",
+      },
+      {
+        Part_Code: "PARTCODE002",
+        Consmption_Qty: 10,
+        Ref_Location: "LOCATION002",
+        Remarks: "testing",
+        Category: "CATEGORY002",
+        Sub_Category: "SUBCATEGORY002",
+      },
     ];
     const ws = XLSX.utils.json_to_sheet(sampleRows);
     const wb = XLSX.utils.book_new();
@@ -198,6 +203,9 @@ const Consumption: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     const locationId = getOptionValue(getValues("location"));
+    const totalQty = getValues("qty");
+    const bomId = getValues("bom");
+
     // const costCenterId = getOptionValue(getValues("costCenter"));
 
     if (!locationId) {
@@ -248,13 +256,18 @@ const Consumption: React.FC = () => {
         return;
       }
 
-      const headers = Object.keys(json[0]).map((h) => h.toLowerCase().trim());
-      if (!headers.includes("partcode") || !headers.includes("qty")) {
+      const headers = Object.keys(json[0]).map((h) => h);
+      if (
+        !headers.includes("Part_Code") ||
+        !headers.includes("Consmption_Qty")
+      ) {
         showToast(
-          "Excel must contain 'partcode' and 'qty' columns",
+          "Excel must contain 'Part_Code' and 'Consmption_Qty' columns",
           "error",
         );
-        setFileError("Excel must contain 'partcode' and 'qty' columns");
+        setFileError(
+          "Excel must contain 'Part_Code' and 'Consmption_Qty' columns",
+        );
         setExcelData([]);
         setParseSuccess(false);
         return;
@@ -263,15 +276,28 @@ const Consumption: React.FC = () => {
       const rows = json
         .map((row: any) => {
           const keys = Object.keys(row);
-          const partcodeKey = keys.find(
-            (k) => k.toLowerCase().trim() === "partcode",
-          );
-          const qtyKey = keys.find(
-            (k) => k.toLowerCase().trim() === "qty",
-          );
+          const partcodeKey = keys.find((k) => k === "Part_Code");
+          const qtyKey = keys.find((k) => k === "Consmption_Qty");
+          const reflocationKey = keys.find((k) => k === "Ref_Location");
+          const categoryKey = keys.find((k) => k === "Category");
+          const subcategoryKey = keys.find((k) => k === "Sub_Category");
+          const remark = keys.find((k) => k === "Remarks");
+          const rawSubcategory = String(row[subcategoryKey!] || "")
+            .trim()
+            .toLowerCase();
+          const subcategory =
+            rawSubcategory === "variable"
+              ? "var"
+              : rawSubcategory === "fixed"
+                ? "fix"
+                : rawSubcategory;
           return {
             partcode: String(row[partcodeKey!] || "").trim(),
             qty: Number(row[qtyKey!]) || 0,
+            reflocation: String(row[reflocationKey!] || "").trim(),
+            category: String(row[categoryKey!] || "").trim(),
+            subcategory,
+            remark: String(row[remark!] || "").trim(),
           };
         })
         .filter((row) => row.partcode !== "");
@@ -300,29 +326,44 @@ const Consumption: React.FC = () => {
         lineNo: idx + 1,
         rowKey: `r-${idx}-${row.partcode}`,
         availableQty: 0,
+        reflocation: row.reflocation,
+        category: row.category,
+        subcategory: row.subcategory,
+        remark: row.remark,
       }));
 
       try {
         const checkResponse = await axiosInstance.post("/consumption/check", {
           partcode: parsed.map((row) => row.partcode),
           qty: parsed.map((row) => row.qty),
+          reflocation: parsed.map((row) => row.reflocation),
+          category: parsed.map((row) => row.category),
+          subcategory: parsed.map((row) => row.subcategory),
+          remark: parsed.map((row) => row.remark ?? "--"), 
           // costCenter: costCenterId,
+          bomId: bomId?.code,
+          totalQty,
           location: locationId,
         });
         const checkBody = checkResponse?.data ?? {};
+
         const isSuccess =
           checkBody?.success === true ||
           String(checkBody?.status ?? "").toLowerCase() === "success";
-        const checkRows: StockCheckRow[] = Array.isArray(checkBody?.data)
+        const checkRows: any[] = Array.isArray(checkBody?.data)
           ? checkBody.data.map((item: any) => ({
               partcode: String(item?.partcode ?? "").trim(),
+              partName: String(item?.partName ?? "").trim(),
+              bomQty: Number(item?.bomQty ?? 0),
               requiredQty: Number(item?.requiredQty ?? 0),
               availableQty: Number(item?.availableQty ?? 0),
               status: String(item?.status ?? "").trim(),
               message: String(item?.message ?? "").trim(),
+              remark: String(item?.remark ?? "").trim(),
             }))
           : [];
-
+      
+        setExcelData(checkRows);
         setStockCheckRows(checkRows);
         setStockCheckOpen(true);
 
@@ -347,16 +388,6 @@ const Consumption: React.FC = () => {
           return;
         }
 
-        const availableQtyByPartcode = new Map(
-          checkRows.map((row) => [row.partcode.toLowerCase(), row.availableQty]),
-        );
-        const enrichedRows: ExcelRow[] = parsed.map((row) => ({
-          ...row,
-          availableQty:
-            Number(availableQtyByPartcode.get(row.partcode.toLowerCase())) || 0,
-        }));
-
-        setExcelData(enrichedRows);
         setParseSuccess(true);
         showToast(
           checkBody?.message || "Excel validated successfully",
@@ -385,12 +416,14 @@ const Consumption: React.FC = () => {
       getOptionValue(data.location) || getOptionValue(getValues("location"));
     // const cc =
     //   getOptionValue(data.costCenter) || getOptionValue(getValues("costCenter"));
+    const bomId = data.bom;
+    const totalQty = Number(data.qty);
 
     if (!locationId) {
       showToast("Please select a pick location", "error");
       return;
     }
-  
+
     if (excelData.length === 0) {
       showToast("Please upload a valid Excel file", "error");
       return;
@@ -402,14 +435,19 @@ const Consumption: React.FC = () => {
         pickLocation: locationId,
         // costCenter: cc,
         // cc,
+        bomId: bomId?.code,
         partcode: excelData.map((row) => row.partcode),
-        qty: excelData.map((row) => row.qty),
+        qty: excelData.map((row) => row.requiredQty),
+        remark: excelData.map((row) => row.remark ?? "--"),
+        // subcategory: excelData.map((row) => row.subcategory),
+        // category: excelData.map((row) => row.category),
+        totalQty,
       });
       showToast(
         response.data?.message || "Consumption saved successfully",
         "success",
       );
-      reset({ location: null, costCenter: null });
+      reset({ location: null, skuValue: null, bom: null, qty: "" });
       setExcelData([]);
       setFileName("");
       setFileError("");
@@ -418,10 +456,7 @@ const Consumption: React.FC = () => {
         fileInputRef.current.value = "";
       }
     } catch (error: any) {
-      showToast(
-        error?.response?.data?.message || "Submission failed",
-        "error",
-      );
+      showToast(error?.response?.data?.message || "Submission failed", "error");
     } finally {
       setSubmitting(false);
     }
@@ -431,7 +466,7 @@ const Consumption: React.FC = () => {
     return params.data.rowKey;
   }, []);
 
-  const columnDefs = useMemo<ColDef<ExcelRow>[]>(
+  const columnDefs = useMemo<ColDef<any>[]>(
     () => [
       {
         headerName: "S.No",
@@ -440,6 +475,7 @@ const Consumption: React.FC = () => {
         maxWidth: 120,
         filter: "agNumberColumnFilter",
         sortable: true,
+        cellRenderer: (params: any) => params.node.rowIndex + 1,
       },
       {
         headerName: "Part Code",
@@ -450,8 +486,27 @@ const Consumption: React.FC = () => {
         sortable: true,
       },
       {
+        headerName: "Part Name",
+        field: "partName",
+        flex: 1,
+        minWidth: 100,
+        filter: "agTextColumnFilter",
+        sortable: true,
+      },
+
+      {
+        headerName: "BOM Qty",
+        field: "bomQty",
+        width: 120,
+        maxWidth: 140,
+        filter: "agNumberColumnFilter",
+        sortable: true,
+        cellStyle: { textAlign: "left" },
+        headerStyle: { textAlign: "left" },
+      },
+      {
         headerName: "Qty",
-        field: "qty",
+        field: "requiredQty",
         width: 120,
         maxWidth: 140,
         filter: "agNumberColumnFilter",
@@ -465,6 +520,16 @@ const Consumption: React.FC = () => {
         width: 160,
         maxWidth: 180,
         filter: "agNumberColumnFilter",
+        sortable: true,
+        cellStyle: { textAlign: "left" },
+        headerStyle: { textAlign: "left" },
+      },
+        {
+        headerName: "Remark",
+        field: "remark",
+        width: 160,
+        maxWidth: 180,
+        filter: "agNumberColumnFilter", 
         sortable: true,
         cellStyle: { textAlign: "left" },
         headerStyle: { textAlign: "left" },
@@ -483,20 +548,19 @@ const Consumption: React.FC = () => {
     [],
   );
 
-  const DocumentIcon = Icons.documentDetail;
   const UploadIcon = Icons.uploadfile;
   const DownloadIcon = Icons.download;
 
   return (
-    <div className="h-full w-full min-h-0 flex p-[20px]">
+    <div className="h-full w-full  flex p-[0px] ">
       <Paper
         elevation={0}
         sx={{
           width: "100%",
-          minHeight: 0,
+          minHeight: "100%",
           display: "flex",
           flexDirection: "column",
-          p: 3,
+          p: 1,
           bgcolor: "background.paper",
           borderRadius: 1,
           border: "1px solid",
@@ -504,24 +568,55 @@ const Consumption: React.FC = () => {
         }}
       >
         <form
-          className="flex flex-col min-h-0 flex-1"
+          className="flex flex-col min-h-0 flex-1 grid grid-cols-1 md:grid-cols-[0.6fr,2fr] gap-4"
           onSubmit={handleSubmit(onSubmit)}
         >
-          <div className="flex items-center gap-2 mb-2 shrink-0">
-            <DocumentIcon color="primary" />
-            <Typography variant="h6" component="h1">
-              Consumption
-            </Typography>
-          </div>
+          <Card sx={{ p: 1.5, borderRadius: 0 }} elevation={2}>
+            <div className="flex flex-col gap-3">
+              <div>
+                <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                  Select Device
+                </Typography>
+                <Controller
+                  name="skuValue"
+                  control={control}
+                  rules={{ required: "Device is required" }}
+                  render={({ field }) => (
+                    <AntSkuSelect
+                      onChange={field.onChange}
+                      value={field.value}
+                    />
+                  )}
+                />
+              </div>
+              <div>
+                <Typography variant="subtitle1" sx={{ mb: 0, fontWeight: 600 }}>
+                  Search BOM
+                </Typography>
+                <Controller
+                  name="bom"
+                  rules={{ required: "BOM is required" }}
+                  control={control}
+                  disabled={!watch("bom")?.code}
+                  render={({ field }) => (
+                    <SelectBom
+                      {...field}
+                      disabled={!watch("skuValue")}
+                      label="Search BOM"
+                      error={!!errors.bom}
+                      varient="standard"
+                      //@ts-ignore
+                      id={watch("skuValue")?.value}
+                    />
+                  )}
+                />
+              </div>
 
-          <Divider sx={{ mb: 3, flexShrink: 0 }} />
+              <div>
+                <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                  Pick Location
+                </Typography>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-4 mb-4 shrink-0">
-            <div>
-              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
-                Pick Location
-              </Typography>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Controller
                   name="location"
                   control={control}
@@ -540,8 +635,7 @@ const Consumption: React.FC = () => {
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Pick Location"
-                          variant="filled"
+                          variant="standard"
                           error={!!errors.location}
                           helperText={errors.location?.message}
                         />
@@ -549,132 +643,151 @@ const Consumption: React.FC = () => {
                     />
                   )}
                 />
-                {/* <Controller
-                  name="costCenter"
+              </div>
+
+              <div>
+                <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                  Total Quantity
+                </Typography>
+                <Controller
+                  name="qty"
                   control={control}
-                  rules={{ required: "Cost center is required" }}
+                  rules={{
+                    required: "Total Quantity is required",
+                    validate: (v) =>
+                      (Number(v) > 0 && Number.isInteger(Number(v))) ||
+                      "Enter a valid positive integer",
+                  }}
                   render={({ field }) => (
-                    <Autocomplete
-                      options={costCenterOptions}
-                      getOptionLabel={(option) => option.label || ""}
-                      isOptionEqualToValue={(option, value) =>
-                        !!value && option.value === value.value
-                      }
-                      value={field.value}
-                      onChange={(_, v) => field.onChange(v)}
+                    <TextField
+                      {...field}
+                      variant="standard"
                       fullWidth
-                      disablePortal
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="Cost Center"
-                          variant="filled"
-                          error={!!errors.costCenter}
-                          helperText={errors.costCenter?.message}
-                        />
-                      )}
+                      placeholder="Enter quantity"
+                      error={!!errors.qty}
+                      helperText={errors.qty?.message}
+                      slotProps={{ htmlInput: { inputMode: "numeric" } }}
+                      onKeyDown={(e) => {
+                        const allowed = [
+                          "Backspace",
+                          "Delete",
+                          "Tab",
+                          "ArrowLeft",
+                          "ArrowRight",
+                          "Home",
+                          "End",
+                        ];
+                        if (allowed.includes(e.key)) return;
+                        if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+                      }}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/[^0-9]/g, "");
+                        field.onChange(cleaned);
+                      }}
                     />
                   )}
-                /> */}
+                />
+              </div>
+
+              <div>
+                <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                  Material Details
+                </Typography>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+                <Button
+                  type="button"
+                  variant="text"
+                  startIcon={<UploadIcon />}
+                  onClick={() => fileInputRef.current?.click()}
+                  sx={{ mb: 1 }}
+                >
+                  Upload Excel
+                </Button>
+
+                {fileName ? (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 0.5 }}
+                  >
+                    Selected: {fileName}
+                  </Typography>
+                ) : null}
+                {fileError ? (
+                  <Typography variant="body2" color="error" sx={{ mb: 0.5 }}>
+                    {fileError}
+                  </Typography>
+                ) : null}
+                {parseSuccess && excelData.length > 0 ? (
+                  <Typography
+                    variant="body2"
+                    color="success.main"
+                    sx={{ mb: 0.5 }}
+                  >
+                    File parsed successfully — Total Items: {excelData.length}
+                  </Typography>
+                ) : null}
               </div>
             </div>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
 
-            <div>
-              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
-                Upload Material Details
-              </Typography>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                className="hidden"
-                onChange={handleFileUpload}
-              />
-              <Button
-                type="button"
-                variant="outlined"
-                startIcon={<UploadIcon />}
-                onClick={() => fileInputRef.current?.click()}
-                sx={{ mb: 1 }}
-              >
-                Choose Excel File (.xlsx)
-              </Button>
+                pt: 2,
+                mt: 2,
+                flexShrink: 0,
+                borderTop: 1,
+                borderColor: "divider",
+                gap: 2,
+              }}
+            >
               <Button
                 type="button"
                 variant="text"
                 startIcon={<DownloadIcon />}
                 onClick={downloadSampleFile}
-                sx={{ mb: 1, ml: 1 }}
               >
-                Download Sample File
+                Sample File
               </Button>
-              {fileName ? (
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                  Selected: {fileName}
-                </Typography>
-              ) : null}
-              {fileError ? (
-                <Typography variant="body2" color="error" sx={{ mb: 0.5 }}>
-                  {fileError}
-                </Typography>
-              ) : null}
-              {parseSuccess && excelData.length > 0 ? (
-                <Typography variant="body2" color="success.main" sx={{ mb: 0.5 }}>
-                  File parsed successfully — Total Items: {excelData.length}
-                </Typography>
-              ) : null}
-            </div>
-          </div>
-
-          <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600, flexShrink: 0 }}>
-            Preview
-          </Typography>
-          <Box
-            className="ag-theme-quartz flex-1 min-h-0 w-full"
-            sx={{
-              minHeight: { xs: 360, md: 480 },
-              height: { md: "min(65vh, 720px)" },
-              "& .ag-root-wrapper": { borderRadius: 1 },
-            }}
-          >
-            <AgGridReact<ExcelRow>
-              ref={gridRef}
-              rowData={excelData}
-              columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
-              getRowId={getRowId}
-              headerHeight={40}
-              floatingFiltersHeight={36}
-              rowHeight={42}
-              pagination
-              paginationPageSize={50}
-              paginationPageSizeSelector={[25, 50, 100, 200]}
-              suppressCellFocus
-              animateRows
-              overlayNoRowsTemplate={OverlayNoRowsTemplate}
-            />
-          </Box>
-
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "flex-end",
-              mt: 3,
-              pt: 2,
-              flexShrink: 0,
-              borderTop: 1,
-              borderColor: "divider",
-            }}
-          >
-            <LoadingButton
-              type="submit"
-              variant="contained"
-              loading={submitting}
-              loadingPosition="start"
-            >
-              Submit
-            </LoadingButton>
-          </Box>
+              <LoadingButton
+                type="submit"
+                variant="contained"
+                loading={submitting}
+                loadingPosition="start"
+                startIcon={<Save />}
+              >
+                Submit
+              </LoadingButton>
+            </Box>
+          </Card>
+          <Card sx={{ p: 0, borderRadius: 0, height: "100%" }} elevation={2}>
+            <Box className="ag-theme-quartz h-full w-full">
+              <AgGridReact<ExcelRow>
+                ref={gridRef}
+                rowData={excelData}
+                columnDefs={columnDefs}
+                defaultColDef={defaultColDef}
+                getRowId={getRowId}
+                headerHeight={40}
+                floatingFiltersHeight={36}
+                rowHeight={42}
+                pagination
+                paginationPageSize={50}
+                paginationPageSizeSelector={[25, 50, 100, 200]}
+                suppressCellFocus
+                animateRows
+                overlayNoRowsTemplate={OverlayNoRowsTemplate}
+              />
+            </Box>
+          </Card>
         </form>
       </Paper>
       <Dialog

@@ -71,6 +71,7 @@ type UploadFileData = {
   ref: string;
   remarks: string;
   category: string;
+  subCategory: string;
 };
 
 export type UploadFileApiResponse = {

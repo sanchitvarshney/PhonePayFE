@@ -35,6 +35,7 @@ interface RowData {
   requiredQty: string;
   bomstatus: string;
   category: string;
+  subCategory: string;
   compKey: string;
   componentName: string;
   partCode: string;
@@ -57,7 +58,9 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
   const [component, setComponent] = useState<ComponentType | null>(null);
   const [altComponent, setAltComponent] = useState<ComponentType | null>(null);
   const [category, setCategory] = useState<string | undefined>();
+  const [subCategory, setSubCategory] = useState<string | undefined>();
   const [altCategory, setAltCategory] = useState<string | undefined>();
+  const [altSubCategory, setAltSubCategory] = useState<string | undefined>();
   const [qty, setQty] = useState<string | undefined>();
   const [altQty, setAltQty] = useState<string | undefined>();
   const [ref, setRef] = useState<string>("");
@@ -79,6 +82,7 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
         qty: rowData.map((row) => Number(row.requiredQty)),
         status: rowData.map((row) => Number(row.bomstatus)),
         category: rowData.map((row) => row.category),
+        bomSubCategory: rowData.map((row) => row.subCategory || ""),
       },
       id: bomDetail?.data?.header?.subjectKey || "",
       sku: bomDetail?.data?.header?.skukey || "",
@@ -166,6 +170,7 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
     { headerName: "Status", field: "bomstatus", cellRenderer: "EditBomCellRenderer", width: 130 },
     { headerName: "Quantity", field: "requiredQty", cellRenderer: "EditBomCellRenderer", width: 130 },
     { headerName: "Category", field: "category", cellRenderer: "EditBomCellRenderer", flex: 1, minWidth: 140 },
+    { headerName: "Sub Category", field: "subCategory", cellRenderer: "EditBomCellRenderer", flex: 1, minWidth: 150 },
   ];
 
   return (
@@ -195,6 +200,17 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
                   label="Category"
                   fullWidth
                 />
+                <MuiSelect
+                  onChange={(value) => setSubCategory(value)}
+                  value={subCategory}
+                  variant="filled"
+                  options={[
+                    { label: "Variable", value: "var" },
+                    { label: "Fixed", value: "fix" },
+                  ]}
+                  label="Sub Category"
+                  fullWidth
+                />
                 <TextField label="Reference" variant="filled" value={ref} onChange={(e) => setRef(e.target.value)} />
               </div>
               <Divider />
@@ -210,6 +226,7 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
                       bomID: id || "",
                       quantity: Number(qty),
                       category: category || "",
+                      bomSubCategory: subCategory || "",
                       reference: ref,
                     };
                     dispatch(addComponentInBom(payload)).then((res: any) => {
@@ -220,6 +237,7 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
                         setQty("");
                         setComponent(null);
                         setCategory(undefined);
+                        setSubCategory(undefined);
                       }
                     });
                   }}
@@ -263,6 +281,17 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
                   label="Category"
                   fullWidth
                 />
+                <MuiSelect
+                  onChange={(value) => setAltSubCategory(value)}
+                  value={altSubCategory}
+                  variant="filled"
+                  options={[
+                    { label: "Variable", value: "var" },
+                    { label: "Fixed", value: "fix" },
+                  ]}
+                  label="Sub Category"
+                  fullWidth
+                />
                 <TextField label="Reference" variant="filled" value={altRef} onChange={(e) => setAltRef(e.target.value)} />
               </div>
               <Divider />
@@ -277,6 +306,7 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
                       bomID: id || "",
                       quantity: Number(altQty),
                       category: altCategory || "",
+                      bomSubCategory: altSubCategory || "",
                       reference: altRef,
                       componentKey: selectedPartCode,
                     };
@@ -288,6 +318,7 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
                         setAltQty("");
                         setAltComponent(null);
                         setAltCategory(undefined);
+                        setAltSubCategory(undefined);
                       }
                     });
                   }}

@@ -11,6 +11,7 @@ interface RowData {
   id: string;
   component: { lable: string; value: string } | null;
   category: string;
+  subcategory: string;
   status: string;
   qty: number;
   isNew: boolean;
@@ -102,6 +103,13 @@ const MasterBOMCraeteTable: React.FC<Props> = ({ rowData, setRowdata, addRow }) 
     {
       headerName: "Category",
       field: "category",
+      cellRenderer: "textInputCellRenderer",
+      flex: 1,
+      minWidth: 150,
+    },
+    {
+      headerName: "Sub Category",
+      field: "subcategory",
       cellRenderer: "textInputCellRenderer",
       flex: 1,
       minWidth: 150,

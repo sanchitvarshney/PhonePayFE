@@ -61,6 +61,7 @@ import MRwithBom from "./pages/materialRequisition/MRwithBom";
 import LocationAllot from "./pages/locationAllotement/LocationAllot";
 import LocationAllotedList from "./pages/locationAllotement/LocationAllotedList";
 import LocationAllotementLayout from "./layouts/LocationAllotementLayout";
+import ConsumptionLayout from "./layouts/ConsumptionLayout";
 
 export const router = createBrowserRouter([
   {
@@ -299,7 +300,9 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
+            <ConsumptionLayout>
             <Consumption />
+             </ConsumptionLayout>
           </MainLayout>
         ),
         path: "/warehouse/consumption",
