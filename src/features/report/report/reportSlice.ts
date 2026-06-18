@@ -141,7 +141,7 @@ export const getr6Report = createAsyncThunk<
   R6ReportQueryParams
 >("report/getr6Report", async (query) => {
   const response = await axiosInstance.get(
-    `/report/r6?fromDate=${query.fromDate}&toDate=${query.toDate}&location=${query.location ?? ""}&page=${query.page ?? 1}&limit=${query.limit ?? 20}`
+    `/report/r6?from=${query.fromDate}&to=${query.toDate}&location=${query.location ?? ""}&page=${query.page ?? 1}&limit=${query.limit ?? 20}`
   );
   return response;
 });

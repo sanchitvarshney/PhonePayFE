@@ -24,19 +24,21 @@ const R6ReportTable: React.FC<Props> = ({
   const columnDefs: ColDef[] = [
     {
       headerName: "#",
-      width: 70,
+   
       valueGetter: "node.rowIndex + 1",
       sortable: false,
       filter: false,
     },
-    { headerName: "Part Code", field: "partCode", sortable: true, filter: true },
-    { headerName: "Part Name", field: "partName", sortable: true, filter: true, flex: 1 },
-    { headerName: "Opening Qty", field: "openingQty", sortable: true, filter: true, width: 130 },
-    { headerName: "Inward Qty", field: "inwardQty", sortable: true, filter: true, width: 120 },
-    { headerName: "Outward Qty", field: "outwardQty", sortable: true, filter: true, width: 130 },
-    { headerName: "Closing Qty", field: "closingQty", sortable: true, filter: true, width: 120 },
-    { headerName: "Date", field: "date", sortable: true, filter: true, width: 130 },
+    { headerName: "Part Code", field: "part_no", sortable: true, filter: true },
+    { headerName: "Part Name", field: "part_name", sortable: true, filter: true, },
+    { headerName: "Opening Qty", field: "opening_qty", sortable: true, filter: true, },
+    { headerName: "Inward Qty", field: "inward_qty", sortable: true, filter: true, },
+    { headerName: "Outward Qty", field: "outward_qty", sortable: true, filter: true, },
+    { headerName: "Closing Qty", field: "closing_qty", sortable: true, filter: true, },
+    { headerName: "Date", field: "dateRange", sortable: true, filter: true, },
   ];
+
+    
 
   const defaultColDef = useMemo<ColDef>(() => ({ filter: true, sortable: true }), []);
 
@@ -60,6 +62,7 @@ const R6ReportTable: React.FC<Props> = ({
           defaultColDef={defaultColDef}
           pagination={false}
           enableCellTextSelection
+             onFirstDataRendered={(params) => params.api.autoSizeAllColumns()}
         />
       </div>
       {r6report && (
