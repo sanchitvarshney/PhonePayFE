@@ -43,9 +43,9 @@ const R6ReportTable: React.FC<Props> = ({
   const defaultColDef = useMemo<ColDef>(() => ({ filter: true, sortable: true }), []);
 
   const pagination = r6report?.pagination;
-  const currentPage = Number(pagination?.page) || 1;
+  const currentPage = Number(pagination?.currentPage) || 1;
   const totalPages = Number(pagination?.totalPages) || 1;
-  const totalRecords = Number(pagination?.total) || 0;
+  const totalRecords = Number(pagination?.totalRecords) || 0;
   const tablePageSize = Number(pagination?.limit) || pageSize;
 
   return (

@@ -116,6 +116,10 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
     socketService.emit("deviceConsReport", payload);
   };
 
+  const emitDownloadR6Report = (payload: any) => {
+    socketService.emit("rmStockReport", payload);
+  };
+
   const value = useMemo(
     () => ({
       isConnected,
@@ -129,7 +133,8 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
      emitDownloadr2Report,
       emitDownloadR3Report,
         emitDownloadR5Report,
-        emitDownloadQ3Report
+        emitDownloadQ3Report,
+        emitDownloadR6Report
     }),
     [isConnected, isLoading, refreshConnection]
   );

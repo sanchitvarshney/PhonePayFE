@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { DatePicker } from "antd";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import dayjs, { Dayjs } from "dayjs";
@@ -13,6 +13,7 @@ import { Icons } from "@/components/icons";
 import MuiTooltip from "@/components/reusable/MuiTooltip";
 import SelectLocation, { LocationType } from "@/components/reusable/SelectLocation";
 import R6ReportTable from "@/table/report/R6ReportTable";
+import { useSocketContext } from "@/components/context/SocketContext";
 
 dayjs.extend(customParseFormat);
 const { RangePicker } = DatePicker;
@@ -20,7 +21,7 @@ const { RangePicker } = DatePicker;
 const R6Report: React.FC = () => {
   const [colapse, setColapse] = useState<boolean>(false);
   const dispatch = useAppDispatch();
-  const { r6reportLoading, r6report } = useAppSelector((state) => state.report);
+  const { r6reportLoading } = useAppSelector((state) => state.report);
   const [location, setLocation] = useState<LocationType | null>(null);
   const [date, setDate] = useState<{ from: Dayjs | null; to: Dayjs | null }>({
     from: null,
@@ -28,6 +29,7 @@ const R6Report: React.FC = () => {
   });
   const [pageSize, setPageSize] = useState<number>(20);
   const gridRef = useRef<AgGridReact<any>>(null);
+  const { emitDownloadR6Report } = useSocketContext();
 
   const handleDateChange = (range: [Dayjs | null, Dayjs | null] | null) => {
     if (range) {
@@ -91,11 +93,18 @@ const R6Report: React.FC = () => {
     });
   };
 
-  const onBtExport = useCallback(() => {
-    gridRef.current!.api.exportDataAsExcel({ sheetName: "R6 Report" });
-  }, []);
-
-  const hasData = (r6report?.data?.length ?? 0) > 0;
+  const downloadR6Report = () => {
+    if (!date.from || !date.to) {
+      showToast("Please select a date range", "error");
+      return;
+    }
+    emitDownloadR6Report({
+      from: date.from.format("DD-MM-YYYY"),
+      to: date.to.format("DD-MM-YYYY"),
+      location: location?.id,
+    });
+    showToast("Download started", "success");
+  };
 
   return (
     <div className="bg-white h-[calc(100vh-100px)] flex relative">
@@ -142,11 +151,11 @@ const R6Report: React.FC = () => {
             >
               Search
             </LoadingButton>
-            <MuiTooltip title="Export Excel" placement="right">
+            <MuiTooltip title="Download Report" placement="right">
               <LoadingButton
                 variant="contained"
-                disabled={!hasData}
-                onClick={onBtExport}
+                disabled={!date.from || !date.to}
+                onClick={downloadR6Report}
                 color="primary"
                 style={{
                   borderRadius: "50%",
