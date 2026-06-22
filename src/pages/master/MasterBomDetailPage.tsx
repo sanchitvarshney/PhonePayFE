@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getBomItem } from "@/features/master/BOM/BOMSlice";
 import MasterFGBOMDetailTable from "@/table/master/MasterFGBOMDetailTable";
 import { AgGridReact } from "ag-grid-react";
+import * as XLSX from "xlsx";
 
 const MasterBomDetailPage: React.FC = () => {
   const gridRef = useRef<AgGridReact<any>>(null);
@@ -19,10 +20,26 @@ const MasterBomDetailPage: React.FC = () => {
   const { id } = useParams();
 
   const onBtExport = useCallback(() => {
-    gridRef.current!.api.exportDataAsExcel({
-      sheetName: "BOM",
-      fileName: "BOM-Export.xlsx",
+    if (!gridRef.current?.api) return;
+
+    const rows: any[] = [];
+    gridRef.current.api.forEachNode((node) => {
+      if (node.data) rows.push(node.data);
     });
+
+    const exportData = rows.map((row, index) => ({
+      "#": index + 1,
+      "Components": row.componentName,
+      "Part Code": row.partCode,
+      "Status": row.bomstatus == 1 ? "Active" : "Inactive",
+      "Quantity": row.requiredQty,
+      "Category": row.category,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "BOM");
+    XLSX.writeFile(workbook, "BOM-Export.xlsx");
   }, []);
 
   useEffect(() => {
