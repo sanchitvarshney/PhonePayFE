@@ -167,6 +167,11 @@ const MasterFGBOMDetailTable: React.FC<Props> = ({ gridRef }) => {
     },
     { headerName: "Components", field: "componentName", sortable: true, filter: true, flex: 2 },
     { headerName: "Part Code", field: "partCode", sortable: true, filter: true, flex: 1 },
+        { headerName: "Alt component", field: "altComponent", sortable: true, filter: true, flex: 2, cellRenderer: ((params: ICellRendererParams) => (
+          params.data.altComponents?.length > 0
+            ? <span>{`${params.data.altComponents[0]?.name} (${params.data.altComponents[0]?.partNo})`}</span>
+            : null
+        )) },
     { headerName: "Status", field: "bomstatus", cellRenderer: "EditBomCellRenderer", width: 130 },
     { headerName: "Quantity", field: "requiredQty", cellRenderer: "EditBomCellRenderer", width: 130 },
     { headerName: "Category", field: "category", cellRenderer: "EditBomCellRenderer", flex: 1, minWidth: 140 },
