@@ -10,19 +10,11 @@ import {
   Autocomplete,
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
   Card,
+  IconButton,
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import * as XLSX from "xlsx";
@@ -34,45 +26,11 @@ import { showToast } from "@/utils/toasterContext";
 import { Icons } from "@/components/icons";
 import axiosInstance from "@/api/axiosInstance";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
-import { Save } from "@mui/icons-material";
+import { Close, Save } from "@mui/icons-material";
 import AntSkuSelect from "@/components/reusable/antSelecters/AntSkuSelect";
 import SelectBom from "@/components/reusable/SelectBom";
 
-interface ExcelRow {
-  lineNo: number;
-  rowKey: string;
-  partcode: string;
-  qty: number;
-  availableQty: number;
-  reflocation: string;
-  category: string;
-  subcategory: string;
-  remark: string;
-}
-
 type LocationOption = { label: string; value: string };
-type StockCheckRow = {
-  partcode: string;
-  requiredQty: number;
-  availableQty: number;
-  status: string;
-  message: string;
-};
-
-const getDuplicateValues = (values: string[]): string[] => {
-  const seen = new Map<string, string>();
-  const duplicates = new Set<string>();
-  values.forEach((raw) => {
-    const normalized = raw.trim().toLowerCase();
-    if (!normalized) return;
-    if (seen.has(normalized)) {
-      duplicates.add(seen.get(normalized)!);
-      return;
-    }
-    seen.set(normalized, raw.trim());
-  });
-  return Array.from(duplicates);
-};
 const getOptionValue = (option: unknown): string => {
   if (typeof option === "string") return option.trim();
   if (typeof option === "number") return String(option);
@@ -119,14 +77,14 @@ interface FormValues {
 
 const Consumption: React.FC = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
+  const [dynamicColDefs, setDynamicColDefs] = useState<ColDef[]>([]);
   const [fileName, setFileName] = useState<string>("");
   const [fileError, setFileError] = useState<string>("");
   const [parseSuccess, setParseSuccess] = useState(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
-  const [stockCheckRows, setStockCheckRows] = useState<StockCheckRow[]>([]);
-  const [stockCheckOpen, setStockCheckOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const gridRef = useRef<AgGridReact<ExcelRow>>(null);
+  const selectedFileRef = useRef<File | null>(null);
+  const gridRef = useRef<AgGridReact>(null);
 
   const dispatch = useAppDispatch();
   const { locationData } = useAppSelector((state) => state.divicemin);
@@ -175,25 +133,12 @@ const Consumption: React.FC = () => {
   }, [locationData]);
 
   const downloadSampleFile = () => {
-    const sampleRows = [
-      {
-        Part_Code: "PARTCODE001",
-        Consmption_Qty: 10,
-        Ref_Location: "LOCATION001",
-        Remarks: "testing",
-        Category: "CATEGORY001",
-        Sub_Category: "SUBCATEGORY001",
-      },
-      {
-        Part_Code: "PARTCODE002",
-        Consmption_Qty: 10,
-        Ref_Location: "LOCATION002",
-        Remarks: "testing",
-        Category: "CATEGORY002",
-        Sub_Category: "SUBCATEGORY002",
-      },
+    const aoa = [
+      ["Engg Id", "Serial NO", "Repair Date", "P0019", "PP0713", "PP0725", "PP0726"],
+      ["ENG001", "PPSS20000000001", "2026-06-08", 1, 1, 0, 2],
+      ["ENG002", "PPSS20000000002", "2026-06-08", 0, 1, 1, 0],
     ];
-    const ws = XLSX.utils.json_to_sheet(sampleRows);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Consumption");
     XLSX.writeFile(wb, "consumption_sample.xlsx");
@@ -202,22 +147,7 @@ const Consumption: React.FC = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const locationId = getOptionValue(getValues("location"));
-    const totalQty = getValues("qty");
-    const bomId = getValues("bom");
-
-    // const costCenterId = getOptionValue(getValues("costCenter"));
-
-    if (!locationId) {
-      const msg = "Please select pick location before uploading Excel";
-      showToast(msg, "error");
-      setFileError(msg);
-      setExcelData([]);
-      setFileName("");
-      setParseSuccess(false);
-      e.target.value = "";
-      return;
-    }
+    selectedFileRef.current = file;
 
     const validTypes = [
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -243,7 +173,7 @@ const Consumption: React.FC = () => {
       setExcelData([]);
       setParseSuccess(false);
     };
-    reader.onload = async (event) => {
+    reader.onload = (event) => {
       const data = new Uint8Array(event.target?.result as ArrayBuffer);
       const workbook = XLSX.read(data, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -256,157 +186,43 @@ const Consumption: React.FC = () => {
         return;
       }
 
-      const headers = Object.keys(json[0]).map((h) => h);
-      if (
-        !headers.includes("Part_Code") ||
-        !headers.includes("Consmption_Qty")
-      ) {
-        showToast(
-          "Excel must contain 'Part_Code' and 'Consmption_Qty' columns",
-          "error",
-        );
-        setFileError(
-          "Excel must contain 'Part_Code' and 'Consmption_Qty' columns",
-        );
-        setExcelData([]);
-        setParseSuccess(false);
-        return;
-      }
 
-      const rows = json
-        .map((row: any) => {
-          const keys = Object.keys(row);
-          const partcodeKey = keys.find((k) => k === "Part_Code");
-          const qtyKey = keys.find((k) => k === "Consmption_Qty");
-          const reflocationKey = keys.find((k) => k === "Ref_Location");
-          const categoryKey = keys.find((k) => k === "Category");
-          const subcategoryKey = keys.find((k) => k === "Sub_Category");
-          const remark = keys.find((k) => k === "Remarks");
-          const rawSubcategory = String(row[subcategoryKey!] || "")
-            .trim()
-            .toLowerCase();
-          const subcategory =
-            rawSubcategory === "variable"
-              ? "var"
-              : rawSubcategory === "fixed"
-                ? "fix"
-                : rawSubcategory;
-          return {
-            partcode: String(row[partcodeKey!] || "").trim(),
-            qty: Number(row[qtyKey!]) || 0,
-            reflocation: String(row[reflocationKey!] || "").trim(),
-            category: String(row[categoryKey!] || "").trim(),
-            subcategory,
-            remark: String(row[remark!] || "").trim(),
-          };
-        })
-        .filter((row) => row.partcode !== "");
+      const colNames = Object.keys(json[0]).filter((k) => k !== "__rowNum__");
+      const dataRows = json.map((row, idx) => ({ ...row, rowKey: `r-${idx}` }));
 
-      if (rows.length === 0) {
+      if (dataRows.length === 0) {
         setFileError("No valid data found in Excel file");
         setExcelData([]);
         setParseSuccess(false);
         return;
       }
 
-      const duplicatePartcodes = getDuplicateValues(
-        rows.map((row) => row.partcode),
-      );
-      if (duplicatePartcodes.length > 0) {
-        const duplicateMsg = `Duplicate partcode entries found: ${duplicatePartcodes.join(", ")}`;
-        showToast(duplicateMsg, "error");
-        setFileError(duplicateMsg);
-        setExcelData([]);
-        setParseSuccess(false);
-        return;
-      }
+      // Build dynamic column defs from extracted headers
+      const cols: ColDef[] = [
+        {
+          headerName: "S.No",
+          valueGetter: (params) => (params.node?.rowIndex ?? 0) + 1,
+          width: 80,
+          maxWidth: 100,
+          sortable: false,
+          filter: false,
+          floatingFilter: false,
+          pinned: "left" as const,
+        },
+        ...colNames.map((name) => ({
+          headerName: name,
+          field: name,
+          flex: 1,
+          minWidth: 120,
+          filter: "agTextColumnFilter",
+          sortable: true,
+        })),
+      ];
 
-      const parsed: ExcelRow[] = rows.map((row, idx) => ({
-        ...row,
-        lineNo: idx + 1,
-        rowKey: `r-${idx}-${row.partcode}`,
-        availableQty: 0,
-        reflocation: row.reflocation,
-        category: row.category,
-        subcategory: row.subcategory,
-        remark: row.remark,
-      }));
-
-      try {
-        const checkResponse = await axiosInstance.post("/consumption/check", {
-          partcode: parsed.map((row) => row.partcode),
-          qty: parsed.map((row) => row.qty),
-          reflocation: parsed.map((row) => row.reflocation),
-          category: parsed.map((row) => row.category),
-          subcategory: parsed.map((row) => row.subcategory),
-          remark: parsed.map((row) => row.remark ?? "--"), 
-          // costCenter: costCenterId,
-          bomId: bomId?.code,
-          totalQty,
-          location: locationId,
-        });
-        const checkBody = checkResponse?.data ?? {};
-
-        const isSuccess =
-          checkBody?.success === true ||
-          String(checkBody?.status ?? "").toLowerCase() === "success";
-        const checkRows: any[] = Array.isArray(checkBody?.data)
-          ? checkBody.data.map((item: any) => ({
-              partcode: String(item?.partcode ?? "").trim(),
-              partName: String(item?.partName ?? "").trim(),
-              bomQty: Number(item?.bomQty ?? 0),
-              requiredQty: Number(item?.requiredQty ?? 0),
-              availableQty: Number(item?.availableQty ?? 0),
-              status: String(item?.status ?? "").trim(),
-              message: String(item?.message ?? "").trim(),
-              remark: String(item?.remark ?? "").trim(),
-            }))
-          : [];
-      
-        setExcelData(checkRows);
-        setStockCheckRows(checkRows);
-        setStockCheckOpen(true);
-
-        if (!isSuccess) {
-          throw new Error(checkBody?.message || "Consumption check failed");
-        }
-
-        const hasInsufficient = checkRows.some(
-          (row) => row.status.toLowerCase() === "insufficient",
-        );
-        if (hasInsufficient) {
-          const msg =
-            "Insufficient stock found for one or more partcodes. Excel upload blocked.";
-          showToast(msg, "error");
-          setFileError(msg);
-          setExcelData([]);
-          setFileName("");
-          setParseSuccess(false);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-          }
-          return;
-        }
-
-        setParseSuccess(true);
-        showToast(
-          checkBody?.message || "Excel validated successfully",
-          "success",
-        );
-      } catch (error: any) {
-        const message =
-          error?.response?.data?.message ||
-          error?.message ||
-          "Consumption check failed";
-        showToast(message, "error");
-        setFileError(message);
-        setExcelData([]);
-        setFileName("");
-        setParseSuccess(false);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-      }
+      setDynamicColDefs(cols);
+      setExcelData(dataRows);
+      setParseSuccess(true);
+      showToast(`File parsed successfully — ${dataRows.length} items loaded`, "success");
     };
     reader.readAsArrayBuffer(file);
   };
@@ -414,8 +230,6 @@ const Consumption: React.FC = () => {
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     const locationId =
       getOptionValue(data.location) || getOptionValue(getValues("location"));
-    // const cc =
-    //   getOptionValue(data.costCenter) || getOptionValue(getValues("costCenter"));
     const bomId = data.bom;
     const totalQty = Number(data.qty);
 
@@ -424,34 +238,34 @@ const Consumption: React.FC = () => {
       return;
     }
 
-    if (excelData.length === 0) {
+    if (!selectedFileRef.current) {
       showToast("Please upload a valid Excel file", "error");
       return;
     }
 
+    const formData = new FormData();
+    formData.append("file", selectedFileRef.current);
+    formData.append("pickLocation", locationId);
+    formData.append("bomId", bomId?.code ?? "");
+    formData.append("totalQty", String(totalQty));
+
     setSubmitting(true);
     try {
-      const response = await axiosInstance.post("/consumption/create", {
-        pickLocation: locationId,
-        // costCenter: cc,
-        // cc,
-        bomId: bomId?.code,
-        partcode: excelData.map((row) => row.partcode),
-        qty: excelData.map((row) => row.requiredQty),
-        remark: excelData.map((row) => row.remark ?? "--"),
-        // subcategory: excelData.map((row) => row.subcategory),
-        // category: excelData.map((row) => row.category),
-        totalQty,
+      const response = await axiosInstance.post("/consumption/deviceConsumption", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+    
       showToast(
         response.data?.message || "Consumption saved successfully",
         "success",
       );
       reset({ location: null, skuValue: null, bom: null, qty: "" });
       setExcelData([]);
+      setDynamicColDefs([]);
       setFileName("");
       setFileError("");
       setParseSuccess(false);
+      selectedFileRef.current = null;
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -462,81 +276,10 @@ const Consumption: React.FC = () => {
     }
   };
 
-  const getRowId = useCallback((params: GetRowIdParams<ExcelRow>) => {
+  const getRowId = useCallback((params: GetRowIdParams<any>) => {
     return params.data.rowKey;
   }, []);
 
-  const columnDefs = useMemo<ColDef<any>[]>(
-    () => [
-      {
-        headerName: "S.No",
-        field: "lineNo",
-        width: 100,
-        maxWidth: 120,
-        filter: "agNumberColumnFilter",
-        sortable: true,
-        cellRenderer: (params: any) => params.node.rowIndex + 1,
-      },
-      {
-        headerName: "Part Code",
-        field: "partcode",
-        flex: 1,
-        minWidth: 100,
-        filter: "agTextColumnFilter",
-        sortable: true,
-      },
-      {
-        headerName: "Part Name",
-        field: "partName",
-        flex: 1,
-        minWidth: 100,
-        filter: "agTextColumnFilter",
-        sortable: true,
-      },
-
-      {
-        headerName: "BOM Qty",
-        field: "bomQty",
-        width: 120,
-        maxWidth: 140,
-        filter: "agNumberColumnFilter",
-        sortable: true,
-        cellStyle: { textAlign: "left" },
-        headerStyle: { textAlign: "left" },
-      },
-      {
-        headerName: "Qty",
-        field: "requiredQty",
-        width: 120,
-        maxWidth: 140,
-        filter: "agNumberColumnFilter",
-        sortable: true,
-        cellStyle: { textAlign: "left" },
-        headerStyle: { textAlign: "left" },
-      },
-      {
-        headerName: "Available Qty",
-        field: "availableQty",
-        width: 160,
-        maxWidth: 180,
-        filter: "agNumberColumnFilter",
-        sortable: true,
-        cellStyle: { textAlign: "left" },
-        headerStyle: { textAlign: "left" },
-      },
-        {
-        headerName: "Remark",
-        field: "remark",
-        width: 160,
-        maxWidth: 180,
-        filter: "agNumberColumnFilter", 
-        sortable: true,
-        cellStyle: { textAlign: "left" },
-        headerStyle: { textAlign: "left" },
-      },
-    ],
-    [],
-  );
 
   const defaultColDef = useMemo<ColDef>(
     () => ({
@@ -711,13 +454,27 @@ const Consumption: React.FC = () => {
                 </Button>
 
                 {fileName ? (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 0.5 }}
-                  >
-                    Selected: {fileName}
-                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
+                    <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 180 }}>
+                      Selected: {fileName}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      sx={{ minWidth: 0, p: 0.25, fontSize: 11 }}
+                      onClick={() => {
+                        setFileName("");
+                        setExcelData([]);
+                        setDynamicColDefs([]);
+                        setFileError("");
+                        setParseSuccess(false);
+                        selectedFileRef.current = null;
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                    >
+                      <Close fontSize="small" />
+                    </IconButton>
+                  </Box>
                 ) : null}
                 {fileError ? (
                   <Typography variant="body2" color="error" sx={{ mb: 0.5 }}>
@@ -770,10 +527,10 @@ const Consumption: React.FC = () => {
           </Card>
           <Card sx={{ p: 0, borderRadius: 0, height: "100%" }} elevation={2}>
             <Box className="ag-theme-quartz h-full w-full">
-              <AgGridReact<ExcelRow>
+              <AgGridReact
                 ref={gridRef}
                 rowData={excelData}
-                columnDefs={columnDefs}
+                columnDefs={dynamicColDefs}
                 defaultColDef={defaultColDef}
                 getRowId={getRowId}
                 headerHeight={40}
@@ -790,52 +547,6 @@ const Consumption: React.FC = () => {
           </Card>
         </form>
       </Paper>
-      <Dialog
-        open={stockCheckOpen}
-        onClose={() => setStockCheckOpen(false)}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogTitle>Consumption Stock Check</DialogTitle>
-        <DialogContent>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Partcode</TableCell>
-                <TableCell>Required Qty</TableCell>
-                <TableCell>Available Qty</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Message</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {stockCheckRows.map((row, idx) => (
-                <TableRow key={`${row.partcode}-${idx}`}>
-                  <TableCell>{row.partcode}</TableCell>
-                  <TableCell>{row.requiredQty}</TableCell>
-                  <TableCell>{row.availableQty}</TableCell>
-                  <TableCell>
-                    <Typography
-                      variant="body2"
-                      color={
-                        row.status.toLowerCase() === "insufficient"
-                          ? "error.main"
-                          : "success.main"
-                      }
-                    >
-                      {row.status}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{row.message}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setStockCheckOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
     </div>
   );
 };
