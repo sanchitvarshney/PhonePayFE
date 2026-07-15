@@ -13,9 +13,12 @@ import {
   Skeleton,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import DeleteIcon from "@mui/icons-material/Delete";
+import IconButton from "@mui/material/IconButton";
 import { ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { useState, useMemo, useRef, useCallback } from "react";
+import dayjs from "dayjs";
 import { showToast } from "@/utils/toasterContext";
 import {
   fetchDataForMIN,
@@ -191,6 +194,17 @@ const MINFromPO = () => {
     [getAllTableData]
   );
 
+  const handleDeleteRow = useCallback(
+    (rowToDelete: any) => {
+      setRowData((prev: any[]) => {
+        const updated = prev.filter((row) => row !== rowToDelete);
+        setTotals(calculateTotals(updated));
+        return updated;
+      });
+    },
+    []
+  );
+
   const components = useMemo(
     () => ({
       textInputCellRenderer: (params: any) => (
@@ -199,8 +213,17 @@ const MINFromPO = () => {
           customFunction={getAllTableData}
         />
       ),
+      deleteCellRenderer: (params: any) => (
+        <IconButton
+          size="small"
+          color="error"
+          onClick={() => handleDeleteRow(params.data)}
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      ),
     }),
-    [getAllTableData]
+    [getAllTableData, handleDeleteRow]
   );
 
   const handleSearchPO = async () => {
@@ -212,8 +235,10 @@ const MINFromPO = () => {
             lable: "( " + item.c_partno + " ) " + item.component_shortname,
             value: item.componentKey,
           },
-          qty: Number(item.orderqty) || 0,
+          orderQty: Number(item.orderqty) || 0,
+          qty: Number(item.pendingQty) || 0,
           pendingQty: Number(item.pendingQty) || 0,
+          orderDueDate: item.orderduedate,
           updaterow: item.access_code,
           rate: Number(item.orderrate) || 0,
           taxableValue: Number(item.totalValue) || 0,
@@ -231,7 +256,7 @@ const MINFromPO = () => {
           },
           isNew: true,
           excRate: item.header?.exchangerate || 1,
-          uom: item.uom,
+          uom: item.unitsname || item.uom,
         }));
         setRowData(newRowData);
         setVendorData(res.payload.data.data.vendor_type);
@@ -277,6 +302,13 @@ const MINFromPO = () => {
 
   const columnDefs: ColDef[] = [
     {
+      headerName: "",
+      field: "delete",
+      cellRenderer: "deleteCellRenderer",
+      width: 60,
+      pinned: "left",
+    },
+    {
       headerName: "#",
       valueGetter: "node.rowIndex + 1",
       width: 50,
@@ -293,14 +325,26 @@ const MINFromPO = () => {
       minWidth: 300,
     },
     {
-      headerName: "Qty",
-      field: "qty",
-      cellRenderer: "textInputCellRenderer",
+      headerName: "Order Due Date",
+      field: "orderDueDate",
+      valueFormatter: (params) =>
+        params.value && dayjs(params.value, "DD-MM-YYYY").isValid()
+          ? dayjs(params.value, "DD-MM-YYYY").format("DD/MM/YYYY")
+          : params.value || "",
+    },
+    {
+      headerName: "Order Qty",
+      field: "orderQty",
     },
     {
       headerName: "Pending Qty",
-      field: "pendingQty",
+      field: "qty",
+      cellRenderer: "textInputCellRenderer",
     },
+    // {
+    //   headerName: "UOM",
+    //   field: "uom",
+    // },
     {
       headerName: "Rate",
       field: "rate",
@@ -350,11 +394,6 @@ const MINFromPO = () => {
     {
       headerName: "Remarks",
       field: "remarks",
-    },
-    {
-      headerName: "uom",
-      field: "uom",
-      hide: true,
     },
   ];
 
@@ -626,7 +665,7 @@ const MINFromPO = () => {
                 suppressCellFocus={true}
                 rowData={rowData}
                 columnDefs={columnDefs}
-                pagination={true}
+                pagination={false}
                 components={components}
                 onCellValueChanged={onCellValueChanged}
               />

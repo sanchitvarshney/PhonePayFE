@@ -117,10 +117,10 @@ const MINFromPOTextInputCellRenderer: React.FC<POCellRendererProps> = ({
             onChange={(e) => {
               if (/^-?\d*\.?\d*$/.test(e.target.value)) {
                 const newValue = e.target.value;
-                const pendingQty = Number(data.pendingQty) || 0;
+                const orderQty = Number(data.orderQty) || 0;
                 const numQty = Number(newValue) || 0;
-                if (newValue !== "" && pendingQty > 0 && numQty > pendingQty) {
-                  showToast("Qty cannot exceed pending qty", "error");
+                if (newValue !== "" && orderQty > 0 && numQty > orderQty) {
+                  showToast("Qty cannot exceed order qty", "error");
                   return;
                 }
                 updateCellAndRefresh(newValue, colDef.field);
