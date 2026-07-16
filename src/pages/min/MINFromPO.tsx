@@ -19,6 +19,9 @@ import { ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { useState, useMemo, useRef, useCallback } from "react";
 import dayjs from "dayjs";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { showToast } from "@/utils/toasterContext";
 import {
   fetchDataForMIN,
@@ -559,20 +562,36 @@ const MINFromPO = () => {
                               className="bg-white"
                               variant="standard"
                             />
-                            <TextField
-                              label="Invoice Date"
-                              type="date"
-                              value={invoiceDate}
-                              onChange={(e) => setInvoiceDate(e.target.value)}
-                              required
-                              size="small"
-                              fullWidth
-                              InputLabelProps={{ shrink: true }}
-                              inputProps={{ max: dayjs().format("YYYY-MM-DD") }}
-                              className="bg-white"
-                              variant="standard"
-
-                            />
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                              <DatePicker
+                                label="Invoice Date"
+                                format="DD-MM-YYYY"
+                                enableAccessibleFieldDOMStructure={false}
+                                disableFuture
+                                value={
+                                  invoiceDate && dayjs(invoiceDate).isValid()
+                                    ? dayjs(invoiceDate)
+                                    : null
+                                }
+                                onChange={(newValue) =>
+                                  setInvoiceDate(
+                                    newValue && dayjs(newValue).isValid()
+                                      ? dayjs(newValue).format("YYYY-MM-DD")
+                                      : ""
+                                  )
+                                }
+                                slots={{ textField: TextField }}
+                                slotProps={{
+                                  textField: {
+                                    required: true,
+                                    size: "small",
+                                    fullWidth: true,
+                                    className: "bg-white",
+                                    variant: "standard",
+                                  },
+                                }}
+                              />
+                            </LocalizationProvider>
                             <AntLocationSelectAcordinttoModule
                               endpoint="/transaction/rm-inward-location"
                               onChange={setLocation}
