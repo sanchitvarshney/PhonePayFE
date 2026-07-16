@@ -327,6 +327,7 @@ const MINFromPO = () => {
     {
       headerName: "Order Due Date",
       field: "orderDueDate",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
       valueFormatter: (params) =>
         params.value && dayjs(params.value, "DD-MM-YYYY").isValid()
           ? dayjs(params.value, "DD-MM-YYYY").format("DD/MM/YYYY")
@@ -340,6 +341,7 @@ const MINFromPO = () => {
     {
       headerName: "Pending Qty",
       field: "pendingQty",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     // {
     //   headerName: "Total Qty",
@@ -355,41 +357,49 @@ const MINFromPO = () => {
       headerName: "Taxable Value",
       field: "taxableValue",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "Foreign Value",
       field: "foreignValue",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "HSN Code",
       field: "hsnCode",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "GST Type",
       field: "gstType",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "GST Rate",
       field: "gstRate",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "CGST",
       field: "cgst",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "SGST",
       field: "sgst",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "IGST",
       field: "igst",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "Remarks",
