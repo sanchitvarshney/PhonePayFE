@@ -332,18 +332,18 @@ const MINFromPO = () => {
           ? dayjs(params.value, "DD-MM-YYYY").format("DD/MM/YYYY")
           : params.value || "",
     },
-    {
+   {
       headerName: "Order Qty",
-      field: "orderQty",
-    },
-    {
-      headerName: "Pending Qty",
       field: "qty",
       cellRenderer: "textInputCellRenderer",
     },
+    {
+      headerName: "Pending Qty",
+      field: "pendingQty",
+    },
     // {
-    //   headerName: "UOM",
-    //   field: "uom",
+    //   headerName: "Total Qty",
+    //   field: "orderQty",
     // },
     {
       headerName: "Rate",
