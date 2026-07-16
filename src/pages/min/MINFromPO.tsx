@@ -239,7 +239,7 @@ const MINFromPO = () => {
             value: item.componentKey,
           },
           orderQty: Number(item.orderqty) || 0,
-          qty: Number(item.pendingQty) || 0,
+          qty: "",
           pendingQty: Number(item.pendingQty) || 0,
           orderDueDate: item.orderduedate,
           updaterow: item.access_code,

@@ -153,7 +153,7 @@ const MINFromPOTextInputCellRenderer: React.FC<POCellRendererProps> = ({
               }
             }}
             value={value}
-            placeholder={colDef.headerName}
+            placeholder={String(data.pendingQty ?? "")}
             className="w-[100%] custom-input"
           />
         );
