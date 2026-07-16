@@ -568,8 +568,10 @@ const MINFromPO = () => {
                               size="small"
                               fullWidth
                               InputLabelProps={{ shrink: true }}
+                              inputProps={{ max: dayjs().format("YYYY-MM-DD") }}
                               className="bg-white"
                               variant="standard"
+
                             />
                             <AntLocationSelectAcordinttoModule
                               endpoint="/transaction/rm-inward-location"
