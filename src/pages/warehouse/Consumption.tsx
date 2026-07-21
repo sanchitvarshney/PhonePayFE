@@ -15,6 +15,16 @@ import {
   Typography,
   Card,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import * as XLSX from "xlsx";
@@ -75,6 +85,15 @@ interface FormValues {
   qty: string;
 }
 
+interface BomError {
+  serialNo: string;
+  partcode: string;
+  rule: string;
+  bomQty: number;
+  providedQty: number;
+  message: string;
+}
+
 const Consumption: React.FC = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
   const [dynamicColDefs, setDynamicColDefs] = useState<ColDef[]>([]);
@@ -82,6 +101,10 @@ const Consumption: React.FC = () => {
   const [fileError, setFileError] = useState<string>("");
   const [parseSuccess, setParseSuccess] = useState(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [bomErrorDialog, setBomErrorDialog] = useState<{
+    open: boolean;
+    errors: BomError[];
+  }>({ open: false, errors: [] });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const selectedFileRef = useRef<File | null>(null);
   const gridRef = useRef<AgGridReact>(null);
@@ -254,6 +277,7 @@ const Consumption: React.FC = () => {
       const response = await axiosInstance.post("/consumption/deviceConsumption", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      console.log(response,"response error");
     
       showToast(
         response.data?.message || "Consumption saved successfully",
@@ -270,7 +294,15 @@ const Consumption: React.FC = () => {
         fileInputRef.current.value = "";
       }
     } catch (error: any) {
-      showToast(error?.response?.data?.message || "Submission failed", "error");
+      const errData = error?.response?.data;
+      if (
+        errData?.status === "error" &&
+        Array.isArray(errData?.bomErrors) &&
+        errData.bomErrors.length > 0
+      ) {
+        setBomErrorDialog({ open: true, errors: errData.bomErrors });
+      }
+      showToast(errData?.message || "Submission failed", "error");
     } finally {
       setSubmitting(false);
     }
@@ -547,6 +579,68 @@ const Consumption: React.FC = () => {
           </Card>
         </form>
       </Paper>
+
+      <Dialog
+        open={bomErrorDialog.open}
+        onClose={(_event, reason) => {
+          if (reason === "backdropClick") return;
+          setBomErrorDialog({ open: false, errors: [] });
+        }}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          BOM Quantity Mismatch
+          <IconButton
+            size="small"
+            onClick={() => setBomErrorDialog({ open: false, errors: [] })}
+          >
+            <Close fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Serial No</TableCell>
+                  <TableCell>Part Code</TableCell>
+                  <TableCell>Rule</TableCell>
+                  <TableCell align="right">BOM Qty</TableCell>
+                  <TableCell align="right">Provided Qty</TableCell>
+                  <TableCell>Message</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {bomErrorDialog.errors.map((err, idx) => (
+                  <TableRow key={`${err.serialNo}-${err.partcode}-${idx}`}>
+                    <TableCell>{err.serialNo}</TableCell>
+                    <TableCell>{err.partcode}</TableCell>
+                    <TableCell>{err.rule}</TableCell>
+                    <TableCell align="right">{err.bomQty}</TableCell>
+                    <TableCell align="right">{err.providedQty}</TableCell>
+                    <TableCell>{err.message}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="contained"
+            onClick={() => setBomErrorDialog({ open: false, errors: [] })}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
