@@ -30,6 +30,15 @@ import { Close, Save } from "@mui/icons-material";
 import AntSkuSelect from "@/components/reusable/antSelecters/AntSkuSelect";
 import SelectBom from "@/components/reusable/SelectBom";
 
+const FIXED_COLUMNS = ["Engg Id", "Serial NO", "Repair Date"];
+
+const formatDateForDisplay = (d: Date): string => {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 type LocationOption = { label: string; value: string };
 const getOptionValue = (option: unknown): string => {
   if (typeof option === "string") return option.trim();
@@ -82,6 +91,7 @@ const Consumption: React.FC = () => {
   const [fileError, setFileError] = useState<string>("");
   const [parseSuccess, setParseSuccess] = useState(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [gridLoading, setGridLoading] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const selectedFileRef = useRef<File | null>(null);
   const gridRef = useRef<AgGridReact>(null);
@@ -166,63 +176,107 @@ const Consumption: React.FC = () => {
     setFileName(file.name);
     setFileError("");
     setParseSuccess(false);
+    setExcelData([]);
+    setDynamicColDefs([]);
+    setGridLoading(true);
 
     const reader = new FileReader();
     reader.onerror = () => {
       setFileError("Failed to read file");
       setExcelData([]);
       setParseSuccess(false);
+      setGridLoading(false);
     };
-    reader.onload = (event) => {
-      const data = new Uint8Array(event.target?.result as ArrayBuffer);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+    reader.onload = async (event) => {
+      try {
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array", cellDates: true });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-      if (json.length === 0) {
-        setFileError("Excel file is empty");
-        setExcelData([]);
-        setParseSuccess(false);
-        return;
+        if (json.length === 0) {
+          setFileError("Excel file is empty");
+          setExcelData([]);
+          setParseSuccess(false);
+          return;
+        }
+
+
+        const colNames = Object.keys(json[0]).filter((k) => k !== "__rowNum__");
+        const dataRows = json.map((row, idx) => {
+          const normalized: any = { rowKey: `r-${idx}` };
+          for (const key of colNames) {
+            const val = row[key];
+            normalized[key] = val instanceof Date ? formatDateForDisplay(val) : val;
+          }
+          return normalized;
+        });
+
+        if (dataRows.length === 0) {
+          setFileError("No valid data found in Excel file");
+          setExcelData([]);
+          setParseSuccess(false);
+          return;
+        }
+
+        // Columns other than the fixed ones are part codes — resolve their names via API
+        const partCodes = colNames.filter((name) => !FIXED_COLUMNS.includes(name));
+        const partNameMap = new Map<string, { name: string; variable: string }>();
+        if (partCodes.length > 0) {
+          try {
+            const res = await axiosInstance.post("/consumption/getPartNames", {
+              partCode: partCodes,
+            });
+            const list = res.data?.data ?? res.data?.body ?? res.data ?? [];
+            (Array.isArray(list) ? list : []).forEach((item: any) => {
+              const code = String(item?.partCode  ?? "").trim();
+              const name = String(item?.partName  ?? "").trim();
+              const variable = String(item?.bomSubCategory ?? "").trim();
+              if (code) partNameMap.set(code, { name, variable });
+            });
+          } catch { 
+           showToast("Failed to resolve part names", "error");
+            return;
+            }
+        }
+
+        // Build dynamic column defs from extracted headers
+        const cols: ColDef[] = [
+          {
+            headerName: "S.No",
+            valueGetter: (params) => (params.node?.rowIndex ?? 0) + 1,
+            width: 80,
+            maxWidth: 100,
+            sortable: false,
+            filter: false,
+            floatingFilter: false,
+            pinned: "left" as const,
+          },
+          ...colNames.map((name) => {
+            const info = partNameMap.get(name);
+            const partName = info?.name;
+            const variable = info?.variable;
+            const fullHeaderName = partName
+              ? `${name} - ${partName}${variable ? ` (${variable})` : ""}`
+              : name;
+            return {
+              headerName: fullHeaderName,
+              headerTooltip: fullHeaderName,
+              field: name,
+              minWidth: 250,
+              filter: "agTextColumnFilter",
+              sortable: true,
+            };
+          }),
+        ];
+
+        setDynamicColDefs(cols);
+        setExcelData(dataRows);
+        setParseSuccess(true);
+        showToast(`File parsed successfully — ${dataRows.length} items loaded`, "success");
+      } finally {
+        setGridLoading(false);
       }
-
-
-      const colNames = Object.keys(json[0]).filter((k) => k !== "__rowNum__");
-      const dataRows = json.map((row, idx) => ({ ...row, rowKey: `r-${idx}` }));
-
-      if (dataRows.length === 0) {
-        setFileError("No valid data found in Excel file");
-        setExcelData([]);
-        setParseSuccess(false);
-        return;
-      }
-
-      // Build dynamic column defs from extracted headers
-      const cols: ColDef[] = [
-        {
-          headerName: "S.No",
-          valueGetter: (params) => (params.node?.rowIndex ?? 0) + 1,
-          width: 80,
-          maxWidth: 100,
-          sortable: false,
-          filter: false,
-          floatingFilter: false,
-          pinned: "left" as const,
-        },
-        ...colNames.map((name) => ({
-          headerName: name,
-          field: name,
-          flex: 1,
-          minWidth: 120,
-          filter: "agTextColumnFilter",
-          sortable: true,
-        })),
-      ];
-
-      setDynamicColDefs(cols);
-      setExcelData(dataRows);
-      setParseSuccess(true);
-      showToast(`File parsed successfully — ${dataRows.length} items loaded`, "success");
     };
     reader.readAsArrayBuffer(file);
   };
@@ -287,6 +341,7 @@ const Consumption: React.FC = () => {
       resizable: true,
       filter: true,
       floatingFilter: true,
+      cellStyle: { textAlign: "center" },
     }),
     [],
   );
@@ -533,6 +588,8 @@ const Consumption: React.FC = () => {
                 columnDefs={dynamicColDefs}
                 defaultColDef={defaultColDef}
                 getRowId={getRowId}
+                loading={gridLoading}
+                enableBrowserTooltips
                 headerHeight={40}
                 floatingFiltersHeight={36}
                 rowHeight={42}
