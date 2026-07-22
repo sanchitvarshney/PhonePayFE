@@ -1341,9 +1341,9 @@ const BulkDeviceInward: React.FC = () => {
                   sx={{ background: "white", color: "red" }}
                   variant="contained"
                   startIcon={<Icons.previous />}
-                  onClick={() => {
-                    handleBack();
-                  }}
+                  onClick={
+                    handleBack
+                  }
                 >
                   Back
                 </LoadingButton>
