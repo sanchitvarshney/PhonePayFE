@@ -625,9 +625,7 @@ const Consumption: React.FC = () => {
                 headerHeight={40}
                 floatingFiltersHeight={36}
                 rowHeight={42}
-                pagination
-                paginationPageSize={50}
-                paginationPageSizeSelector={[25, 50, 100, 200]}
+                pagination={false}
                 suppressCellFocus
                 animateRows
                 overlayNoRowsTemplate={OverlayNoRowsTemplate}
