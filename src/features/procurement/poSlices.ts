@@ -65,19 +65,27 @@ export const createPO = createAsyncThunk<AxiosResponse<unknown>, unknown>(
 export const createBulkDeviceInward = createAsyncThunk<
   AxiosResponse<unknown>,
   unknown
->("bulkDeviceInward/create", async (payload) => {
-  const response = await axiosInstance.post(
-    "/inward/deviceInward",
-    payload
-  );
-  return response;
+>("bulkDeviceInward/create", async (payload, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post(
+      "/inward/deviceInward",
+      payload
+    );
+    return response;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data ?? { message: error.message });
+  }
 });
 
 export const updatePO = createAsyncThunk<AxiosResponse<unknown>, unknown>(
   "po/updatePO",
-  async (payload) => {
-    const response = await axiosInstance.put("/po/updateData4Update", payload);
-    return response;
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put("/po/updateData4Update", payload);
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data ?? { message: error.message });
+    }
   }
 );
 
@@ -277,7 +285,8 @@ const procurementPoSlice = createSlice({
       })
       .addCase(createBulkDeviceInward.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error =
+          (action.payload as any)?.message ?? action.error.message;
       })
       .addCase(updatePO.pending, (state) => {
         state.loading = true;
@@ -287,7 +296,8 @@ const procurementPoSlice = createSlice({
       })
       .addCase(updatePO.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error =
+          (action.payload as any)?.message ?? action.error.message;
       })
       .addCase(fetchDataForMIN.pending, (state) => {
         state.loading = true;

@@ -379,8 +379,11 @@ const BulkDeviceInward: React.FC = () => {
     };
     if (isEdit) {
       dispatch(updatePO(payload)).then((response: any) => {
-        const body = response?.payload?.data ?? response?.payload ?? {};
-        if (body?.success === true || String(body?.status).toLowerCase() === "success") {
+        const isRejected = updatePO.rejected.match(response);
+        const body = isRejected
+          ? response?.payload ?? {}
+          : response?.payload?.data ?? response?.payload ?? {};
+        if (!isRejected && (body?.success === true || String(body?.status).toLowerCase() === "success")) {
           showToast(body?.message ?? "Details Submitted successfully", "success");
           resetall();
           navigate("/procurement/manage");
@@ -390,10 +393,12 @@ const BulkDeviceInward: React.FC = () => {
       });
     } else {
       dispatch(createBulkDeviceInward(payload)).then((response: any) => {
-        const body = response?.payload?.data ?? response?.payload ?? {};
-    
+        const isRejected = createBulkDeviceInward.rejected.match(response);
+        const body = isRejected
+          ? response?.payload ?? {}
+          : response?.payload?.data ?? response?.payload ?? {};
 
-        if (body?.success) {
+        if (!isRejected && body?.success) {
           showToast(
             body?.message ??
               body?.data?.message ??
@@ -419,9 +424,7 @@ const BulkDeviceInward: React.FC = () => {
             "error"
           );
         }
-      }).catch((error) => {
-        showToast(error?.message || "Failed to create device inward", "error");
-      })
+      });
     }
   };
   useEffect(() => {
