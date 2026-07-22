@@ -294,7 +294,7 @@ const BulkDeviceInward: React.FC = () => {
       dispatch(setFormData(cloneFormData(data)));
       setActiveStep(1); // Directly set the step instead of using handleNext
     } catch (error) {
-      console.error("Error submitting form:", error);
+     
       showToast("Error submitting form", "error");
     }
   };
@@ -390,16 +390,10 @@ const BulkDeviceInward: React.FC = () => {
       });
     } else {
       dispatch(createBulkDeviceInward(payload)).then((response: any) => {
-        const requestStatus = response?.meta?.requestStatus;
         const body = response?.payload?.data ?? response?.payload ?? {};
-        const statusText = String(body?.status ?? body?.data?.status ?? "").toLowerCase();
-        const isSuccess =
-          requestStatus === "fulfilled" &&
-          (body?.success === true ||
-            body?.data?.success === true ||
-            statusText === "success");
+    
 
-        if (isSuccess) {
+        if (body?.success) {
           showToast(
             body?.message ??
               body?.data?.message ??
@@ -425,7 +419,9 @@ const BulkDeviceInward: React.FC = () => {
             "error"
           );
         }
-      });
+      }).catch((error) => {
+        showToast(error?.message || "Failed to create device inward", "error");
+      })
     }
   };
   useEffect(() => {
