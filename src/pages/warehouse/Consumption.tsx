@@ -19,12 +19,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import * as XLSX from "xlsx";
@@ -103,6 +97,123 @@ interface BomError {
   message: string;
 }
 
+interface MissingSerialRow {
+  serialNo: string;
+}
+
+// ag-grid cells are flex containers, so `textAlign` alone doesn't center content —
+// justifyContent/alignItems are required.
+const centerCellStyle = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  textAlign: "center" as const,
+};
+
+const gridDialogDefaultColDef: ColDef = {
+  sortable: true,
+  resizable: true,
+  filter: true,
+  floatingFilter: true,
+  cellStyle: centerCellStyle,
+};
+
+const snoColDef: ColDef = {
+  headerName: "S.No",
+  valueGetter: (params) => (params.node?.rowIndex ?? 0) + 1,
+  width: 80,
+  maxWidth: 100,
+  sortable: false,
+  filter: false,
+  floatingFilter: false,
+  pinned: "left",
+};
+
+const bomErrorColDefs: ColDef<BomError>[] = [
+  snoColDef,
+  { headerName: "Serial No", field: "serialNo", flex: 1, minWidth: 170, filter: "agTextColumnFilter" },
+  { headerName: "Part Code", field: "partcode", flex: 1, minWidth: 140, filter: "agTextColumnFilter" },
+  { headerName: "Rule", field: "rule", flex: 1, minWidth: 140, filter: "agTextColumnFilter" },
+  { headerName: "BOM Qty", field: "bomQty", width: 110, type: "numericColumn", filter: "agNumberColumnFilter" },
+  { headerName: "Provided Qty", field: "providedQty", width: 130, type: "numericColumn", filter: "agNumberColumnFilter" },
+  { headerName: "Message", field: "message", flex: 1.5, minWidth: 220, filter: "agTextColumnFilter" },
+];
+
+const missingSerialColDefs: ColDef<MissingSerialRow>[] = [
+  snoColDef,
+  { headerName: "Serial No", field: "serialNo", flex: 1, minWidth: 220, filter: "agTextColumnFilter" },
+];
+
+interface GridDialogProps<T> {
+  open: boolean;
+  title: string;
+  columnDefs: ColDef<T>[];
+  rowData: T[];
+  getRowId?: (params: GetRowIdParams<T>) => string;
+  onClose: () => void;
+}
+
+function GridDialog<T>({
+  open,
+  title,
+  columnDefs,
+  rowData,
+  getRowId,
+  onClose,
+}: GridDialogProps<T>) {
+  return (
+    <Dialog
+      open={open}
+      onClose={(_event, reason) => {
+        if (reason === "backdropClick") return;
+        onClose();
+      }}
+      maxWidth="lg"
+      fullWidth
+    >
+      <DialogTitle
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        {title}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Total: {rowData.length}
+          </Typography>
+          <IconButton size="small" onClick={onClose}>
+            <Close fontSize="small" />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      <DialogContent dividers sx={{ p: 1 }}>
+        <Box className="ag-theme-quartz" sx={{ height: 420, width: "100%" }}>
+          <AgGridReact
+            rowData={rowData}
+            columnDefs={columnDefs}
+            defaultColDef={gridDialogDefaultColDef}
+            getRowId={getRowId}
+            headerHeight={40}
+            floatingFiltersHeight={36}
+            rowHeight={38}
+            pagination={false}
+            suppressCellFocus
+            animateRows
+            overlayNoRowsTemplate={OverlayNoRowsTemplate}
+          />
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button variant="contained" onClick={onClose}>
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
 const Consumption: React.FC = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
   const [dynamicColDefs, setDynamicColDefs] = useState<ColDef[]>([]);
@@ -114,6 +225,10 @@ const Consumption: React.FC = () => {
     open: boolean;
     errors: BomError[];
   }>({ open: false, errors: [] });
+  const [missingSerialsDialog, setMissingSerialsDialog] = useState<{
+    open: boolean;
+    serials: string[];
+  }>({ open: false, serials: [] });
   const [gridLoading, setGridLoading] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const selectedFileRef = useRef<File | null>(null);
@@ -245,9 +360,10 @@ const Consumption: React.FC = () => {
         // Columns other than the fixed ones are part codes — resolve their names via API
         const partCodes = colNames.filter((name) => !FIXED_COLUMNS.includes(name));
         const partNameMap = new Map<string, { name: string; variable: string }>();
+        const bomKey = getValues("bom"); 
         if (partCodes.length > 0) {
           try {
-            const res = await axiosInstance.post("/consumption/getPartNames", {
+            const res = await axiosInstance.post("/consumption/getPartNames?bomKey=" + bomKey?.code, {
               partCode: partCodes,
             });
             const list = res.data?.data ?? res.data?.body ?? res.data ?? [];
@@ -274,6 +390,7 @@ const Consumption: React.FC = () => {
             filter: false,
             floatingFilter: false,
             pinned: "left" as const,
+            cellStyle: centerCellStyle,
           },
           ...colNames.map((name) => {
             const info = partNameMap.get(name);
@@ -289,6 +406,7 @@ const Consumption: React.FC = () => {
               minWidth: 250,
               filter: "agTextColumnFilter",
               sortable: true,
+              cellStyle: centerCellStyle,
             };
           }),
         ];
@@ -331,7 +449,7 @@ const Consumption: React.FC = () => {
       const response = await axiosInstance.post("/consumption/deviceConsumption", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      console.log(response,"response error");
+    
     
       showToast(
         response.data?.message || "Consumption saved successfully",
@@ -355,6 +473,12 @@ const Consumption: React.FC = () => {
         errData.bomErrors.length > 0
       ) {
         setBomErrorDialog({ open: true, errors: errData.bomErrors });
+      } else if (
+        errData?.status === "error" &&
+        Array.isArray(errData?.missingSerials) &&
+        errData.missingSerials.length > 0
+      ) {
+        setMissingSerialsDialog({ open: true, serials: errData.missingSerials });
       }
       showToast(errData?.message || "Submission failed", "error");
     } finally {
@@ -373,7 +497,7 @@ const Consumption: React.FC = () => {
       resizable: true,
       filter: true,
       floatingFilter: true,
-      cellStyle: { textAlign: "center" },
+      cellStyle: centerCellStyle,
     }),
     [],
   );
@@ -635,67 +759,23 @@ const Consumption: React.FC = () => {
         </form>
       </Paper>
 
-      <Dialog
+      <GridDialog
         open={bomErrorDialog.open}
-        onClose={(_event, reason) => {
-          if (reason === "backdropClick") return;
-          setBomErrorDialog({ open: false, errors: [] });
-        }}
-        maxWidth="lg"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          BOM Quantity Mismatch
-          <IconButton
-            size="small"
-            onClick={() => setBomErrorDialog({ open: false, errors: [] })}
-          >
-            <Close fontSize="small" />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Serial No</TableCell>
-                  <TableCell>Part Code</TableCell>
-                  <TableCell>Rule</TableCell>
-                  <TableCell align="right">BOM Qty</TableCell>
-                  <TableCell align="right">Provided Qty</TableCell>
-                  <TableCell>Message</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {bomErrorDialog.errors.map((err, idx) => (
-                  <TableRow key={`${err.serialNo}-${err.partcode}-${idx}`}>
-                    <TableCell>{err.serialNo}</TableCell>
-                    <TableCell>{err.partcode}</TableCell>
-                    <TableCell>{err.rule}</TableCell>
-                    <TableCell align="right">{err.bomQty}</TableCell>
-                    <TableCell align="right">{err.providedQty}</TableCell>
-                    <TableCell>{err.message}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="contained"
-            onClick={() => setBomErrorDialog({ open: false, errors: [] })}
-          >
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+        title="BOM Quantity Mismatch"
+        columnDefs={bomErrorColDefs}
+        rowData={bomErrorDialog.errors}
+        getRowId={(params) => `${params.data.serialNo}-${params.data.partcode}`}
+        onClose={() => setBomErrorDialog({ open: false, errors: [] })}
+      />
+
+      <GridDialog
+        open={missingSerialsDialog.open}
+        title="Device(s) Not Found at Pick Location"
+        columnDefs={missingSerialColDefs}
+        rowData={missingSerialsDialog.serials.map((serialNo) => ({ serialNo }))}
+        getRowId={(params) => params.data.serialNo}
+        onClose={() => setMissingSerialsDialog({ open: false, serials: [] })}
+      />
     </div>
   );
 };
