@@ -25,7 +25,7 @@ import * as XLSX from "xlsx";
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef, GetRowIdParams } from "ag-grid-community";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
-import { getLocationAsync } from "@/features/wearhouse/Divicemin/devaiceMinSlice";
+import { getLocationAsync, getPartNamesAsync } from "@/features/wearhouse/Divicemin/devaiceMinSlice";
 import { showToast } from "@/utils/toasterContext";
 import { Icons } from "@/components/icons";
 import axiosInstance from "@/api/axiosInstance";
@@ -362,21 +362,22 @@ const Consumption: React.FC = () => {
         const partNameMap = new Map<string, { name: string; variable: string }>();
         const bomKey = getValues("bom"); 
         if (partCodes.length > 0) {
-          try {
-            const res = await axiosInstance.post("/consumption/getPartNames?bomKey=" + bomKey?.code, {
-              partCode: partCodes,
-            });
-            const list = res.data?.data ?? res.data?.body ?? res.data ?? [];
-            (Array.isArray(list) ? list : []).forEach((item: any) => {
-              const code = String(item?.partCode  ?? "").trim();
-              const name = String(item?.partName  ?? "").trim();
-              const variable = String(item?.bomSubCategory ?? "").trim();
-              if (code) partNameMap.set(code, { name, variable });
-            });
-          } catch { 
-           showToast("Failed to resolve part names", "error");
+          const result = await dispatch(
+            getPartNamesAsync({ bomKey: bomKey?.code, partCode: partCodes })
+          );
+          if (getPartNamesAsync.rejected.match(result)) {
+            const body: any = result.payload ?? {};
+            showToast(body?.message ?? "Failed to resolve part names", "error");
             return;
-            }
+          }
+          const list =
+            result.payload?.data?.data ?? result.payload?.data?.body ?? [];
+          (Array.isArray(list) ? list : []).forEach((item: any) => {
+            const code = String(item?.partCode ?? "").trim();
+            const name = String(item?.partName ?? "").trim();
+            const variable = String(item?.bomSubCategory ?? "").trim();
+            if (code) partNameMap.set(code, { name, variable });
+          });
         }
 
         // Build dynamic column defs from extracted headers
