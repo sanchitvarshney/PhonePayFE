@@ -10,6 +10,16 @@ export type PasswordChangePayload = {
   confirmPassword: string;
 };
 
+export type ForgotPasswordOtpPayload = {
+  emailId: string;
+};
+
+export type ResetPasswordPayload = {
+  emailId: string;
+  otp: string;
+  password: string;
+};
+
 /** API response body for /auth/signin */
 export type LoginResponse = {
   success: boolean;
@@ -42,4 +52,5 @@ export interface AuthState {
   loading: boolean;
   token: string | null;
   changepasswordloading: boolean;
+  otpLoading: boolean;
 }
