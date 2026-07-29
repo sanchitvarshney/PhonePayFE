@@ -83,6 +83,7 @@ const getOptionValue = (option: unknown): string => {
 
 interface FormValues {
   location: LocationOption | null;
+  putLocation: LocationOption | null;
   skuValue: LocationOption | null;
   bom: any | null;
   qty: string;
@@ -244,9 +245,10 @@ const Consumption: React.FC = () => {
     reset,
     getValues,
     watch,
+    trigger,
     formState: { errors },
   } = useForm<FormValues>({
-    defaultValues: { location: null, skuValue: null, bom: null, qty: "" },
+    defaultValues: { location: null, putLocation: null, skuValue: null, bom: null, qty: "" },
   });
 
   useEffect(() => {
@@ -426,11 +428,23 @@ const Consumption: React.FC = () => {
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     const locationId =
       getOptionValue(data.location) || getOptionValue(getValues("location"));
+    const putLocationId =
+      getOptionValue(data.putLocation) || getOptionValue(getValues("putLocation"));
     const bomId = data.bom;
     const totalQty = Number(data.qty);
 
     if (!locationId) {
       showToast("Please select a pick location", "error");
+      return;
+    }
+
+    if (!putLocationId) {
+      showToast("Please select a put location", "error");
+      return;
+    }
+
+    if (locationId === putLocationId) {
+      showToast("Pick location and Put location cannot be same", "error");
       return;
     }
 
@@ -442,6 +456,7 @@ const Consumption: React.FC = () => {
     const formData = new FormData();
     formData.append("file", selectedFileRef.current);
     formData.append("pickLocation", locationId);
+    formData.append("putLocation", putLocationId);
     formData.append("bomId", bomId?.code ?? "");
     formData.append("totalQty", String(totalQty));
 
@@ -456,7 +471,7 @@ const Consumption: React.FC = () => {
         response.data?.message || "Consumption saved successfully",
         "success",
       );
-      reset({ location: null, skuValue: null, bom: null, qty: "" });
+      reset({ location: null, putLocation: null, skuValue: null, bom: null, qty: "" });
       setExcelData([]);
       setDynamicColDefs([]);
       setFileName("");
@@ -575,7 +590,14 @@ const Consumption: React.FC = () => {
                 <Controller
                   name="location"
                   control={control}
-                  rules={{ required: "Location is required" }}
+                  rules={{
+                    required: "Location is required",
+                    validate: (value) =>
+                      !value ||
+                      !getValues("putLocation") ||
+                      getOptionValue(value) !== getOptionValue(getValues("putLocation")) ||
+                      "Pick location and Put location cannot be same",
+                  }}
                   render={({ field }) => (
                     <Autocomplete
                       options={locationOptions}
@@ -584,7 +606,10 @@ const Consumption: React.FC = () => {
                         !!value && option.value === value.value
                       }
                       value={field.value}
-                      onChange={(_, v) => field.onChange(v)}
+                      onChange={(_, v) => {
+                        field.onChange(v);
+                        trigger(["location", "putLocation"]);
+                      }}
                       fullWidth
                       disablePortal
                       renderInput={(params) => (
@@ -593,6 +618,49 @@ const Consumption: React.FC = () => {
                           variant="standard"
                           error={!!errors.location}
                           helperText={errors.location?.message}
+                        />
+                      )}
+                    />
+                  )}
+                />
+              </div>
+
+              <div>
+                <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                  Put Location
+                </Typography>
+
+                <Controller
+                  name="putLocation"
+                  control={control}
+                  rules={{
+                    required: "Put Location is required",
+                    validate: (value) =>
+                      !value ||
+                      !getValues("location") ||
+                      getOptionValue(value) !== getOptionValue(getValues("location")) ||
+                      "Pick location and Put location cannot be same",
+                  }}
+                  render={({ field }) => (
+                    <Autocomplete
+                      options={locationOptions}
+                      getOptionLabel={(option) => option.label || ""}
+                      isOptionEqualToValue={(option, value) =>
+                        !!value && option.value === value.value
+                      }
+                      value={field.value}
+                      onChange={(_, v) => {
+                        field.onChange(v);
+                        trigger(["location", "putLocation"]);
+                      }}
+                      fullWidth
+                      disablePortal
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          variant="standard"
+                          error={!!errors.putLocation}
+                          helperText={errors.putLocation?.message}
                         />
                       )}
                     />
