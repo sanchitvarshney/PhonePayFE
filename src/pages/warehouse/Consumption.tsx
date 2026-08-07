@@ -28,7 +28,6 @@ import { AgGridReact } from "ag-grid-react";
 import type { ColDef, GetRowIdParams } from "ag-grid-community";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { getLocationAsync } from "@/features/wearhouse/Divicemin/devaiceMinSlice";
-import { getCostCenter } from "@/features/common/commonSlice";
 import { showToast } from "@/utils/toasterContext";
 import { Icons } from "@/components/icons";
 import axiosInstance from "@/api/axiosInstance";
@@ -120,7 +119,7 @@ const Consumption: React.FC = () => {
 
   const dispatch = useAppDispatch();
   const { locationData } = useAppSelector((state) => state.divicemin);
-  const { costCenterData } = useAppSelector((state) => state.common);
+  // const { costCenterData } = useAppSelector((state) => state.common);
 
   const {
     control,
@@ -134,7 +133,7 @@ const Consumption: React.FC = () => {
 
   useEffect(() => {
     dispatch(getLocationAsync(null));
-    dispatch(getCostCenter());
+  
   }, [dispatch]);
 
   const locationOptions = useMemo<LocationOption[]>(() => {
@@ -157,32 +156,32 @@ const Consumption: React.FC = () => {
     });
   }, [locationData]);
 
-  const costCenterOptions = useMemo<LocationOption[]>(() => {
-    if (!costCenterData?.length) return [];
-    return costCenterData.map((item) => {
-      const raw = item as {
-        text?: string;
-        name?: string;
-        label?: string;
-        id?: string | number;
-        code?: string | number;
-        value?: string | number;
-        key?: string | number;
-      };
-      const label = String(raw.text ?? raw.name ?? raw.label ?? "");
-      const value = String(
-        raw.id ??
-          raw.code ??
-          raw.value ??
-          raw.key ??
-          raw.text ??
-          raw.name ??
-          raw.label ??
-          "",
-      );
-      return { label, value };
-    });
-  }, [costCenterData]);
+  // const costCenterOptions = useMemo<LocationOption[]>(() => {
+  //   if (!costCenterData?.length) return [];
+  //   return costCenterData.map((item) => {
+  //     const raw = item as {
+  //       text?: string;
+  //       name?: string;
+  //       label?: string;
+  //       id?: string | number;
+  //       code?: string | number;
+  //       value?: string | number;
+  //       key?: string | number;
+  //     };
+  //     const label = String(raw.text ?? raw.name ?? raw.label ?? "");
+  //     const value = String(
+  //       raw.id ??
+  //         raw.code ??
+  //         raw.value ??
+  //         raw.key ??
+  //         raw.text ??
+  //         raw.name ??
+  //         raw.label ??
+  //         "",
+  //     );
+  //     return { label, value };
+  //   });
+  // }, [costCenterData]);
 
   const downloadSampleFile = () => {
     const sampleRows = [
@@ -199,10 +198,10 @@ const Consumption: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     const locationId = getOptionValue(getValues("location"));
-    const costCenterId = getOptionValue(getValues("costCenter"));
+    // const costCenterId = getOptionValue(getValues("costCenter"));
 
-    if (!locationId || !costCenterId) {
-      const msg = "Please select pick location and cost center before uploading Excel";
+    if (!locationId) {
+      const msg = "Please select pick location before uploading Excel";
       showToast(msg, "error");
       setFileError(msg);
       setExcelData([]);
@@ -307,7 +306,7 @@ const Consumption: React.FC = () => {
         const checkResponse = await axiosInstance.post("/consumption/check", {
           partcode: parsed.map((row) => row.partcode),
           qty: parsed.map((row) => row.qty),
-          costCenter: costCenterId,
+          // costCenter: costCenterId,
           location: locationId,
         });
         const checkBody = checkResponse?.data ?? {};
@@ -384,17 +383,14 @@ const Consumption: React.FC = () => {
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     const locationId =
       getOptionValue(data.location) || getOptionValue(getValues("location"));
-    const cc =
-      getOptionValue(data.costCenter) || getOptionValue(getValues("costCenter"));
+    // const cc =
+    //   getOptionValue(data.costCenter) || getOptionValue(getValues("costCenter"));
 
     if (!locationId) {
       showToast("Please select a pick location", "error");
       return;
     }
-    if (!cc) {
-      showToast("Please select a cost center", "error");
-      return;
-    }
+  
     if (excelData.length === 0) {
       showToast("Please upload a valid Excel file", "error");
       return;
@@ -404,8 +400,8 @@ const Consumption: React.FC = () => {
     try {
       const response = await axiosInstance.post("/consumption/create", {
         pickLocation: locationId,
-        costCenter: cc,
-        cc,
+        // costCenter: cc,
+        // cc,
         partcode: excelData.map((row) => row.partcode),
         qty: excelData.map((row) => row.qty),
       });
@@ -523,7 +519,7 @@ const Consumption: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-4 mb-4 shrink-0">
             <div>
               <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
-                Pick Location & Cost Center
+                Pick Location
               </Typography>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Controller
@@ -553,7 +549,7 @@ const Consumption: React.FC = () => {
                     />
                   )}
                 />
-                <Controller
+                {/* <Controller
                   name="costCenter"
                   control={control}
                   rules={{ required: "Cost center is required" }}
@@ -579,7 +575,7 @@ const Consumption: React.FC = () => {
                       )}
                     />
                   )}
-                />
+                /> */}
               </div>
             </div>
 

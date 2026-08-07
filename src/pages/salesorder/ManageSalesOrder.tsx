@@ -83,12 +83,20 @@ const ManageSalesOrder: React.FC = () => {
     return getSalesOrderStatus(rowData).trim().toLowerCase() === "cancel";
   };
 
-  const isSalesOrderDispatched = (rowData: any): boolean => {
-    const raw =
-      rowData?.isDispatched ?? rowData?.is_dispatched ?? rowData?.dispatched ?? "";
-    if (raw === true || raw === 1) return true;
-    const s = String(raw).trim().toLowerCase();
-    return s === "yes" || s === "y" || s === "true" || s === "1";
+  const isFullyDispatched = (rowData: any): boolean => {
+    const status = String(
+      rowData?.dispatchStatus ?? rowData?.dispatch_status ?? "",
+    )
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "_");
+    return status === "fully_dispatched";
+  };
+
+  const canEditOrCancelSalesOrder = (rowData: any): boolean => {
+    const qty = Number(rowData?.qty ?? 0);
+    const pendingQty = Number(rowData?.pendingQty ?? rowData?.pending_qty ?? 0);
+    return pendingQty >= qty;
   };
 
   const handleMenuClick = (
@@ -137,6 +145,7 @@ const ManageSalesOrder: React.FC = () => {
         filter: false,
         width: 60,
         cellRenderer: (params: { data: any }) => {
+          if (isFullyDispatched(params.data)) return null;
           const isCancelled = isSalesOrderCancelled(params.data);
           return (
             <IconButton
@@ -290,8 +299,8 @@ const ManageSalesOrder: React.FC = () => {
   };
 
   const handleEdit = async () => {
-    if (isSalesOrderDispatched(selectedRow)) {
-      showToast("This sales order is dispatched and cannot be edited", "error");
+    if (!canEditOrCancelSalesOrder(selectedRow)) {
+      showToast("This sales order cannot be edited once quantity is dispatched", "error");
       closeMenu();
       return;
     }
@@ -532,11 +541,16 @@ const ManageSalesOrder: React.FC = () => {
           <MenuItem onClick={handleCreateChallan}>Create Challan</MenuItem>
           <MenuItem
             onClick={handleEdit}
-            // disabled={isSalesOrderDispatched(selectedRow)}
+            disabled={!canEditOrCancelSalesOrder(selectedRow)}
           >
             Edit
           </MenuItem>
-          <MenuItem onClick={handleCancelClick}>Cancel</MenuItem>
+          <MenuItem
+            onClick={handleCancelClick}
+            disabled={!canEditOrCancelSalesOrder(selectedRow)}
+          >
+            Cancel
+          </MenuItem>
         </Menu>
 
         <Dialog

@@ -154,24 +154,32 @@ export const challanPrint = createAsyncThunk<
   { rejectValue: { success: false; message: string } }
 >("salesOrder/challanPrint", async (payload, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post(
-      "/challan-print/challanPrint",
-      { challanNo: payload.challanNo },
-      { responseType: "blob" },
-    );
-    const blob = new Blob([response.data], { type: "application/pdf" });
-    const url = window.URL.createObjectURL(blob);
-    const opened = window.open(url, "_blank", "noopener,noreferrer");
-    if (!opened) {
-      window.URL.revokeObjectURL(url);
-      return rejectWithValue({
-        success: false,
-        message: "Unable to open PDF — allow pop-ups for this site, or try again.",
-      });
+    const response = await axiosInstance.post("/challan-print/challanPrint", {
+      challanNo: payload.challanNo,
+    });
+
+    const { pdfBuffer, fileName } = response.data?.data ?? {};
+    if (!pdfBuffer?.data) {
+      return rejectWithValue({ success: false, message: "Invalid PDF response from server" });
     }
-    // Revoke after the new tab has time to read the blob URL (immediate revoke can blank the tab).
-    window.setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
-    return { success: true, message: "Challan PDF opened in a new tab" };
+
+    // Convert the Node.js Buffer byte-array to a Uint8Array, then to a Blob
+    const uint8 = new Uint8Array(pdfBuffer.data as number[]);
+    const blob = new Blob([uint8], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
+    // Trigger download with the fileName provided by the server
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName ?? "challan.pdf";
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+
+    // Revoke after a short delay to let the download start
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 10_000);
+
+    return { success: true, message: response.data?.message ?? "Challan PDF downloaded" };
   } catch (error: unknown) {
     const message =
       (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||

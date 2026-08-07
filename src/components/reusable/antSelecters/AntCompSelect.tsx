@@ -27,11 +27,12 @@ const AntCompSelect: React.FC<Props> = ({ value, onChange, label = "Search Item"
   const [itemList, setItemList] = useState<ComponentType[]>([]);
 
   const fetchItems = async (query: string | null) => {
+    if (!query) return;
     setLoading(true);
     try {
       const response = await axiosInstance.get(`/backend/search/item/${query}`);
       if (response.data.success) {
-        setItemList(response.data.data||[]);
+        setItemList(response.data.data || []);
       }
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -48,7 +49,7 @@ const AntCompSelect: React.FC<Props> = ({ value, onChange, label = "Search Item"
 
   return (
     <Select
-      onFocus={() => fetchItems(null)}
+      onFocus={() => { if (!inputValue) fetchItems("") }}
       filterOption={false}
       showSearch
       loading={loading}

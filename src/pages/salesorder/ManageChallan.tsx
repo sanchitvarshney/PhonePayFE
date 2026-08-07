@@ -28,6 +28,14 @@ const getChallanNumber = (rowData: any): string => {
   );
 };
 
+const isChallanDispatched = (rowData: any): boolean => {
+  const raw =
+    rowData?.isDispatched ?? rowData?.is_dispatched ?? rowData?.dispatched ?? "";
+  if (raw === true || raw === 1) return true;
+  const s = String(raw).trim().toLowerCase();
+  return s === "yes" || s === "y" || s === "true" || s === "1";
+};
+
 const ManageChallan: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -111,6 +119,11 @@ const ManageChallan: React.FC = () => {
   };
 
   const handleCreateDispatch = () => {
+    if (isChallanDispatched(selectedRow)) {
+      showToast("This challan is already dispatched", "error");
+      closeMenu();
+      return;
+    }
     const challanNo = getChallanNumber(selectedRow);
     if (!challanNo) {
       showToast("Challan number not found on this row", "error");
@@ -309,7 +322,12 @@ const ManageChallan: React.FC = () => {
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           transformOrigin={{ vertical: "top", horizontal: "right" }}
         >
-          <MenuItem onClick={handleCreateDispatch}>Create Dispatch</MenuItem>
+          <MenuItem
+            onClick={handleCreateDispatch}
+            disabled={isChallanDispatched(selectedRow)}
+          >
+            Create Dispatch
+          </MenuItem>
           <MenuItem onClick={handlePrint} disabled={printLoading}>
             Print
           </MenuItem>

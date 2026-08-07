@@ -90,6 +90,12 @@ const R3ReportTable: React.FC<Props> = ({
   ];
   const { r3report, r3reportLoading } = useAppSelector((state) => state.report);
 
+  const pagination = r3report?.pagination;
+  const currentPage = Number(pagination?.page) || 1;
+  const totalPages = Number(pagination?.totalPages) || 1;
+  const totalRecords = Number(pagination?.total) || 0;
+  const tablePageSize = Number(pagination?.limit) || pageSize;
+
   const paginationPageSize = 20; // Define page size
 
   const defaultColDef = useMemo<ColDef>(() => {
@@ -118,12 +124,12 @@ const R3ReportTable: React.FC<Props> = ({
       </div>
       {r3report && (
         <CustomPagination
-          currentPage={r3report?.pagination?.currentPage}
-          totalPages={r3report?.pagination?.totalPages}
-          totalRecords={r3report?.pagination?.totalRecords}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalRecords={totalRecords}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
-          pageSize={pageSize}
+          pageSize={tablePageSize}
         />
       )}
     </div>

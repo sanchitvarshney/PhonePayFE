@@ -4,6 +4,7 @@ import MainLayout from "./layouts/MainLayout";
 import ProcurementLayout from "./layouts/ProcurementLayout";
 import MasterVendorLayout from "./layouts/MasterVendorLayout";
 import Protected from "./components/shared/Protected";
+import LocationAllotementProtected from "./components/shared/LocationAllotementProtected";
 
 // Static imports – no lazy loading; use FullPageLoading elsewhere when needed (e.g. auth/data loading)
 import HomePage from "./pages/HomePage";
@@ -43,6 +44,23 @@ import ManageChallan from "@/pages/salesorder/ManageChallan";
 import CreateDispatch from "@/pages/salesorder/CreateDispatch";
 import Consumption from "@/pages/warehouse/Consumption";
 import GoodSpareInwardv2 from "@/pages/warehouse/GoodSpareInwardv2";
+import MasterBOMLayout from "./layouts/MasterBOMLayout";
+import MasterCraeteBOM from "./pages/master/MasterCreateBOM";
+import MasterFGBOM from "./pages/master/MasterFGBOM";
+import MasterBOMDisabled from "./pages/master/MasterBOMDisabled";
+import MasterBomDetailPage from "./pages/master/MasterBomDetailPage";
+import MaterialRequisitionLayout from "./layouts/MaterialRequisitionLayout";
+import MaterialRequisition from "./pages/materialRequisition/MaterialRequisition";
+import MRPendingApproval from "./pages/materialRequisition/MRPendingApproval";
+import MRRequest from "./pages/materialRequisition/MRRequest";
+import MRApprovalLayout from "./layouts/MRApprovalLayout";
+import MaterialApprovalLayout from "./layouts/MaterialApprovalLayout";
+import ProductionMaterialRequisitionLayout from "./layouts/ProductionMaterialRequisitionLayout";
+import MaterialReqWithoutBom from "./pages/production/MaterialReqWithoutBom";
+import MRwithBom from "./pages/materialRequisition/MRwithBom";
+import LocationAllot from "./pages/locationAllotement/LocationAllot";
+import LocationAllotedList from "./pages/locationAllotement/LocationAllotedList";
+import LocationAllotementLayout from "./layouts/LocationAllotementLayout";
 
 export const router = createBrowserRouter([
   {
@@ -237,6 +255,7 @@ export const router = createBrowserRouter([
         ),
         path: "/sales-order/create/:salesOrderId",
       },
+      
       {
         element: (
           <MainLayout>
@@ -296,10 +315,109 @@ export const router = createBrowserRouter([
       {
         element: (
           <MainLayout>
+            <MasterBOMLayout>
+              <MasterCraeteBOM />
+            </MasterBOMLayout>
+          </MainLayout>
+        ),
+        path: "/master-bom-create",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterBOMLayout>
+              <MasterFGBOM />
+            </MasterBOMLayout>
+          </MainLayout>
+        ),
+        path: "/master-fg-bom",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterBomDetailPage />
+          </MainLayout>
+        ),
+        path: "/master-fg-bom/:id",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterBOMLayout>
+              <MasterBOMDisabled />
+            </MasterBOMLayout>
+          </MainLayout>
+        ),
+        path: "/master-bom-disabled",
+      },
+      {
+        element: (
+          <MainLayout>
             <Profile />
           </MainLayout>
         ),
         path: "/profile",
+      },
+         {
+        element: (
+          <MainLayout>
+            <MaterialRequisitionLayout>
+              <MaterialRequisition />
+            </MaterialRequisitionLayout>
+          </MainLayout>
+        ),
+        path: "/material-management/raw-material-request",
+      },
+           {
+        element: (
+          <MainLayout>
+            <MRApprovalLayout>
+              <MRPendingApproval />
+            </MRApprovalLayout>
+          </MainLayout>
+        ),
+        path: "/material-management/raw-material-approval",
+      },
+             {
+        element: (
+          <MainLayout>
+            <MRApprovalLayout>
+              <MRRequest />
+            </MRApprovalLayout>
+          </MainLayout>
+        ),
+        path: "/material-management/material-requisition-request",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MaterialApprovalLayout>
+              <MRPendingApproval />
+            </MaterialApprovalLayout>
+          </MainLayout>
+        ),
+        path: "/pending-material-approval",
+      },
+     
+      {
+        element: (
+          <MainLayout>
+            <ProductionMaterialRequisitionLayout>
+              <MaterialReqWithoutBom />
+            </ProductionMaterialRequisitionLayout>
+          </MainLayout>
+        ),
+        path: "/production/material-req-without-bom",
+      },
+        {
+        element: (
+          <MainLayout>
+            <MaterialRequisitionLayout>
+              <MRwithBom />
+            </MaterialRequisitionLayout>
+          </MainLayout>
+        ),
+        path: "/material-management/raw-material-request/with-bom",
       },
       {
         element: (
@@ -308,6 +426,30 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/profile/settings",
+      },
+      {
+        element: (
+          <MainLayout>
+            <LocationAllotementProtected>
+              <LocationAllotementLayout>
+                <LocationAllot />
+              </LocationAllotementLayout>
+            </LocationAllotementProtected>
+          </MainLayout>
+        ),
+        path: "/location/location-allot",
+      },
+      {
+        element: (
+          <MainLayout>
+            <LocationAllotementProtected>
+              <LocationAllotementLayout>
+                <LocationAllotedList />
+              </LocationAllotementLayout>
+            </LocationAllotementProtected>
+          </MainLayout>
+        ),
+        path: "/location/location-alloted-list",
       },
     ],
   },

@@ -28,6 +28,14 @@
   justify-content: center;
 }
 
+.ag-theme-quartz .ag-cell.ag-cell-center {
+  display: flex;
+  align-items: center;
+  /* justify-content: center; */
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
 /* Workers report: different color per parent group, same color for children of that group */
 .ag-theme-quartz.workers-report-grid .ag-header-group-cell.wr-group-0,
 .ag-theme-quartz.workers-report-grid .ag-header-cell.wr-group-0 {
@@ -289,6 +297,17 @@ input:-webkit-autofill {
   box-shadow: none; /* No outline shadow */
   background-color: transparent !important;
 }
+
+
+
+.ag-theme-quartz.material-req-grid .ag-cell {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  overflow: visible;
+}
+
+
 
 .ant-select-dropdown {
   border-radius: 0 !important;

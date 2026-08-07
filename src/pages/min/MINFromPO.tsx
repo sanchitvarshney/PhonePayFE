@@ -13,9 +13,15 @@ import {
   Skeleton,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import DeleteIcon from "@mui/icons-material/Delete";
+import IconButton from "@mui/material/IconButton";
 import { ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { useState, useMemo, useRef, useCallback } from "react";
+import dayjs from "dayjs";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { showToast } from "@/utils/toasterContext";
 import {
   fetchDataForMIN,
@@ -191,6 +197,17 @@ const MINFromPO = () => {
     [getAllTableData]
   );
 
+  const handleDeleteRow = useCallback(
+    (rowToDelete: any) => {
+      setRowData((prev: any[]) => {
+        const updated = prev.filter((row) => row !== rowToDelete);
+        setTotals(calculateTotals(updated));
+        return updated;
+      });
+    },
+    []
+  );
+
   const components = useMemo(
     () => ({
       textInputCellRenderer: (params: any) => (
@@ -199,8 +216,17 @@ const MINFromPO = () => {
           customFunction={getAllTableData}
         />
       ),
+      deleteCellRenderer: (params: any) => (
+        <IconButton
+          size="small"
+          color="error"
+          onClick={() => handleDeleteRow(params.data)}
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      ),
     }),
-    [getAllTableData]
+    [getAllTableData, handleDeleteRow]
   );
 
   const handleSearchPO = async () => {
@@ -212,8 +238,10 @@ const MINFromPO = () => {
             lable: "( " + item.c_partno + " ) " + item.component_shortname,
             value: item.componentKey,
           },
-          qty: Number(item.orderqty) || 0,
+          orderQty: Number(item.orderqty) || 0,
+          qty: "",
           pendingQty: Number(item.pendingQty) || 0,
+          orderDueDate: item.orderduedate,
           updaterow: item.access_code,
           rate: Number(item.orderrate) || 0,
           taxableValue: Number(item.totalValue) || 0,
@@ -231,7 +259,7 @@ const MINFromPO = () => {
           },
           isNew: true,
           excRate: item.header?.exchangerate || 1,
-          uom: item.uom,
+          uom: item.unitsname || item.uom,
         }));
         setRowData(newRowData);
         setVendorData(res.payload.data.data.vendor_type);
@@ -277,6 +305,13 @@ const MINFromPO = () => {
 
   const columnDefs: ColDef[] = [
     {
+      headerName: "",
+      field: "delete",
+      cellRenderer: "deleteCellRenderer",
+      width: 60,
+      pinned: "left",
+    },
+    {
       headerName: "#",
       valueGetter: "node.rowIndex + 1",
       width: 50,
@@ -293,14 +328,28 @@ const MINFromPO = () => {
       minWidth: 300,
     },
     {
-      headerName: "Qty",
+      headerName: "Order Due Date",
+      field: "orderDueDate",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+      valueFormatter: (params) =>
+        params.value && dayjs(params.value, "DD-MM-YYYY").isValid()
+          ? dayjs(params.value, "DD-MM-YYYY").format("DD/MM/YYYY")
+          : params.value || "",
+    },
+   {
+      headerName: "Order Qty",
       field: "qty",
       cellRenderer: "textInputCellRenderer",
     },
     {
       headerName: "Pending Qty",
       field: "pendingQty",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
+    // {
+    //   headerName: "Total Qty",
+    //   field: "orderQty",
+    // },
     {
       headerName: "Rate",
       field: "rate",
@@ -311,50 +360,53 @@ const MINFromPO = () => {
       headerName: "Taxable Value",
       field: "taxableValue",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "Foreign Value",
       field: "foreignValue",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "HSN Code",
       field: "hsnCode",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "GST Type",
       field: "gstType",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "GST Rate",
       field: "gstRate",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "CGST",
       field: "cgst",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "SGST",
       field: "sgst",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "IGST",
       field: "igst",
       cellRenderer: "textInputCellRenderer",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
     },
     {
       headerName: "Remarks",
       field: "remarks",
-    },
-    {
-      headerName: "uom",
-      field: "uom",
-      hide: true,
     },
   ];
 
@@ -510,18 +562,36 @@ const MINFromPO = () => {
                               className="bg-white"
                               variant="standard"
                             />
-                            <TextField
-                              label="Invoice Date"
-                              type="date"
-                              value={invoiceDate}
-                              onChange={(e) => setInvoiceDate(e.target.value)}
-                              required
-                              size="small"
-                              fullWidth
-                              InputLabelProps={{ shrink: true }}
-                              className="bg-white"
-                              variant="standard"
-                            />
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                              <DatePicker
+                                label="Invoice Date"
+                                format="DD-MM-YYYY"
+                                enableAccessibleFieldDOMStructure={false}
+                                disableFuture
+                                value={
+                                  invoiceDate && dayjs(invoiceDate).isValid()
+                                    ? dayjs(invoiceDate)
+                                    : null
+                                }
+                                onChange={(newValue) =>
+                                  setInvoiceDate(
+                                    newValue && dayjs(newValue).isValid()
+                                      ? dayjs(newValue).format("YYYY-MM-DD")
+                                      : ""
+                                  )
+                                }
+                                slots={{ textField: TextField }}
+                                slotProps={{
+                                  textField: {
+                                    required: true,
+                                    size: "small",
+                                    fullWidth: true,
+                                    className: "bg-white",
+                                    variant: "standard",
+                                  },
+                                }}
+                              />
+                            </LocalizationProvider>
                             <AntLocationSelectAcordinttoModule
                               endpoint="/transaction/rm-inward-location"
                               onChange={setLocation}
@@ -626,7 +696,7 @@ const MINFromPO = () => {
                 suppressCellFocus={true}
                 rowData={rowData}
                 columnDefs={columnDefs}
-                pagination={true}
+                pagination={false}
                 components={components}
                 onCellValueChanged={onCellValueChanged}
               />

@@ -35,7 +35,7 @@ const Protected: React.FC<ProtectedProps> = ({ children, authentication = true }
         <div className="absolute top-0 left-0 right-0 w-full h-full opacity-50">
           <LinearProgress />
         </div>
-        <span className="text-lg text-slate-500"><img src={"./images/ms.png"} alt="logo" className="opacity-50" /></span>
+        <span className="text-lg text-slate-500"><img src={"/images/ms.png"} alt="logo" className="opacity-50" /></span>
       </div>
     );
   }

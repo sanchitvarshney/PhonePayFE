@@ -3,7 +3,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { AxiosResponse } from "axios";
 import {
   Commonstate,
-  CostCenterApiResponse,
   CurrencListResponse,
   UserApiResponse,
 } from "./commonType";
@@ -68,12 +67,7 @@ export const getCurrency = createAsyncThunk<AxiosResponse<CurrencListResponse>>(
     return response;
   }
 );
-export const getCostCenter = createAsyncThunk<
-  AxiosResponse<CostCenterApiResponse>
->("common/getCostCenter", async () => {
-  const response = await axiosInstance.get(`/backend/costcenter`);
-  return response;
-});
+
 
 export const getDeviceImages = createAsyncThunk<
   AxiosResponse<DeviceImageApiResponse>,
@@ -131,18 +125,7 @@ const commonSlice = createSlice({
       .addCase(getCurrency.rejected, (state) => {
         state.currencyLoaidng = false;
       })
-      .addCase(getCostCenter.pending, (state) => {
-        state.costCenterLoading = true;
-      })
-      .addCase(getCostCenter.fulfilled, (state, action) => {
-        state.costCenterLoading = false;
-        if (action.payload?.data?.success) {
-          state.costCenterData = action.payload.data.data;
-        }
-      })
-      .addCase(getCostCenter.rejected, (state) => {
-        state.costCenterLoading = false;
-      })
+
       .addCase(getDeviceImages.pending, (state) => {
         state.deviceImagesLoading = true;
         state.deviceImagesError = null;

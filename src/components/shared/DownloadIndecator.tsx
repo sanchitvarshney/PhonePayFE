@@ -9,6 +9,7 @@ import { NotificationData, useSocketContext } from "../context/SocketContext";
 import { Icons } from "../icons";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { showToast } from "@/utils/toasterContext";
+import { resolveDownloadUrl } from "@/utils/socketSettings";
 import ProgressWithParcentage from "../reusable/ProgressWithParcentage";
 const progressRowId = (n: { notificationId?: unknown; reactNotificationId?: unknown }) =>
   String(n.notificationId ?? n.reactNotificationId ?? "");
@@ -47,10 +48,8 @@ const DownloadIndecator = () => {
         "data" in data
       ) {
         // Filter out notifications where type === 'notification', keep only download-related ones
-        if (data.type === "notification") {
-          // Clear download notifications when receiving general notifications
-          setNotification([]);
-        } else {
+        if (data.type === "notification" && Array.isArray(data.data)) {
+      
           // For download-related types, show the notifications
           setNotification(Array.isArray(data.data) ? data.data : []);
         }
@@ -64,7 +63,6 @@ const DownloadIndecator = () => {
           : [];
         setNotification(downloadNotifications);
       }
-      console.log(data);
     };
 
     onnotification(handlenotification);
@@ -209,9 +207,7 @@ const DownloadIndecator = () => {
                                 : item.other_data;
                             const fileUrl = raw?.fileUrl;
                             if (!fileUrl) return;
-                            const baseUrl =
-                              import.meta.env.VITE_SOCKET_URL.replace(/:\d+$/, "");
-                            const finalUrl = new URL(fileUrl, baseUrl).href;
+                            const finalUrl = resolveDownloadUrl(fileUrl);
                             window.open(
                               finalUrl,
                               "_blank",

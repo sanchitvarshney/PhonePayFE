@@ -13,20 +13,24 @@ import { IconButton } from "@mui/material";
 import MuiTooltip from "@/components/reusable/MuiTooltip";
 import { useSocketContext } from "@/components/context/SocketContext";
 import DownloadIndecator from "@/components/shared/DownloadIndecator";
-import NotificationPnnel from "@/components/shared/NotificationPanel";
+// import NotificationPnnel from "@/components/shared/NotificationPanel";
 // import { useSocketContext } from "@/components/context/SocketContext";
 
 function MainLayout(props: { children: React.ReactNode }) {
-    const { isConnected,emitGetNotification,refreshConnection, isLoading } = useSocketContext();
+  const { isConnected, emitGetNotification, refreshConnection, isLoading } =
+    useSocketContext();
   const [sheetOpen, setSheetOpen] = useState<boolean>(false);
   const [sheet2Open, setSheet2Open] = useState<boolean>(false);
   const [favoriteSheet, setFavoriteSheet] = useState<boolean>(false);
   const [logotAlert, setLogotAlert] = useState<boolean>(false);
   const [notificationSheet, setNotificationSheet] = useState<boolean>(false);
-  const [favoriteLinkList, setFavoriteLinkList] = useState<FavoriteMenuLinkListType[]>([]);
+  const [favoriteLinkList, setFavoriteLinkList] = useState<
+    FavoriteMenuLinkListType[]
+  >([]);
   const modalRef = useRef<HTMLDivElement>(null);
   const sidebaref = useRef<HTMLDivElement>(null);
   const favoriteref = useRef<HTMLDivElement>(null);
+
   const uiState: MainUIStateType = {
     sheetOpen,
     setSheetOpen,
@@ -45,8 +49,7 @@ function MainLayout(props: { children: React.ReactNode }) {
     setFavoriteLinkList,
   };
 
-
-    useEffect(() => {
+  useEffect(() => {
     if (isConnected) {
       emitGetNotification();
     }
@@ -70,28 +73,32 @@ function MainLayout(props: { children: React.ReactNode }) {
 
       <div>
         <nav
-          style={{ boxShadow: "rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px" }}
+          style={{
+            boxShadow:
+              "rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px",
+          }}
           className="z-[7] flex items-center justify-between h-[50px] px-[20px] fixed top-0 left-[50px] w-[calc(100vw-50px)] bg-[#5F259F]"
         >
-          <div className="flex gap-[20px] items-center">
-            
-          </div>
+          <div className="flex gap-[20px] items-center"></div>
           <div className="flex items-center gap-[20px]">
-               <MuiTooltip title={`Socket ${isConnected ? "Connected" : "Disconnected"}`} placement="right">
+            <MuiTooltip
+              title={`Socket ${isConnected ? "Connected" : "Disconnected"}`}
+              placement="right"
+            >
               <IconButton onClick={() => refreshConnection()}>
-                <SiSocketdotio className={`h-[25px] w-[25px] ${isConnected ? "text-green-500" : "text-red-500"}  ${isLoading ? "animate-spin" : ""}`} />
+                <SiSocketdotio
+                  className={`h-[25px] w-[25px] ${isConnected ? "text-green-500" : "text-red-500"}  ${isLoading ? "animate-spin" : ""}`}
+                />
               </IconButton>
             </MuiTooltip>
-             <div className="flex items-center gap-[20px]">
-            <div className="toggle"></div>
-            <div className="download">
-              <DownloadIndecator   />
-            </div>
- 
-             
+            <div className="flex items-center gap-[20px]">
+              <div className="toggle"></div>
+              <div className="download">
+                <DownloadIndecator />
+              </div>
 
-            <NotificationPnnel  />
-          </div>
+              {/* <NotificationPnnel /> */}
+            </div>
             <MuiTooltip title="Account" placement="left">
               <IconButton
                 onClick={() => {
@@ -121,7 +128,11 @@ function MainLayout(props: { children: React.ReactNode }) {
               }}
               className="flex items-center justify-center"
             >
-              <img src="/images/PhonePeIcon.jpg" alt="PhonePe" className="h-9 w-9 object-contain rounded-full" />
+              <img
+                src="/images/PhonePeIcon.jpg"
+                alt="PhonePe"
+                className="h-9 w-9 object-contain rounded-full"
+              />
             </Link>
           </div>
           <div className="flex flex-col gap-[30px]">
@@ -149,6 +160,7 @@ function MainLayout(props: { children: React.ReactNode }) {
           </div>
         </div>
         <main className="ml-[60px] bg-[#faf5ff] h-full">{props.children}</main>
+     
       </div>
     </Wrapper>
   );
@@ -160,7 +172,7 @@ const Wrapper = styled.div`
     position: relative;
     span {
       position: absolute;
-      background-color: #5F259F;
+      background-color: #5f259f;
       height: 100px;
       width: 10px;
       rotate: 30deg;

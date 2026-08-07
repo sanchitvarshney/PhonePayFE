@@ -1,59 +1,55 @@
 import { Icons } from "@/components/icons";
 import SelectComponent, { ComponentType } from "@/components/reusable/SelectComponent";
 import { Button } from "@/components/ui/button";
-import { getCostCenter } from "@/features/common/commonSlice";
 import { getQ3DatA } from "@/features/query/query/querySlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { formatNumber } from "@/utils/numberFormatUtils";
 import { showToast } from "@/utils/toasterContext";
 import { LoadingButton } from "@mui/lab";
-import { Autocomplete, List, ListItem, ListItemText, Skeleton, TextField, Typography } from "@mui/material";
+import { List, ListItem, ListItemText, Skeleton, TextField, Typography } from "@mui/material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs, { Dayjs } from "dayjs";
-import React, { useEffect, useMemo, useState } from "react";
+import React, {useState } from "react";
 
 const Q1query: React.FC = () => {
   const [colapse, setcolapse] = useState<boolean>(false);
   const [component, setComponent] = React.useState<ComponentType | null>(null);
   const [date, setDate] = React.useState<Dayjs | null>(dayjs());
-  const [costCenter, setCostCenter] = useState<{ label: string; value: string } | null>(null);
+  // const [costCenter, setCostCenter] = useState<{ label: string; value: string } | null>(null);
   const dispatch = useAppDispatch();
   const { q3data, q3DataLoading } = useAppSelector((state) => state.query);
-  const { costCenterData } = useAppSelector((state) => state.common);
+  // const { costCenterData } = useAppSelector((state) => state.common);
 
-  useEffect(() => {
-    dispatch(getCostCenter());
-  }, [dispatch]);
 
-  const costCenterOptions = useMemo(() => {
-    if (!costCenterData?.length) return [];
-    return costCenterData.map((item) => {
-      const raw = item as {
-        text?: string;
-        name?: string;
-        label?: string;
-        id?: string | number;
-        code?: string | number;
-        value?: string | number;
-        key?: string | number;
-      };
-      return {
-        label: String(raw.text ?? raw.name ?? raw.label ?? ""),
-        value: String(
-          raw.id ??
-            raw.code ??
-            raw.value ??
-            raw.key ??
-            raw.text ??
-            raw.name ??
-            raw.label ??
-            "",
-        ),
-      };
-    });
-  }, [costCenterData]);
+  // const costCenterOptions = useMemo(() => {
+  //   if (!costCenterData?.length) return [];
+  //   return costCenterData.map((item) => {
+  //     const raw = item as {
+  //       text?: string;
+  //       name?: string;
+  //       label?: string;
+  //       id?: string | number;
+  //       code?: string | number;
+  //       value?: string | number;
+  //       key?: string | number;
+  //     };
+  //     return {
+  //       label: String(raw.text ?? raw.name ?? raw.label ?? ""),
+  //       value: String(
+  //         raw.id ??
+  //           raw.code ??
+  //           raw.value ??
+  //           raw.key ??
+  //           raw.text ??
+  //           raw.name ??
+  //           raw.label ??
+  //           "",
+  //       ),
+  //     };
+  //   });
+  // }, [costCenterData]);
 
   return (
     <div className="h-[calc(100vh-100px)] bg-white relative">
@@ -78,7 +74,7 @@ const Q1query: React.FC = () => {
           <div className="p-[20px]">
             <div className="flex flex-col gap-[30px]">
               <SelectComponent value={component} onChange={setComponent} />
-              <Autocomplete
+              {/* <Autocomplete
                 options={costCenterOptions}
                 value={costCenter}
                 onChange={(_, value) => setCostCenter(value)}
@@ -87,7 +83,7 @@ const Q1query: React.FC = () => {
                 renderInput={(params) => (
                   <TextField {...params} label="Cost Center" variant="outlined" />
                 )}
-              />
+              /> */}
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   enableAccessibleFieldDOMStructure={false}
@@ -120,7 +116,7 @@ const Q1query: React.FC = () => {
                     getQ3DatA({
                       date: dayjs(date).format("DD-MM-YYYY"),
                       comp: component?.id || "",
-                      costCenter: costCenter?.value || "",
+                      // costCenter: costCenter?.value || "",
                     }),
                   );
                 }}

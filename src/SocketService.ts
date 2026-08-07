@@ -1,5 +1,6 @@
 import { showToast } from "@/utils/toasterContext";
 import { getToken } from "@/utils/tokenUtills";
+import { getSocketUrl } from "@/utils/socketSettings";
 import { io, Socket } from "socket.io-client";
 
 interface ISocketService {
@@ -15,12 +16,11 @@ interface ISocketService {
 class SocketService implements ISocketService {
   socket: Socket | null = null;
   isLoading = false;
-  constructor(private url: string) {}
 
   connect() {
     if (this.socket?.connected) return;
     this.isLoading = true;
-    this.socket = io(this.url, {
+    this.socket = io(getSocketUrl(), {
       transports: ["websocket"],
       auth: { authorization: getToken() },
     });
@@ -75,4 +75,4 @@ class SocketService implements ISocketService {
   }
 }
 
-export const socketService = new SocketService(import.meta.env.VITE_SOCKET_URL);
+export const socketService = new SocketService();

@@ -29,7 +29,7 @@ export type CreateRawMinPayloadType = {
   docketNo?: string[];
   recievedDate?: string[];
   receivedDate?: string[];
-  cc: string;
+  // cc: string;
   deliveryAddress: string;
   deliveryGst: string;
   minType?: string;
