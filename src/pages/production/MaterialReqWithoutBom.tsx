@@ -33,8 +33,9 @@ import SelectLocationAcordingModule, {
 } from "@/components/reusable/SelectLocationAcordingModule";
 
 interface RowData {
-  code: { lable: string; value: string } | null;
+  code: { lable: string; value: string; deviceKey?: string } | null;
   pickLocation: { lable: string; value: string } | null;
+  batch: { lable: string; value: string } | null;
   orderqty: string;
   remarks: string;
   id: string;
@@ -87,6 +88,7 @@ const MaterialReqWithoutBom = () => {
       id: newId,
       code: null,
       pickLocation: null,
+      batch: null,
       orderqty: "",
       remarks: "",
       isNew: true,
@@ -106,6 +108,7 @@ const MaterialReqWithoutBom = () => {
       const missingFields: string[] = [];
       if (!row.code) missingFields.push(type === "device" ? "Part Code" : "SKU");
       if (!row.pickLocation) missingFields.push("pickLocation");
+      if (type === "device" && !row.batch?.value) missingFields.push("batch");
       if (!row.orderqty) missingFields.push("orderqty");
       if (missingFields.length > 0) {
         showToast(`Row ${row.id}: Empty fields: ${missingFields.join(", ")}`, "error");
@@ -118,6 +121,10 @@ const MaterialReqWithoutBom = () => {
       const picLocation = rowData.map((row) => row.pickLocation?.value || "");
       const qty = rowData.map((row) => row.orderqty);
       const remark = rowData.map((row) => row.remarks);
+      const batchId =
+        type === "device"
+          ? rowData.map((row) => row.batch?.value || "")
+          : undefined;
       dispatch(
         createProductRequest({
           itemKey,
@@ -128,6 +135,7 @@ const MaterialReqWithoutBom = () => {
           putLocation: data.location!.code,
           comment: data.remarks,
           forTrc: type === "device" ? "1" : "0",
+          ...(batchId ? { batchId } : {}),
         })
       ).then((res: any) => {
         if (res.payload?.data.success) {

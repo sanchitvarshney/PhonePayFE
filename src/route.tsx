@@ -37,6 +37,7 @@ import ProductionAddDataPage from "./pages/production/ProductionAddDataPage";
 import ProductionReportPage from "./pages/production/ProductionReportPage";
 import BulkDeviceInwardLayout from "@/layouts/BulkDeviceInwardLayout";
 import BulkDeviceInward from "@/pages/bulkDeviceInward/BulkDeviceInward";
+import ManageBulkDeviceInward from "@/pages/bulkDeviceInward/ManageBulkDeviceInward";
 import SalesOrderLayout from "@/layouts/SalesOrderLayout";
 import CreateSalesOrder from "@/pages/salesorder/CreateSalesOrder";
 import ManageSalesOrder from "@/pages/salesorder/ManageSalesOrder";
@@ -232,8 +233,18 @@ export const router = createBrowserRouter([
               <BulkDeviceInward />
             </BulkDeviceInwardLayout>
           </MainLayout>
-        ), 
+        ),
         path: "/bulk-device-inward/create",
+      },
+      {
+        element: (
+          <MainLayout>
+            <BulkDeviceInwardLayout>
+              <ManageBulkDeviceInward />
+            </BulkDeviceInwardLayout>
+          </MainLayout>
+        ),
+        path: "/bulk-device-inward/manage",
       },
       {
         element: (

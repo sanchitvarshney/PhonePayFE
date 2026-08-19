@@ -56,12 +56,29 @@ export type CreateProductRequestType = {
   remark: string[];
   comment: string;
   forTrc?: string;
+  batchId?: string[];
 };
 
 export type AvailbleQtyItem = {
   location: string;
   item: string;
   Stock: number;
+};
+
+/** One batch, as returned by GET /request/fetch-batches?device_key=. */
+export type DeviceBatchItem = {
+  batchId: string;
+  totalQty: string | number;
+};
+
+export type DeviceBatchResponse = {
+  success: boolean;
+  data: DeviceBatchItem[];
+};
+
+export type DeviceBatchGroup = {
+  deviceKey: string;
+  batches: DeviceBatchItem[];
 };
 
 export type MRRequestWithoutBomState = {
@@ -74,4 +91,6 @@ export type MRRequestWithoutBomState = {
   availbleQtyData: AvailbleQtyItem[] | null;
   getSkuLoading: boolean;
   skuCodeData: SkuCodeDataresponse["data"] | null;
+  deviceBatchLoading: boolean;
+  deviceBatchData: DeviceBatchGroup[];
 };

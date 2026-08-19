@@ -1,3 +1,4 @@
+import AntBatchSelect from "@/components/reusable/antSelecters/AntBatchSelect";
 import AntCompSelect from "@/components/reusable/antSelecters/AntCompSelect";
 import AntLocationSelectAcordinttoModule from "@/components/reusable/antSelecters/AntLocationSelectAcordinttoModule";
 import AntSkuSelect from "@/components/reusable/antSelecters/AntSkuSelect";
@@ -17,7 +18,7 @@ interface MaterialInvardCellRendererProps {
 
 const formatDisplayValue = (field: string, val: any): string => {
   if (val == null || val === "") return "";
-  if (field === "code" || field === "pickLocation") {
+  if (field === "code" || field === "pickLocation" || field === "batch") {
     return val?.label || val?.lable || val?.text || "";
   }
   return String(val);
@@ -97,6 +98,7 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
           <AntSkuSelect
             onChange={(selectedValue) => {
               data[colDef.field] = selectedValue;
+              data.batch = null;
 
               if (selectedValue && data?.pickLocation) {
                 fetchAvailableQty(
@@ -104,7 +106,7 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
                   data.pickLocation,
                 );
               }
-              refreshCell([colDef.field]);
+              refreshCell([colDef.field, "batch"]);
             }}
             value={value}
           />
@@ -144,6 +146,22 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
                 );
               }
               refreshCell([colDef.field]);
+            }}
+            value={value}
+          />
+        );
+
+      case "batch":
+        return (
+          <AntBatchSelect
+            deviceKey={data.code?.deviceKey}
+            onChange={(selectedValue) => {
+              data[colDef.field] = selectedValue;
+              data.orderqty =
+                selectedValue?.totalQty != null
+                  ? String(selectedValue.totalQty)
+                  : data.orderqty;
+              refreshCell([colDef.field, "orderqty"]);
             }}
             value={value}
           />
