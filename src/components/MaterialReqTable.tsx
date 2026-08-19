@@ -9,8 +9,9 @@ import { Button, IconButton } from "@mui/material";
 import { useAppSelector } from "@/hooks/useReduxHook";
 
 interface RowData {
-  code: { lable: string; value: string } | null;
+  code: { lable: string; value: string; deviceKey?: string } | null;
   pickLocation: { lable: string; value: string } | null;
+  batch: { lable: string; value: string } | null;
   orderqty: string;
   remarks: string;
   id: string;
@@ -127,6 +128,16 @@ const MaterialReqTable: React.FC<Props> = ({
       cellRenderer: "textInputCellRenderer",
       minWidth: 300,
     },
+    ...(type === "device"
+      ? [
+          {
+            headerName: "Batch",
+            field: "batch",
+            cellRenderer: "textInputCellRenderer",
+            minWidth: 250,
+          },
+        ]
+      : []),
     {
       headerName: "Available Qty",
       field: "availableqty",

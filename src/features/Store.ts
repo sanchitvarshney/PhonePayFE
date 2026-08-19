@@ -18,6 +18,7 @@ import salesOrderReducer from "@/features/salesOrder/salesOrderSlice";
 import bomReducer from "@/features/master/BOM/BOMSlice";
 import pendingMrRequestReducer from "@/features/production/MaterialRequestWithoutBom/MRApprovalSlice";
 import locationAllotReducer from "@/features/locationAllotement/locationAllotSlice";
+import bulkDeviceInwardReducer from "@/features/bulkDeviceInward/bulkDeviceInwardSlice";
 
 
 export const store = configureStore({
@@ -41,6 +42,7 @@ export const store = configureStore({
     bom: bomReducer,
      pendingMr: pendingMrRequestReducer,
     locationAllot: locationAllotReducer,
+    bulkDeviceInward: bulkDeviceInwardReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

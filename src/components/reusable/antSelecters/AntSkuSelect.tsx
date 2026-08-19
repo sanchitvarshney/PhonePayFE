@@ -6,11 +6,20 @@ import { Select } from "antd";
 type SkuItem = {
   id: string;
   text: string;
+  device_key?: string;
+  deviceKey?: string;
+  key?: string;
+};
+
+export type SkuSelectValue = {
+  label: string;
+  value: string;
+  deviceKey?: string;
 };
 
 type Props = {
-  onChange: (value: { label: string; value: string } | null) => void;
-  value: { label: string; value: string } | null;
+  onChange: (value: SkuSelectValue | null) => void;
+  value: SkuSelectValue | null;
   label?: string;
   width?: string;
   skuType?: string;
@@ -68,7 +77,15 @@ const AntSkuSelect: React.FC<Props> = ({
       onChange={(selectedValue) => {
         const selectedItem = skuList.find((item) => item.id === selectedValue);
         if (selectedItem) {
-          onChange({ value: selectedItem.id, label: selectedItem.text });
+          onChange({
+            value: selectedItem.id,
+            label: selectedItem.text,
+            deviceKey:
+              selectedItem.device_key ??
+              selectedItem.deviceKey ??
+              selectedItem.key ??
+              selectedItem.id,
+          });
         }
       }}
       options={

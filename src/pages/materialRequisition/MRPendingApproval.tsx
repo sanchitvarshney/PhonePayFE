@@ -13,10 +13,15 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  FormControlLabel,
   IconButton,
+  ListItemButton,
   ListItemIcon,
+  ListItemText,
   Menu,
   MenuItem,
+  Radio,
+  RadioGroup,
   TextField,
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
@@ -48,6 +53,7 @@ const MRPendingApproval: React.FC = () => {
   const [alert, setAlert] = useState<boolean>(false);
   const [approved, setApproved] = useState<string[] | null>(null);
     const [requestType, setRequestType] = useState<string>("");
+  const [listType, setListType] = useState<"part" | "device">("part");
   const [remarks, setRemarks] = useState<string>("");
   const {
     cancelItemLoading,
@@ -61,8 +67,8 @@ const MRPendingApproval: React.FC = () => {
 
   const dispatch = useAppDispatch();
   useEffect(() => {
-    dispatch(getPendingMaterialListsync());
-  }, []);
+    dispatch(getPendingMaterialListsync(listType.toUpperCase()));
+  }, [listType]);
   useEffect(() => {
     dispatch(clearItemdetail());
     if (!approve) {
@@ -146,6 +152,22 @@ const MRPendingApproval: React.FC = () => {
         </div>
       ),
     },
+    ...(listType === "device"
+      ? [
+          {
+            headerName: "Batch ID",
+            field: "batchId",
+            sortable: true,
+            filter: true,
+            flex: 1,
+            cellRenderer: (params: any) => (
+              <div className="flex items-center h-full">
+                <span>{params?.data?.batchId ?? "--"}</span>
+              </div>
+            ),
+          },
+        ]
+      : []),
     {
       headerName: "Request Date",
       field: "insertDate",
@@ -190,7 +212,7 @@ const MRPendingApproval: React.FC = () => {
                   setRemarks("");
                   setTxnId("");
                   setAlert(false);
-                  dispatch(getPendingMaterialListsync());
+                  dispatch(getPendingMaterialListsync(listType.toUpperCase()));
                 }
               });
             } else {
@@ -238,24 +260,72 @@ const MRPendingApproval: React.FC = () => {
         alert={alert}
         setAlert={setAlert}
         reqType={requestType}
+        listType={listType.toUpperCase()}
       />
-   
-   
 
-      <div className=" ag-theme-quartz h-[calc(100vh-100px)]">
-        <AgGridReact
-          rowHeight={40}
-          headerHeight={40}
-          loadingOverlayComponent={CustomLoadingOverlay}
-          loading={getPendingMrRequestLoading}
-          overlayNoRowsTemplate={OverlayNoRowsTemplate}
-          suppressCellFocus={true}
-          rowData={pendingMrRequestData || []}
-          columnDefs={columnDefs}
-          defaultColDef={defaultColDef}
-          pagination={true}
-          paginationPageSize={20}
-        />
+
+
+      <div className="h-[calc(100vh-100px)] grid grid-cols-[300px_1fr] bg-white">
+        <div className="h-full border-r border-neutral-300 p-[10px]">
+          <RadioGroup value={listType}>
+            <div className="flex flex-col gap-[10px]">
+              <ListItemButton
+                sx={{
+                  border: "1px solid #5F259F",
+                  borderRadius: "5px",
+                  "&.Mui-selected": {
+                    backgroundColor: "#f3e8ff",
+                    color: "black",
+                  },
+                }}
+                onClick={() => setListType("part")}
+                selected={listType === "part"}
+              >
+                <FormControlLabel
+                  value="part"
+                  control={<Radio />}
+                  label={<ListItemText primary="Material" />}
+                  sx={{ width: "100%", margin: 0 }}
+                />
+              </ListItemButton>
+              <ListItemButton
+                sx={{
+                  border: "1px solid #5F259F",
+                  borderRadius: "5px",
+                  "&.Mui-selected": {
+                    backgroundColor: "#f3e8ff",
+                    color: "black",
+                  },
+                }}
+                onClick={() => setListType("device")}
+                selected={listType === "device"}
+              >
+                <FormControlLabel
+                  value="device"
+                  control={<Radio />}
+                  label={<ListItemText primary="SKU" />}
+                  sx={{ width: "100%", margin: 0 }}
+                />
+              </ListItemButton>
+            </div>
+          </RadioGroup>
+        </div>
+        <div className="ag-theme-quartz h-full min-h-0">
+          <AgGridReact
+            rowHeight={40}
+            headerHeight={40}
+            loadingOverlayComponent={CustomLoadingOverlay}
+            loading={getPendingMrRequestLoading}
+            overlayNoRowsTemplate={OverlayNoRowsTemplate}
+            suppressCellFocus={true}
+            rowData={pendingMrRequestData || []}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            pagination={true}
+            paginationPageSize={20}
+            paginationPageSizeSelector={[20, 50, 100]}
+          />
+        </div>
       </div>
 
       <Menu

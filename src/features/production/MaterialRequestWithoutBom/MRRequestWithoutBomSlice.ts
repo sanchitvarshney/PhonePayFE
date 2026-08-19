@@ -6,6 +6,7 @@ import {
   AvailbleQtyResponse,
   CreateProductRequestResponse,
   CreateProductRequestType,
+  DeviceBatchResponse,
   MRRequestWithoutBomState,
   PartCodeDataresponse,
 } from "./MRRequestWithoutBomType";
@@ -20,6 +21,8 @@ const initialState: MRRequestWithoutBomState = {
   availbleQtyData: null,
   getSkuLoading: false,
   skuCodeData: null,
+  deviceBatchLoading: false,
+  deviceBatchData: [],
 };
 
 const upsertAvailbleQty = (
@@ -62,6 +65,16 @@ export const createProductRequest = createAsyncThunk<
 
 
 
+
+export const getDeviceBatches = createAsyncThunk<
+  AxiosResponse<DeviceBatchResponse>,
+  { deviceKey: string }
+>("request/fetchDeviceBatches", async (params) => {
+  const response = await axiosInstance.get(
+    `/request/fetch-batches?device_key=${encodeURIComponent(params.deviceKey)}`,
+  );
+  return response;
+});
 
 export const getAvailbleQty = createAsyncThunk<
   AxiosResponse<AvailbleQtyResponse>,
@@ -131,6 +144,25 @@ const mrRequestWithoutBomSlice = createSlice({
   
 
  
+      .addCase(getDeviceBatches.pending, (state) => {
+        state.deviceBatchLoading = true;
+      })
+      .addCase(getDeviceBatches.fulfilled, (state, action) => {
+        state.deviceBatchLoading = false;
+        const deviceKey = action.meta.arg.deviceKey;
+        const batches = action.payload?.data?.data ?? [];
+        const existingIndex = state.deviceBatchData.findIndex(
+          (group) => group.deviceKey === deviceKey,
+        );
+        if (existingIndex >= 0) {
+          state.deviceBatchData[existingIndex] = { deviceKey, batches };
+        } else {
+          state.deviceBatchData.push({ deviceKey, batches });
+        }
+      })
+      .addCase(getDeviceBatches.rejected, (state) => {
+        state.deviceBatchLoading = false;
+      })
       .addCase(getAvailbleQty.fulfilled, (state, action) => {
         if (action.payload?.data?.success) {
           upsertAvailbleQty(state, action.payload.data.data);

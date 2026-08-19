@@ -28,9 +28,10 @@ const initialState: PendingMrRequestState = {
 };
 
 export const getPendingMaterialListsync = createAsyncThunk<
-  AxiosResponse<PendingMrRequestResponse>
->("master/getPendingMrrequst", async () => {
-  const response = await axiosInstance.get("/request/list");
+  AxiosResponse<PendingMrRequestResponse>,
+  string
+>("master/getPendingMrrequst", async (reqType) => {
+  const response = await axiosInstance.get(`/request/list/${reqType}`);
   return response;
 });
 

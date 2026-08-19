@@ -67,6 +67,7 @@ type Props = {
   approved: string[] | null;
   setApproved: React.Dispatch<React.SetStateAction<string[] | null>>;
   reqType: string;
+  listType: string;
 };
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -88,6 +89,7 @@ const MRProcessDrawer: React.FC<Props> = ({
   approved,
   setApproved,
   reqType,
+  listType,
 }) => {
   const [itemkey, setItemKey] = useState<string>("");
   const {
@@ -117,7 +119,7 @@ const MRProcessDrawer: React.FC<Props> = ({
 
   const handleClose = () => {
     setOpen(false);
-    dispatch(getPendingMaterialListsync());
+    dispatch(getPendingMaterialListsync(listType));
     setSelectedValue(null);
     setRemarks("");
     setIsueeQty("");
@@ -250,7 +252,7 @@ const MRProcessDrawer: React.FC<Props> = ({
         open={open}
         onClose={() => {
           setOpen(false);
-          dispatch(getPendingMaterialListsync());
+          dispatch(getPendingMaterialListsync(listType));
         }}
         TransitionComponent={Transition}
       >

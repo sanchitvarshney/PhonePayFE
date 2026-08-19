@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
-import MaterialInvardUploadDocumentDrawer from "@/components/Drawers/wearhouse/MaterialInvardUploadDocumentDrawer";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
-import {
-  clearaddressdetail,
-} from "@/features/wearhouse/Divicemin/devaiceMinSlice";
-import {
-  resetDocumentFile,
-} from "@/features/wearhouse/Rawmin/RawMinSlice";
 import {
   Autocomplete,
   Divider,
@@ -43,6 +36,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import FullPageLoading from "@/components/shared/FullPageLoading";
 import SerialNumberUpload from "@/components/procurement/SerialNumberUpload";
+import FileUploader from "@/components/reusable/FileUploader";
+import {
+  uploadBulkInvoiceFile,
+  storeInvoicePath,
+  resetInvoicePath,
+} from "@/features/bulkDeviceInward/bulkDeviceInwardSlice";
 
 interface SingleRowData {
   id: string;
@@ -205,7 +204,6 @@ const BulkDeviceInward: React.FC = () => {
   const navigate = useNavigate();
   const [alert, setAlert] = useState<boolean>(false);
   const [minNo, setMinno] = useState<string>("");
-  const [upload, setUpload] = useState<boolean>(false);
   const [singleRow, setSingleRow] = useState<SingleRowData>({
     id: newSingleRowId(),
     partComponent: null,
@@ -214,6 +212,8 @@ const BulkDeviceInward: React.FC = () => {
   });
   const [serialNumbers, setSerialNumbers] = useState<string[]>([]);
   const [serialUploadKey, setSerialUploadKey] = useState(0);
+  const [invoiceDocName, setInvoiceDocName] = useState<string>("");
+  const [invoiceFile, setInvoiceFile] = useState<File[] | null>(null);
   const [skuOptions, setSkuOptions] = useState<
     Array<{
       label: string;
@@ -231,6 +231,9 @@ const BulkDeviceInward: React.FC = () => {
   const { dispatchFromDetails, shippingAddress } = useAppSelector(
     (state) => state.client,
   ) as any;
+  const { invoicePath, uploadInvoiceLoading } = useAppSelector(
+    (state) => state.bulkDeviceInward,
+  );
   const isEdit = window.location.href.includes("edit-po");
   const id =
     window.location.href.split("edit-po/")[1]?.replace(/_/g, "/") || "";
@@ -272,12 +275,38 @@ const BulkDeviceInward: React.FC = () => {
     });
     setSerialNumbers([]);
     setSerialUploadKey((prev) => prev + 1);
+    setInvoiceDocName("");
+    setInvoiceFile(null);
+    dispatch(resetInvoicePath());
     reset(defaultFormValues);
-    dispatch(resetDocumentFile());
-    dispatch(clearaddressdetail());
     dispatch(setFormData(null as any));
     setActiveStep(0);
     setMinno("");
+  };
+
+  const handleInvoiceUpload = () => {
+    if (invoiceFile && invoiceFile.length > 0 && invoiceDocName) {
+      const formdata = new FormData();
+      formdata.append("file", invoiceFile[0]);
+      formdata.append("fileName", invoiceDocName);
+      dispatch(uploadBulkInvoiceFile(formdata)).then((res: any) => {
+        if (res.payload?.data?.success) {
+          const uploadedPath = String(res.payload.data?.data || "").trim();
+          if (!uploadedPath) {
+            showToast("Upload succeeded but file path not found", "error");
+            return;
+          }
+          dispatch(storeInvoicePath(uploadedPath));
+          showToast(res.payload.data.message ?? "Invoice uploaded successfully", "success");
+          setInvoiceFile(null);
+          setInvoiceDocName("");
+        } else {
+          showToast(res.payload?.data?.message ?? "Failed to upload invoice", "error");
+        }
+      });
+    } else {
+      showToast("File and Document Name Required", "error");
+    }
   };
 
   const onSubmit: SubmitHandler<FormData> = (data) => {
@@ -316,28 +345,9 @@ const BulkDeviceInward: React.FC = () => {
       return;
     }
 
-    const normalizedSerialNumbers = serialNumbers
-      .map((serial) => String(serial ?? "").trim())
-      .filter(Boolean);
-    const duplicateSerialNumbers = getDuplicateValues(normalizedSerialNumbers);
-    if (duplicateSerialNumbers.length > 0) {
-      showToast(
-        `Duplicate serial numbers found: ${duplicateSerialNumbers.join(", ")}`,
-        "error",
-      );
-      return;
-    }
-
     const component = singleRow.partComponent?.value || "";
     const qty = singleRow.qty;
     const rate = singleRow.rate;
-    if (normalizedSerialNumbers.length > 0 && normalizedSerialNumbers.length !== qty) {
-      showToast(
-        `Quantity (${qty}) must match uploaded serial count (${normalizedSerialNumbers.length})`,
-        "error",
-      );
-      return;
-    }
 
     const challanDate = formData.challanDate;
     let formattedChallanDate = "";
@@ -348,7 +358,7 @@ const BulkDeviceInward: React.FC = () => {
       }
     }
 
-    const payload: any = {
+    const basePayload: any = {
       component,
       sku: singleRow.partComponent?.sku || "",
       device_key: singleRow.partComponent?.device_key || "",
@@ -356,7 +366,6 @@ const BulkDeviceInward: React.FC = () => {
       device_modal: singleRow.partComponent?.device_modal || "",
       qty,
       rate,
-      serialno: normalizedSerialNumbers,
       placeOfSupply: formData.placeOfSupply,
       stateCode: formData.stateCode,
       challanNo: formData.challanNo,
@@ -377,7 +386,28 @@ const BulkDeviceInward: React.FC = () => {
       poid: id,
       vendor_type: "v01",
     };
+
     if (isEdit) {
+      const normalizedSerialNumbers = serialNumbers
+        .map((serial) => String(serial ?? "").trim())
+        .filter(Boolean);
+      const duplicateSerialNumbers = getDuplicateValues(normalizedSerialNumbers);
+      if (duplicateSerialNumbers.length > 0) {
+        showToast(
+          `Duplicate serial numbers found: ${duplicateSerialNumbers.join(", ")}`,
+          "error",
+        );
+        return;
+      }
+      if (normalizedSerialNumbers.length > 0 && normalizedSerialNumbers.length !== qty) {
+        showToast(
+          `Quantity (${qty}) must match uploaded serial count (${normalizedSerialNumbers.length})`,
+          "error",
+        );
+        return;
+      }
+
+      const payload = { ...basePayload, serialno: normalizedSerialNumbers };
       dispatch(updatePO(payload)).then((response: any) => {
         const body = response?.payload?.data ?? response?.payload ?? {};
         if (body?.success === true || String(body?.status).toLowerCase() === "success") {
@@ -388,45 +418,52 @@ const BulkDeviceInward: React.FC = () => {
           showToast(body?.message ?? "Failed to submit details", "error");
         }
       });
-    } else {
-      dispatch(createBulkDeviceInward(payload)).then((response: any) => {
-        const requestStatus = response?.meta?.requestStatus;
-        const body = response?.payload?.data ?? response?.payload ?? {};
-        const statusText = String(body?.status ?? body?.data?.status ?? "").toLowerCase();
-        const isSuccess =
-          requestStatus === "fulfilled" &&
-          (body?.success === true ||
-            body?.data?.success === true ||
-            statusText === "success");
-
-        if (isSuccess) {
-          showToast(
-            body?.message ??
-              body?.data?.message ??
-              "Device inward created successfully",
-            "success"
-          );
-          const ref =
-            body?.data?.min_no ??
-            body?.data?.id ??
-            body?.data?.dc_id ??
-            body?.dc_id ??
-            body?.data?.challan_no ??
-            body?.min_no ??
-            "";
-          resetall();
-          setMinno(ref ? String(ref) : "");
-          setActiveStep(2);
-        } else {
-          showToast(
-            body?.message ??
-              body?.data?.message ??
-              "Failed to create device inward",
-            "error"
-          );
-        }
-      });
+      return;
     }
+
+    if (!invoicePath) {
+      showToast("Please upload invoice before submitting", "error");
+      return;
+    }
+
+    const payload = { ...basePayload, invoiceAttachment: invoicePath };
+    dispatch(createBulkDeviceInward(payload)).then((response: any) => {
+      const requestStatus = response?.meta?.requestStatus;
+      const body = response?.payload?.data ?? response?.payload ?? {};
+      const statusText = String(body?.status ?? body?.data?.status ?? "").toLowerCase();
+      const isSuccess =
+        requestStatus === "fulfilled" &&
+        (body?.success === true ||
+          body?.data?.success === true ||
+          statusText === "success");
+
+      if (isSuccess) {
+        showToast(
+          body?.message ??
+            body?.data?.message ??
+            "Device inward created successfully",
+          "success"
+        );
+        const ref =
+          body?.data?.min_no ??
+          body?.data?.id ??
+          body?.data?.dc_id ??
+          body?.dc_id ??
+          body?.data?.challan_no ??
+          body?.min_no ??
+          "";
+        resetall();
+        setMinno(ref ? String(ref) : "");
+        setActiveStep(2);
+      } else {
+        showToast(
+          body?.message ??
+            body?.data?.message ??
+            "Failed to create device inward",
+          "error"
+        );
+      }
+    });
   };
   useEffect(() => {
     dispatch(getDispatchFromDetail());
@@ -577,13 +614,11 @@ const BulkDeviceInward: React.FC = () => {
         confirmText="Continue"
         onConfirm={() => {
           resetall();
-          dispatch(resetDocumentFile());
           setActiveStep(0);
           setAlert(false);
         }}
       />
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white w-full flex-1 min-h-0 flex flex-col overflow-hidden">
-        <MaterialInvardUploadDocumentDrawer open={upload} setOpen={setUpload} />
         {loading && <FullPageLoading />}
         <div className="flex-1 min-h-0 w-full flex flex-col overflow-hidden">
           <div className="flex-shrink-0 h-[50px] flex items-center w-full px-[20px] bg-neutral-50 border-b border-neutral-300">
@@ -1235,61 +1270,98 @@ const BulkDeviceInward: React.FC = () => {
                     fullWidth
                   />
                 </div>
-                <SerialNumberUpload
-                  key={serialUploadKey}
-                  disabled={isSerialUploadDisabled}
-                  disabledMessage="Select description, then enter quantity and rate before uploading Excel."
-                  onSerialNumbersChange={(serials: string[]) => {
-                    if (isSerialUploadDisabled) {
-                      showToast(
-                        "Please select description and enter quantity and rate before uploading Excel",
-                        "error",
-                      );
-                      setSerialNumbers([]);
-                      setSerialUploadKey((prev) => prev + 1);
-                      return;
-                    }
-                    const normalizedSerials = serials
-                      .map((serial) => String(serial ?? "").trim())
-                      .filter(Boolean);
-                    const duplicateSerialNumbers =
-                      getDuplicateValues(normalizedSerials);
-                    if (duplicateSerialNumbers.length > 0) {
-                      showToast(
-                        `Duplicate serial numbers found: ${duplicateSerialNumbers.join(", ")}`,
-                        "error",
-                      );
-                      setSerialNumbers([]);
-                      setSerialUploadKey((prev) => prev + 1);
-                      return;
-                    }
-                    const enteredQty = Number(singleRow.qty) || 0;
-                    if (
-                      enteredQty > 0 &&
-                      normalizedSerials.length > 0 &&
-                      normalizedSerials.length !== enteredQty
-                    ) {
-                      showToast(
-                        `Uploaded serial count (${normalizedSerials.length}) must match quantity (${enteredQty})`,
-                        "error",
-                      );
-                      setSerialNumbers([]);
-                      setSerialUploadKey((prev) => prev + 1);
-                      return;
-                    }
-                    setSerialNumbers(normalizedSerials);
-                  }}
-                />
-                <div>
-                  <LoadingButton
-                    type="button"
-                    variant="text"
-                    startIcon={<DownloadIcon />}
-                    onClick={downloadSerialSampleFile}
-                  >
-                    Download Serial Sample File
-                  </LoadingButton>
-                </div>
+                {isEdit ? (
+                  <>
+                    <SerialNumberUpload
+                      key={serialUploadKey}
+                      disabled={isSerialUploadDisabled}
+                      disabledMessage="Select description, then enter quantity and rate before uploading Excel."
+                      onSerialNumbersChange={(serials: string[]) => {
+                        if (isSerialUploadDisabled) {
+                          showToast(
+                            "Please select description and enter quantity and rate before uploading Excel",
+                            "error",
+                          );
+                          setSerialNumbers([]);
+                          setSerialUploadKey((prev) => prev + 1);
+                          return;
+                        }
+                        const normalizedSerials = serials
+                          .map((serial) => String(serial ?? "").trim())
+                          .filter(Boolean);
+                        const duplicateSerialNumbers =
+                          getDuplicateValues(normalizedSerials);
+                        if (duplicateSerialNumbers.length > 0) {
+                          showToast(
+                            `Duplicate serial numbers found: ${duplicateSerialNumbers.join(", ")}`,
+                            "error",
+                          );
+                          setSerialNumbers([]);
+                          setSerialUploadKey((prev) => prev + 1);
+                          return;
+                        }
+                        const enteredQty = Number(singleRow.qty) || 0;
+                        if (
+                          enteredQty > 0 &&
+                          normalizedSerials.length > 0 &&
+                          normalizedSerials.length !== enteredQty
+                        ) {
+                          showToast(
+                            `Uploaded serial count (${normalizedSerials.length}) must match quantity (${enteredQty})`,
+                            "error",
+                          );
+                          setSerialNumbers([]);
+                          setSerialUploadKey((prev) => prev + 1);
+                          return;
+                        }
+                        setSerialNumbers(normalizedSerials);
+                      }}
+                    />
+                    <div>
+                      <LoadingButton
+                        type="button"
+                        variant="text"
+                        startIcon={<DownloadIcon />}
+                        onClick={downloadSerialSampleFile}
+                      >
+                        Download Serial Sample File
+                      </LoadingButton>
+                    </div>
+                  </>
+                ) : (
+                  <div className="border border-neutral-200 rounded-md p-[20px] bg-white flex flex-col gap-[15px]">
+                    <Typography variant="inherit" fontWeight={600}>
+                      Upload Invoice
+                    </Typography>
+                    <TextField
+                      variant="filled"
+                      label="Document Name"
+                      value={invoiceDocName}
+                      onChange={(e) => setInvoiceDocName(e.target.value)}
+                      fullWidth
+                    />
+                    <FileUploader
+                      label="Upload Invoice"
+                      value={invoiceFile}
+                      onFileChange={setInvoiceFile}
+                    />
+                    <LoadingButton
+                      type="button"
+                      variant="contained"
+                      loading={uploadInvoiceLoading}
+                      startIcon={<Icons.uploadfile />}
+                      onClick={handleInvoiceUpload}
+                      className="max-w-max"
+                    >
+                      Upload
+                    </LoadingButton>
+                    {invoicePath ? (
+                      <Typography variant="inherit" className="text-green-700">
+                        Invoice uploaded: {invoicePath}
+                      </Typography>
+                    ) : null}
+                  </div>
+                )}
               </div>
             </div>
           )}
