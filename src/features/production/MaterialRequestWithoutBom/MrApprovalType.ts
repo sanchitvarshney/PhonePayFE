@@ -19,6 +19,7 @@ export type Head = {
   mfgQty: string;
   comment: string;
   transactionId: string;
+  deviceBatchId?: string;
 };
 
 export type ProcessRequestDataBody = {
@@ -63,6 +64,7 @@ export type ApprovePayload = {
   srlNumber?: string[];
   txnID?: string;
   itemCode?: string;
+  batchId?: string;
 };
 export type ApproveItemsResponse = {
   status: string;
