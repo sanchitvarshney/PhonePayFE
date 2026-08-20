@@ -40,6 +40,7 @@ const BatchListDrawer: React.FC<Props> = ({ open, row, onClose }) => {
   );
   const challanNo = getChallanNo(row);
   const minNo = getMinNo(row);
+  const deviceSku = row?.deviceSku ?? "";
   const [selectedBatch, setSelectedBatch] =
     useState<BulkDeviceInwardSerialBatch | null>(null);
 
@@ -101,7 +102,7 @@ const BatchListDrawer: React.FC<Props> = ({ open, row, onClose }) => {
             Batch Details
           </CustomDrawerTitle>
           <CustomDrawerDescription className="text-slate-500">
-            Challan {challanNo}
+            Challan {challanNo} &middot; SKU {deviceSku}
           </CustomDrawerDescription>
         </CustomDrawerHeader>
         <div className="p-[20px] flex-1 min-h-0 ag-theme-quartz">

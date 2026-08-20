@@ -170,6 +170,7 @@ const MRProcessDrawer: React.FC<Props> = ({
             issueQty: data.issueQty,
             txnID: requestDetail?.id || "",
             srlNumber: scanned || [],
+            batchId: processRequestData?.head?.deviceBatchId || "",
           }
         : {
             itemsCode: itemkey,
