@@ -10,6 +10,8 @@ export interface SerialNumberUploadProps {
   disabledMessage?: string;
   /** Tailwind classes for the serial preview table wrapper (e.g. max height + scroll). */
   serialPreviewWrapperClassName?: string;
+  /** Shows a "Download Sample File" button that writes a single-column serial list. */
+  onDownloadSample?: () => void;
 }
 
 function normalizeHeader(v: unknown): string {
@@ -24,6 +26,7 @@ export default function SerialNumberUpload({
   disabled = false,
   disabledMessage = "",
   serialPreviewWrapperClassName,
+  onDownloadSample,
 }: SerialNumberUploadProps) {
   const [error, setError] = useState<string>("");
   const [fileName, setFileName] = useState<string>("");
@@ -50,14 +53,16 @@ export default function SerialNumberUpload({
 
     const headerRow = data[0] || [];
     const colIdx = headerRow.findIndex((h) => normalizeHeader(h) === "serialno");
-    if (colIdx === -1) {
-      throw new Error('Column "serialno" not found');
-    }
 
-    const extracted = data
-      .slice(1)
-      .map((r) => String((r || [])[colIdx] ?? "").trim())
-      .filter(Boolean);
+    // Falls back to reading column A directly when there's no "serialno"
+    // header — the real files uploaded here are a single unlabeled column.
+    const extracted =
+      colIdx !== -1
+        ? data
+            .slice(1)
+            .map((r) => String((r || [])[colIdx] ?? "").trim())
+            .filter(Boolean)
+        : data.map((r) => String((r || [])[0] ?? "").trim()).filter(Boolean);
 
     setSerials(extracted);
     onSerialNumbersChange(extracted);
@@ -72,7 +77,17 @@ export default function SerialNumberUpload({
             Upload Serial Numbers
           </Typography>
         </div>
-        <LoadingButton
+        <div className="flex items-center gap-[10px]">
+          {onDownloadSample ? (
+            <LoadingButton
+              variant="text"
+              startIcon={<Icons.download />}
+              onClick={onDownloadSample}
+            >
+              Download Sample File
+            </LoadingButton>
+          ) : null}
+          <LoadingButton
           component="label"
           variant="contained"
           startIcon={<Icons.uploadfile />}
@@ -98,7 +113,8 @@ export default function SerialNumberUpload({
               }
             }}
           />
-        </LoadingButton>
+          </LoadingButton>
+        </div>
       </div>
 
       <div className="pt-[10px] flex flex-col gap-[10px]">
