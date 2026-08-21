@@ -4,6 +4,7 @@ import AntLocationSelectAcordinttoModule from "@/components/reusable/antSelecter
 import AntSkuSelect from "@/components/reusable/antSelecters/AntSkuSelect";
 import {
   getAvailbleQty,
+  getDeviceBatches,
   getSwipeAvailbleQty,
 } from "@/features/production/MaterialRequestWithoutBom/MRRequestWithoutBomSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
@@ -35,6 +36,7 @@ const AvailableQtyCell = memo<{ data: any, onChange?: any }>(({ data, onChange }
 
   const itemCode = data?.code?.value;
   const locationCode = data?.pickLocation?.value;
+  const batchId = data?.batch?.value;
 
   useEffect(() => {
     if (!availbleQtyData || !itemCode || !locationCode) {
@@ -43,12 +45,15 @@ const AvailableQtyCell = memo<{ data: any, onChange?: any }>(({ data, onChange }
     }
 
     const matchingItem:any = availbleQtyData.find(
-      (item) => item.location === locationCode && item.item === itemCode,
+      (item) =>
+        item.location === locationCode &&
+        item.item === itemCode &&
+        item.batchId === batchId,
     );
       console.log(matchingItem);
     setAvailbleQty(matchingItem?.Stock);
     onChange(String(matchingItem?.Stock));
-  }, [availbleQtyData, itemCode, locationCode]);
+  }, [availbleQtyData, itemCode, locationCode, batchId]);
 
   return <span>{availbleQty}</span>;
 });
@@ -74,6 +79,7 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
   const fetchAvailableQty = (
     itemCode: string,
     location: { value?: string } | string,
+    batchId?: string,
   ) => {
     const fetchQty =
       module === "swipe" ? getSwipeAvailbleQty : getAvailbleQty;
@@ -82,6 +88,7 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
         itemCode,
         type: getStockType(),
         location,
+        ...(batchId ? { batchId } : {}),
       }),
     );
   };
@@ -98,13 +105,15 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
           <AntSkuSelect
             onChange={(selectedValue) => {
               data[colDef.field] = selectedValue;
+              // Stock lookup for SKU requires a batchId, which isn't known
+              // until the batch dropdown (populated from this device, after
+              // pick location) is selected — so no fetchAvailableQty call here.
               data.batch = null;
-
-              if (selectedValue && data?.pickLocation) {
-                fetchAvailableQty(
-                  selectedValue.value || "",
-                  data.pickLocation,
-                );
+              // Fetch the batch list here rather than relying on
+              // AntBatchSelect's own effect — ag-grid can reuse cell params
+              // across refreshes, so a prop-driven fetch can lag behind.
+              if (selectedValue?.deviceKey) {
+                dispatch(getDeviceBatches({ deviceKey: selectedValue.deviceKey }));
               }
               refreshCell([colDef.field, "batch"]);
             }}
@@ -139,13 +148,15 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
             onChange={(locationValue) => {
               data[colDef.field] = locationValue;
 
-              if (locationValue && data?.code) {
+              // For SKU rows, the stock lookup needs a batchId, which is
+              // only available once the batch is chosen (after location).
+              if (locationValue && data?.code && type !== "device") {
                 fetchAvailableQty(
                   data.code?.value ?? data.code,
                   locationValue.value,
                 );
               }
-              refreshCell([colDef.field]);
+              refreshCell([colDef.field, "batch"]);
             }}
             value={value}
           />
@@ -161,7 +172,15 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
                 selectedValue?.totalQty != null
                   ? String(selectedValue.totalQty)
                   : data.orderqty;
-              refreshCell([colDef.field, "orderqty"]);
+
+              if (selectedValue && data?.code && data?.pickLocation) {
+                fetchAvailableQty(
+                  data.code?.value ?? data.code,
+                  data.pickLocation,
+                  selectedValue.value,
+                );
+              }
+              refreshCell([colDef.field, "orderqty", "availableqty"]);
             }}
             value={value}
           />
@@ -223,4 +242,4 @@ const MaterialCellRender: React.FC<MaterialInvardCellRendererProps> = ({
   return <span>{formatDisplayValue(colDef.field, value)}</span>;
 };
 
-export default memo(MaterialCellRender);
+export default MaterialCellRender;

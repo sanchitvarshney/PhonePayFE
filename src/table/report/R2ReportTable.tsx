@@ -52,7 +52,7 @@ const R2ReportTable: React.FC<Props> = ({ gridRef, handlePageChange, handlePageS
     },
     {
       headerName: "Dispatch Qty",
-      field: "dispatchQty",
+      field: "qty",
       sortable: true,
       filter: true,
     minWidth: 100,

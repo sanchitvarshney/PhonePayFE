@@ -63,6 +63,7 @@ export type AvailbleQtyItem = {
   location: string;
   item: string;
   Stock: number;
+  batchId?: string;
 };
 
 /** One batch, as returned by GET /request/fetch-batches?device_key=. */
