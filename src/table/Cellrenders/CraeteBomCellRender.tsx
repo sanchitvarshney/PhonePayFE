@@ -65,6 +65,26 @@ const CraeteBomCellRender: React.FC<CraeteBomProps> = ({ props, customFunction }
             className="custom-input"
           />
         );
+      case "subcategory":
+        return (
+          <Select
+            value={value || undefined}
+            placeholder="Sub Category"
+            style={{ width: "100%" }}
+            onChange={(val) => {
+              data[colDef.field] = val;
+              api.refreshCells({
+                rowNodes: [props.node],
+                columns: [column, "component", "remark", "qty", "uom", "reference"],
+              });
+            }}
+            options={[
+              { label: "Variable", value: "var" },
+              { label: "Fixed", value: "fix" },
+            ]}
+            className="custom-input"
+          />
+        );
       case "status":
         return (
           <Select

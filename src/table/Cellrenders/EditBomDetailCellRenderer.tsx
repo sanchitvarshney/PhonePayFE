@@ -75,6 +75,28 @@ const EditBomDetailCellRenderer: React.FC<any> = ({ value, colDef, data, api, co
     );
   }
 
+  if (colDef.field === "subCategory") {
+    return (
+      <Select
+        value={value || undefined}
+        placeholder="Sub Category"
+        style={{ width: "100%" }}
+        onChange={(value) => {
+          data[colDef.field] = value;
+          api.refreshCells({
+            rowNodes: [node],
+            columns: [column],
+          });
+        }}
+        options={[
+          { label: "Variable", value: "var" },
+          { label: "Fixed", value: "fix" },
+        ]}
+        className="custom-input"
+      />
+    );
+  }
+
   return <span>{value}</span>;
 };
 

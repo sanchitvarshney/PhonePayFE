@@ -22,6 +22,7 @@ interface RowData {
   id: string;
   component: { lable: string; value: string } | null;
   category: string;
+  subcategory: string;
   status: string;
   qty: number;
   isNew: boolean;
@@ -66,6 +67,7 @@ const MasterCraeteBOM: React.FC = () => {
       remark: "",
       reference: "",
       category: "",
+      subcategory: "",
       status: "1",
     };
     setRowData((prev) => [newRow, ...prev]);
@@ -96,6 +98,11 @@ const MasterCraeteBOM: React.FC = () => {
     return hasErrors;
   };
 
+  const subCategoryToValue = (label: string) => {
+    const map: Record<string, string> = { variable: "var", fixed: "fix" };
+    return map[label.trim().toLowerCase()] ?? label;
+  };
+
   const onSubmit: SubmitHandler<FormState> = (data) => {
     if (uploadFileData) {
       const component = uploadFileData.map((item) => item.compKey);
@@ -103,7 +110,8 @@ const MasterCraeteBOM: React.FC = () => {
       const reference = uploadFileData.map((item) => item.ref);
       const remark = uploadFileData.map((item) => item.remarks);
       const category = uploadFileData.map((item) => item.category || "");
-      const items = { component, qty, remark, reference, category };
+      const bomSubCategory = uploadFileData.map((item) => subCategoryToValue(item.subCategory || ""));
+      const items = { component, qty, remark, reference, category, bomSubCategory };
       dispatch(createBomAsync({ sku: data.sku!.id, type: data.type || "", remark: data.remark, subject: data.subject, items })).then((res: any) => {
         if (res.payload.data.success) {
           setRowData([]);
@@ -122,7 +130,8 @@ const MasterCraeteBOM: React.FC = () => {
           const remark = rowData.map((item) => item.remark || "");
           const category = rowData.map((item) => item.category);
           const status = rowData.map((item) => item.status);
-          const items = { component, qty, remark, reference, category, status };
+          const bomSubCategory = rowData.map((item) => item.subcategory || "");
+          const items = { component, qty, remark, reference, category, status, bomSubCategory };
           dispatch(createBomAsync({ sku: data.sku!.id, type: data.type || "", remark: data.remark, subject: data.subject, items })).then((res: any) => {
             if (res.payload.data.success) {
               setRowData([]);

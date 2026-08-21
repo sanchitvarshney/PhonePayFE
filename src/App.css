@@ -281,10 +281,10 @@ input:-webkit-autofill {
 }
 .custom-input {
   border: none;
-  border-bottom: 2px solid #a3a3a3; /* Bottom border */
+  border-bottom: 1px solid #a3a3a3; /* Bottom border */
   border-radius: 0;
   box-shadow: none; /* No shadow */
-  padding: 5px 12px;
+  padding: 5px 2px;
   font-size: 16px;
   transition: border-color 0.3s;
   background-color: transparent !important;
@@ -292,7 +292,7 @@ input:-webkit-autofill {
 
 .custom-input:focus,
 .custom-input:hover {
-  border-color: #155e75; /* Focus color */
+  border-color: #000; /* Focus color */
   outline: none;
   box-shadow: none; /* No outline shadow */
   background-color: transparent !important;

@@ -43,6 +43,20 @@ export type UploadInvoiceFileApiResponse = {
   data: InvoiceFileData[];
 };
 
+export type PartNameData = {
+  partCode: string;
+  partName: string;
+  bomSubCategory: string;
+};
+
+export type PartNamesApiResponse = {
+  success: boolean;
+  status: string;
+  message?: string;
+  data?: PartNameData[];
+  body?: PartNameData[];
+};
+
 export type DeviceMinSate = {
   getLocationLoading: boolean;
   locationData: Location[] | null;
@@ -56,4 +70,6 @@ export type DeviceMinSate = {
   serialFiledata: UploadFileData | null;
   uploadInvoiceFileLoading: boolean;
   invociceFiledata: InvoiceFileData[] | null;
+  getPartNamesLoading: boolean;
+  partNamesData: PartNameData[] | null;
 };
