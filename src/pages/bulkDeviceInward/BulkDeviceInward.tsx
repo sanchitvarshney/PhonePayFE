@@ -323,7 +323,7 @@ const BulkDeviceInward: React.FC = () => {
       dispatch(setFormData(cloneFormData(data)));
       setActiveStep(1); // Directly set the step instead of using handleNext
     } catch (error) {
-      console.error("Error submitting form:", error);
+     
       showToast("Error submitting form", "error");
     }
   };
@@ -409,8 +409,11 @@ const BulkDeviceInward: React.FC = () => {
 
       const payload = { ...basePayload, serialno: normalizedSerialNumbers };
       dispatch(updatePO(payload)).then((response: any) => {
-        const body = response?.payload?.data ?? response?.payload ?? {};
-        if (body?.success === true || String(body?.status).toLowerCase() === "success") {
+        const isRejected = updatePO.rejected.match(response);
+        const body = isRejected
+          ? response?.payload ?? {}
+          : response?.payload?.data ?? response?.payload ?? {};
+        if (!isRejected && (body?.success === true || String(body?.status).toLowerCase() === "success")) {
           showToast(body?.message ?? "Details Submitted successfully", "success");
           resetall();
           navigate("/procurement/manage");
@@ -1414,9 +1417,9 @@ const BulkDeviceInward: React.FC = () => {
                   sx={{ background: "white", color: "red" }}
                   variant="contained"
                   startIcon={<Icons.previous />}
-                  onClick={() => {
-                    handleBack();
-                  }}
+                  onClick={
+                    handleBack
+                  }
                 >
                   Back
                 </LoadingButton>

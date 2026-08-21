@@ -4,6 +4,7 @@ import { AxiosResponse } from "axios";
 import {
   DeviceMinSate,
   LocationApiresponse,
+  PartNamesApiResponse,
   UploadInvoiceFileApiResponse,
   UploadSerialFileResponse,
   VendorAddressApiResponse,
@@ -22,6 +23,8 @@ const initialState: DeviceMinSate = {
   serialFiledata: null,
   uploadInvoiceFileLoading: false,
   invociceFiledata: null,
+  getPartNamesLoading: false,
+  partNamesData: null,
 };
 
 export const getLocationAsync = createAsyncThunk<AxiosResponse<LocationApiresponse>, string | null>(
@@ -73,6 +76,24 @@ export const uploadInvoiceFile = createAsyncThunk<AxiosResponse<UploadInvoiceFil
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response;
+  }
+);
+
+export const getPartNamesAsync = createAsyncThunk<
+  AxiosResponse<PartNamesApiResponse>,
+  { bomKey: string; partCode: string[] }
+>(
+  "wearhouse/deviceMin/getPartNames",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(
+        `/consumption/getPartNames?bomKey=${payload.bomKey}`,
+        { partCode: payload.partCode }
+      );
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data ?? { message: error.message });
+    }
   }
 );
 
@@ -158,6 +179,17 @@ const deviceMinSlice = createSlice({
       })
       .addCase(uploadInvoiceFile.rejected, (state) => {
         state.uploadInvoiceFileLoading = false;
+      })
+      .addCase(getPartNamesAsync.pending, (state) => {
+        state.getPartNamesLoading = true;
+      })
+      .addCase(getPartNamesAsync.fulfilled, (state, action) => {
+        state.getPartNamesLoading = false;
+        const list = action.payload?.data?.data ?? action.payload?.data?.body ?? [];
+        state.partNamesData = Array.isArray(list) ? list : [];
+      })
+      .addCase(getPartNamesAsync.rejected, (state) => {
+        state.getPartNamesLoading = false;
       });
   },
 });

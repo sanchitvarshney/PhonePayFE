@@ -60,8 +60,7 @@ const SelectComponent: React.FC<Props> = ({
   }, []);
 
   return (
-    <Autocomplete
-      onFocus={() => fetchItems(null)}
+    <Autocomplete 
       value={value}
       size={size}
       options={itemList || []}
