@@ -39,7 +39,11 @@ type Props = {
 };
 
 const downloadSerialSampleFile = () => {
-  const sampleRows = [["PPSS20001112588"], ["PPSS20001126959"]];
+  const sampleRows = [
+    ["serialno"],
+    ["PPSS20001112588"],
+    ["PPSS20001126959"],
+  ];
   const ws = XLSX.utils.aoa_to_sheet(sampleRows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "SerialNumbers");
