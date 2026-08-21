@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Autocomplete, InputAdornment, TextField, Typography } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
+import * as XLSX from "xlsx";
 import {
   CustomDrawer,
   CustomDrawerContent,
@@ -35,6 +36,14 @@ type Props = {
   row: any;
   onClose: () => void;
   onSuccess: () => void;
+};
+
+const downloadSerialSampleFile = () => {
+  const sampleRows = [["PPSS20001112588"], ["PPSS20001126959"]];
+  const ws = XLSX.utils.aoa_to_sheet(sampleRows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "SerialNumbers");
+  XLSX.writeFile(wb, "serial_number_sample.xlsx");
 };
 
 const getDuplicateValues = (values: string[]): string[] => {
@@ -161,7 +170,7 @@ const UploadSerialNoDrawer: React.FC<Props> = ({
 
   return (
     <CustomDrawer open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <CustomDrawerContent side="right" className="min-w-[500px] p-0 flex flex-col">
+      <CustomDrawerContent side="right" className="min-w-[700px] p-0 flex flex-col">
         <CustomDrawerHeader className="h-[60px] flex-shrink-0 p-0 flex flex-col justify-center px-[20px] space-y-0 bg-zinc-200 gap-0">
           <CustomDrawerTitle className="text-slate-600 font-[500] p-0">
             Upload Serial No
@@ -172,7 +181,7 @@ const UploadSerialNoDrawer: React.FC<Props> = ({
         </CustomDrawerHeader>
         <div className="p-[20px] flex flex-col gap-[20px] overflow-y-auto flex-1 min-h-0">
           {step === 0 ? (
-            <>
+            <div className="grid grid-cols-2 gap-[20px]">
               <TextField
                 variant="filled"
                 type="number"
@@ -196,14 +205,17 @@ const UploadSerialNoDrawer: React.FC<Props> = ({
                   <TextField {...params} variant="filled" label="Location" />
                 )}
               />
-            </>
+            </div>
           ) : (
             <>
-              <Typography variant="inherit">Quantity: {qty}</Typography>
-              <Typography variant="inherit">Location: {location?.label}</Typography>
+              <div className="grid grid-cols-2 gap-[20px]">
+                <Typography variant="inherit">Quantity: {qty}</Typography>
+                <Typography variant="inherit">Location: {location?.label}</Typography>
+              </div>
               <SerialNumberUpload
                 key={serialUploadKey}
                 onSerialNumbersChange={handleSerialNumbersChange}
+                onDownloadSample={downloadSerialSampleFile}
               />
             </>
           )}
