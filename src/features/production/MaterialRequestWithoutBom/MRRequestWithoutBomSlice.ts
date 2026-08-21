@@ -33,7 +33,10 @@ const upsertAvailbleQty = (
     state.availbleQtyData = [];
   }
   const existingIndex = state.availbleQtyData.findIndex(
-    (item) => item.location === data.location && item.item === data.item,
+    (item) =>
+      item.location === data.location &&
+      item.item === data.item &&
+      item.batchId === data.batchId,
   );
   if (existingIndex >= 0) {
     state.availbleQtyData[existingIndex] = data;
@@ -78,28 +81,44 @@ export const getDeviceBatches = createAsyncThunk<
 
 export const getAvailbleQty = createAsyncThunk<
   AxiosResponse<AvailbleQtyResponse>,
-  { type: string; itemCode: string; location: { value?: string } | string }
+  {
+    type: string;
+    itemCode: string;
+    location: { value?: string } | string;
+    batchId?: string;
+  }
 >("wearhouse/getAvailbleQty", async (params) => {
   const locationValue =
     typeof params.location === "string"
       ? params.location
       : params.location.value ?? "";
+  const query = params.batchId
+    ? `?batchId=${encodeURIComponent(params.batchId)}`
+    : "";
   const response = await axiosInstance.get(
-    `/backend/stock/${params.type}/${params.itemCode}/${locationValue}`,
+    `/backend/stock/${params.type}/${params.itemCode}/${locationValue}${query}`,
   );
   return response;
 });
 
 export const getSwipeAvailbleQty = createAsyncThunk<
   AxiosResponse<AvailbleQtyResponse>,
-  { type: string; itemCode: string; location: { value?: string } | string }
+  {
+    type: string;
+    itemCode: string;
+    location: { value?: string } | string;
+    batchId?: string;
+  }
 >("wearhouse/getSwipeAvailbleQty", async (params) => {
   const locationValue =
     typeof params.location === "string"
       ? params.location
       : params.location.value ?? "";
+  const query = params.batchId
+    ? `?batchId=${encodeURIComponent(params.batchId)}`
+    : "";
   const response = await axiosInstance.get(
-    `/backend/stockv2/${params.type}/${params.itemCode}/${locationValue}`,
+    `/backend/stockv2/${params.type}/${params.itemCode}/${locationValue}${query}`,
   );
   return response;
 });
@@ -165,12 +184,18 @@ const mrRequestWithoutBomSlice = createSlice({
       })
       .addCase(getAvailbleQty.fulfilled, (state, action) => {
         if (action.payload?.data?.success) {
-          upsertAvailbleQty(state, action.payload.data.data);
+          upsertAvailbleQty(state, {
+            ...action.payload.data.data,
+            batchId: action.meta.arg.batchId,
+          });
         }
       })
       .addCase(getSwipeAvailbleQty.fulfilled, (state, action) => {
         if (action.payload?.data?.success) {
-          upsertAvailbleQty(state, action.payload.data.data);
+          upsertAvailbleQty(state, {
+            ...action.payload.data.data,
+            batchId: action.meta.arg.batchId,
+          });
         }
       });
   },

@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Select } from "antd";
-import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
-import { getDeviceBatches } from "@/features/production/MaterialRequestWithoutBom/MRRequestWithoutBomSlice";
+import { useAppSelector } from "@/hooks/useReduxHook";
 
 export type BatchSelectValue = {
   label: string;
@@ -24,16 +23,9 @@ const AntBatchSelect: React.FC<Props> = ({
   label = "Select Batch",
   width = "100%",
 }) => {
-  const dispatch = useAppDispatch();
   const { deviceBatchLoading, deviceBatchData } = useAppSelector(
     (state) => state.materialRequestWithoutBom,
   );
-
-  useEffect(() => {
-    if (deviceKey) {
-      dispatch(getDeviceBatches({ deviceKey }));
-    }
-  }, [deviceKey, dispatch]);
 
   const batches = useMemo(
     () =>
