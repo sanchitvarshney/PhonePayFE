@@ -58,8 +58,8 @@ export const updateAllotLocationAsync = createAsyncThunk<
     "/location/location_allotted_update",
     {
       key: payload.loc_all_key,
-      module_name: payload.for_module,
-      module_description: payload.module_desc,
+      moduleName: payload.module_name,
+      moduleDescription: payload.module_description,
       locations: [payload.locations],
     },
   );
