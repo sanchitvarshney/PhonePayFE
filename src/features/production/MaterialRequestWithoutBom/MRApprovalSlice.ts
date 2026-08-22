@@ -69,10 +69,13 @@ export const getProcessSwipeReqeustAsync = createAsyncThunk<
 
 export const getItemDetailsAsync = createAsyncThunk<
   AxiosResponse<ItemDetailApiResponse>,
-  { txnid: string; itemKey: string; picLocation: string }
+  { txnid: string; itemKey: string; picLocation: string; batchId?: string }
 >("master/getItemDetails", async (params) => {
+  const query = params.batchId
+    ? `?batchId=${encodeURIComponent(params.batchId)}`
+    : "";
   const response = await axiosInstance.get(
-    `/request/stock/${params.txnid}/${params.itemKey}/${params.picLocation}`,
+    `/request/stock/${params.txnid}/${params.itemKey}/${params.picLocation}${query}`,
   );
   return response;
 });
