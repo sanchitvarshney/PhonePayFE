@@ -20,6 +20,7 @@ import InsertInvitationIcon from "@mui/icons-material/InsertInvitation";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ContactEmergencyIcon from "@mui/icons-material/ContactEmergency";
 import AppsIcon from "@mui/icons-material/Apps";
+import Inventory2Icon from "@mui/icons-material/Inventory2";
 import Dialog from "@mui/material/Dialog";
 import {
   Avatar,
@@ -346,6 +347,25 @@ const MRProcessDrawer: React.FC<Props> = ({
                   }
                 />
               </ListItem>
+              {reqType === "DEVICE" && (
+                <ListItem>
+                  <ListItemAvatar>
+                    <Avatar>
+                      <Inventory2Icon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="Batch ID:"
+                    secondary={
+                      processMrRequestLoading ? (
+                        <Skeleton className="w-full h-[20px]" />
+                      ) : (
+                        processRequestData?.head?.deviceBatchId
+                      )
+                    }
+                  />
+                </ListItem>
+              )}
             </List>
 
             <div className="absolute bottom-0 left-0 right-0 ">
