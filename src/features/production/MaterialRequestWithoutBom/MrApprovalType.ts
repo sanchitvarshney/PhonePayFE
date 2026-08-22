@@ -21,7 +21,7 @@ export type Head = {
   mfgQty: string;
   comment: string;
   transactionId: string;
-  deviceBatchId?: string;
+  batchId?: string;
 };
 
 export type ProcessRequestDataBody = {
