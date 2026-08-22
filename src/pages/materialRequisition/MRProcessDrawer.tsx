@@ -171,7 +171,7 @@ const MRProcessDrawer: React.FC<Props> = ({
             issueQty: data.issueQty,
             txnID: requestDetail?.id || "",
             srlNumber: scanned || [],
-            batchId: processRequestData?.head?.deviceBatchId || "",
+            batchId: processRequestData?.head?.batchId || "",
           }
         : {
             itemsCode: itemkey,
@@ -360,7 +360,7 @@ const MRProcessDrawer: React.FC<Props> = ({
                       processMrRequestLoading ? (
                         <Skeleton className="w-full h-[20px]" />
                       ) : (
-                        processRequestData?.head?.deviceBatchId
+                        processRequestData?.head?.batchId
                       )
                     }
                   />
@@ -601,7 +601,7 @@ const MRProcessDrawer: React.FC<Props> = ({
                                       ? {
                                           batchId:
                                             processRequestData?.head
-                                              ?.deviceBatchId || "",
+                                              ?.batchId || "",
                                         }
                                       : {}),
                                   }),
@@ -822,7 +822,7 @@ const MRProcessDrawer: React.FC<Props> = ({
                                       ? {
                                           batchId:
                                             processRequestData?.head
-                                              ?.deviceBatchId || "",
+                                              ?.batchId || "",
                                         }
                                       : {}),
                                   }),
