@@ -577,6 +577,13 @@ const MRProcessDrawer: React.FC<Props> = ({
                                     txnid: requestDetail?.id || "",
                                     itemKey: itemkey,
                                     picLocation: e?.id || "",
+                                    ...(reqType === "DEVICE"
+                                      ? {
+                                          batchId:
+                                            processRequestData?.head
+                                              ?.deviceBatchId || "",
+                                        }
+                                      : {}),
                                   }),
                                 );
                               }}
