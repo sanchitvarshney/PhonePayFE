@@ -3,6 +3,8 @@ export type PendingRequests = {
   transactionId: string;
   insertDate: string; // You can later parse this string into a date if needed
   transactionType: string;
+  batchId?: string;
+  serialNo?: string;
 };
 
 export type PendingMrRequestResponse = {

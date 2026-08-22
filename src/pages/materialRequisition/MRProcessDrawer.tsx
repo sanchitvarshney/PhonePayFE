@@ -816,9 +816,16 @@ const MRProcessDrawer: React.FC<Props> = ({
                             ).then((response: any) => {
                               if (response.payload.data?.success) {
                                 dispatch(
-                                  getProcessMrReqeustAsync(
-                                    requestDetail?.id || "",
-                                  ),
+                                  getProcessMrReqeustAsync({
+                                    id: requestDetail?.id || "",
+                                    ...(reqType === "DEVICE"
+                                      ? {
+                                          batchId:
+                                            processRequestData?.head
+                                              ?.deviceBatchId || "",
+                                        }
+                                      : {}),
+                                  }),
                                 ).then((res: any) => {
                                   if (!res.payload.data?.success) {
                                     setOpen(false);

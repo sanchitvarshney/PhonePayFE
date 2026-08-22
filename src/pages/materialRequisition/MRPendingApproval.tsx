@@ -381,7 +381,14 @@ const MRPendingApproval: React.FC = () => {
               }),
             );
             setApprove(true);
-            dispatch(getProcessMrReqeustAsync(params?.data?.transactionId));
+            dispatch(
+              getProcessMrReqeustAsync({
+                id: params?.data?.transactionId,
+                ...(params?.data?.transactionType === "DEVICE"
+                  ? { batchId: params?.data?.batchId || "" }
+                  : {}),
+              }),
+            );
           }}
         >
           <ListItemIcon>

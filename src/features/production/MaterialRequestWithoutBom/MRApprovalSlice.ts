@@ -53,9 +53,10 @@ export const serailList = createAsyncThunk<
 });
 export const getProcessMrReqeustAsync = createAsyncThunk<
   AxiosResponse<ProcessApiResponse>,
-  string
->("master/getProcessMrrequst", async (id) => {
-  const response = await axiosInstance.get(`/request/detail/${id}`);
+  { id: string; batchId?: string }
+>("master/getProcessMrrequst", async ({ id, batchId }) => {
+  const query = batchId ? `?batchId=${encodeURIComponent(batchId)}` : "";
+  const response = await axiosInstance.get(`/request/detail/${id}${query}`);
   return response;
 });
 
