@@ -139,11 +139,18 @@ const ManageBulkDeviceInward: React.FC = () => {
       },
       { headerName: "#", width: 70, valueGetter: "node.rowIndex + 1" },
       {
+        headerName: "Transation ID",
+        flex: 1,
+        minWidth: 160,
+        valueGetter: (params) => params.data?.minNo ?? "",
+      },
+      {
         headerName: "Challan No",
         flex: 1,
         minWidth: 160,
         valueGetter: (params) => getChallanNo(params.data),
       },
+
       {
         headerName: "Challan Date",
         minWidth: 130,
@@ -211,7 +218,11 @@ const ManageBulkDeviceInward: React.FC = () => {
             onClick={() => setcolapse(!colapse)}
             className="transition-all w-[16px] p-0 py-[35px] bg-neutral-200 rounded-none hover:bg-neutral-300/50 text-slate-600 hover:h-full shadow-sm shadow-neutral-400 duration-300"
           >
-            {colapse ? <Icons.right fontSize="small" /> : <Icons.left fontSize="small" />}
+            {colapse ? (
+              <Icons.right fontSize="small" />
+            ) : (
+              <Icons.left fontSize="small" />
+            )}
           </Button>
         </div>
         <div className="overflow-x-hidden overflow-y-auto">

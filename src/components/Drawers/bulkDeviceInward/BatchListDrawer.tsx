@@ -33,7 +33,7 @@ type Props = {
   onClose: () => void;
 };
 
-const BatchListDrawer: React.FC<Props> = ({ open, row, onClose }) => {
+const  BatchListDrawer: React.FC<Props> = ({ open, row, onClose }) => {
   const dispatch = useAppDispatch();
   const { serials, serialsLoading } = useAppSelector(
     (state) => state.bulkDeviceInward,
@@ -102,7 +102,7 @@ const BatchListDrawer: React.FC<Props> = ({ open, row, onClose }) => {
             Batch Details
           </CustomDrawerTitle>
           <CustomDrawerDescription className="text-slate-500">
-            Challan {challanNo} &middot; SKU {deviceSku}
+          Transaction - {minNo} | Challan - {challanNo} | SKU - {deviceSku}
           </CustomDrawerDescription>
         </CustomDrawerHeader>
         <div className="p-[20px] flex-1 min-h-0 ag-theme-quartz">
