@@ -26,7 +26,7 @@ import {
   Avatar,
   Button,
   Chip,
-  CircularProgress,
+  // CircularProgress,
   DialogActions,
   DialogContent,
   DialogContentText,
@@ -34,7 +34,7 @@ import {
   FormControl,
   FormControlLabel,
   InputAdornment,
-  InputLabel,
+  // InputLabel,
   ListItem,
   ListItemAvatar,
   OutlinedInput,
@@ -55,11 +55,11 @@ import {
   getItemDetailsAsync,
   getPendingMaterialListsync,
   getProcessMrReqeustAsync,
-  isExistItemOnLocation,
+  // isExistItemOnLocation,
   materialRequestReject,
 } from "@/features/production/MaterialRequestWithoutBom/MRApprovalSlice";
 import { ProcessRequestDataBody } from "@/features/production/MaterialRequestWithoutBom/MrApprovalType";
-import { Delete, QrCodeScanner } from "@mui/icons-material";
+// import { Delete, QrCodeScanner } from "@mui/icons-material";
 type Props = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -101,16 +101,16 @@ const MRProcessDrawer: React.FC<Props> = ({
     itemDetailLoading,
     approveItemLoading,
     rejectItemLoading,
-    deviceLoading,
+    // deviceLoading,
   } = useAppSelector((state) => state.pendingMr);
 
-  const [isueeQty, setIsueeQty] = useState<string>("");
+  // const [isueeQty, setIsueeQty] = useState<string>("");
   const [confirmIssueChange, setConfirmIssueChange] = useState<boolean>(false);
   const [remarks, setRemarks] = useState<string>("");
   const dispatch = useAppDispatch();
   const [data, setData] = useState<ProcessRequestDataBody[] | null>(null);
-  const [input, setInput] = useState<string>("");
-  const [scanned, setScanned] = useState<string[] | null>(null);
+  // const [input, setInput] = useState<string>("");
+  // const [scanned, setScanned] = useState<string[] | null>(null);
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
 
   const handleChange = (value: string) => {
@@ -123,17 +123,17 @@ const MRProcessDrawer: React.FC<Props> = ({
     dispatch(getPendingMaterialListsync(listType));
     setSelectedValue(null);
     setRemarks("");
-    setIsueeQty("");
+    // setIsueeQty("");
     setItemKey("");
-    setInput("");
-    setScanned(null);
+    //  setInput("");
+    // setScanned(null);
   };
   const {
     handleSubmit,
     control,
     reset,
     setValue,
-    getValues,
+    // getValues,
     formState: { errors },
   } = useForm<Forstate>({
     defaultValues: {
@@ -143,25 +143,25 @@ const MRProcessDrawer: React.FC<Props> = ({
     },
   });
 
-  const getItemExists = async () => {
-    const payload: any = {
-      type: "SOUNDBOX",
-      id: input,
-      location: getValues("picLocation")?.id,
-    };
+  // const getItemExists = async () => {
+  //   const payload: any = {
+  //     type: "SOUNDBOX",
+  //     id: input,
+  //     location: getValues("picLocation")?.id,
+  //   };
 
-    try {
-      const response: any = await dispatch(isExistItemOnLocation(payload));
+  //   try {
+  //     const response: any = await dispatch(isExistItemOnLocation(payload));
 
-      if (response?.payload?.data?.success) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (error) {
-      return false;
-    }
-  };
+  //     if (response?.payload?.data?.success) {
+  //       return true;
+  //     } else {
+  //       return false;
+  //     }
+  //   } catch (error) {
+  //     return false;
+  //   }
+  // };
   const onSubmit: SubmitHandler<Forstate> = (data) => {
     const payload: any =
       reqType === "DEVICE"
@@ -170,7 +170,7 @@ const MRProcessDrawer: React.FC<Props> = ({
             pickLocation: data.picLocation!.id,
             issueQty: data.issueQty,
             txnID: requestDetail?.id || "",
-            srlNumber: scanned || [],
+            // srlNumber: scanned || [],
             batchId: processRequestData?.head?.batchId || "",
           }
         : {
@@ -187,9 +187,10 @@ const MRProcessDrawer: React.FC<Props> = ({
         setItemKey("");
         reset();
         approved ? setApproved([...approved, itemkey]) : setApproved([itemkey]);
-        setScanned(null);
-        setIsueeQty("");
+        // setScanned(null);
+        // setIsueeQty("");
         setSelectedValue(null);
+        setConfirmIssueChange(false)
       }
     });
   };
@@ -197,17 +198,17 @@ const MRProcessDrawer: React.FC<Props> = ({
   useEffect(() => {
     if (!open) {
       setItemKey("");
-      setScanned(null);
+      // setScanned(null);
       reset();
-      setIsueeQty("");
+      // setIsueeQty("");
       setRemarks("");
     }
   }, [open]);
   useEffect(() => {
     dispatch(clearItemdetail());
-    setScanned(null);
+    // setScanned(null);
     reset();
-    setIsueeQty("");
+    // setIsueeQty("");
     setRemarks("");
   }, [selectedValue]);
   useEffect(() => {
@@ -236,9 +237,9 @@ const MRProcessDrawer: React.FC<Props> = ({
           <LoadingButton
             onClick={() => {
               setConfirmIssueChange(false);
-              setIsueeQty("");
+              // setIsueeQty("");
               setValue("issueQty", "");
-              setScanned(null);
+              // setScanned(null);
             }}
             type="submit"
             variant="contained"
@@ -581,7 +582,7 @@ const MRProcessDrawer: React.FC<Props> = ({
                       </ListItem>
                     </List>
                     <Grid container spacing={2} sx={{ p: 2 }}>
-                      <Grid size={6}>
+                      <Grid size={12}>
                         <Controller
                           name="picLocation"
                           control={control}
@@ -612,7 +613,7 @@ const MRProcessDrawer: React.FC<Props> = ({
                           )}
                         />
                       </Grid>
-                      <Grid size={6}>
+                      {/* <Grid size={6}>
                         <Controller
                           name="issueQty"
                           control={control}
@@ -667,7 +668,7 @@ const MRProcessDrawer: React.FC<Props> = ({
                             </FormControl>
                           )}
                         />
-                      </Grid>
+                      </Grid> */}
                       <Grid size={12}>
                         <Controller
                           name="remarks"
@@ -689,7 +690,7 @@ const MRProcessDrawer: React.FC<Props> = ({
                         />
                       </Grid>
                     </Grid>
-                    {reqType === "DEVICE" && (
+                    {/* {reqType === "DEVICE" && (
                       <>
                         <div className="px-[18px]  flex items-center justify-center">
                           <FormControl fullWidth>
@@ -795,7 +796,7 @@ const MRProcessDrawer: React.FC<Props> = ({
                           </div>
                         </div>
                       </>
-                    )}
+                    )} */}
                     <div className="h-[50px]  flex items-center justify-end gap-[10px] px-[10px] mt-[30px] ">
                       <LoadingButton
                         disabled={approveItemLoading}
@@ -848,14 +849,7 @@ const MRProcessDrawer: React.FC<Props> = ({
                         startIcon={<DoneIcon fontSize="small" />}
                         variant="contained"
                         disabled={
-                          reqType === "DEVICE"
-                            ? !(scanned
-                                ? parseInt(isueeQty) === scanned.length
-                                : true) ||
-                              approveItemLoading ||
-                              !scanned ||
-                              !isueeQty
-                            : approveItemLoading || !isueeQty
+                        approveItemLoading 
                         }
                         loading={approveItemLoading}
                       >
