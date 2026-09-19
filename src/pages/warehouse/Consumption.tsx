@@ -284,9 +284,9 @@ const Consumption: React.FC = () => {
 
   const downloadSampleFile = () => {
     const aoa = [
-      ["Engg Id", "Serial NO", "Repair Date", "P0019", "PP0713", "PP0725", "PP0726"],
-      ["ENG001", "PPSS20000000001", "2026-06-08", 1, 1, 0, 2],
-      ["ENG002", "PPSS20000000002", "2026-06-08", 0, 1, 1, 0],
+      ["Engg Id", "Serial NO", "Repair Date", "Repair Level","P0019", "PP0713", "PP0725", "PP0726"],
+      ["ENG001", "PPSS20000000001", "2026-06-08","L0", 1, 1, 0, 2],
+      ["ENG002", "PPSS20000000002", "2026-06-08", "L1",0, 1, 1, 0],
     ];
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     const wb = XLSX.utils.book_new();
