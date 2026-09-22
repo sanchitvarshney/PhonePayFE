@@ -1,8 +1,6 @@
 import { useSocketContext } from "@/components/context/SocketContext";
 import { Icons } from "@/components/icons";
-import SelectLocation, {
-  LocationType,
-} from "@/components/reusable/SelectLocation";
+import SelectSku, { DeviceType } from "@/components/reusable/SelectSku";
 import { rangePresets } from "@/utils/rangePresets";
 import { showToast } from "@/utils/toasterContext";
 import { Button, Card, Typography } from "@mui/material";
@@ -12,7 +10,7 @@ import React, { useState } from "react";
 const { RangePicker } = DatePicker;
 const R4Report: React.FC = () => {
   const { emitDownloadReport, isConnected } = useSocketContext();
-  const [location, setLocation] = useState<LocationType | null>(null);
+  const [device, setDevice] = useState<DeviceType | null>(null);
   const [date, setDate] = useState<{ from: Dayjs | null; to: Dayjs | null }>({
     from: null,
     to: null,
@@ -25,12 +23,13 @@ const R4Report: React.FC = () => {
     }
   };
   const downloadReport = () => {
+    if (!device) return showToast("Please select a device", "error");
     if (!date.from || !date.to)
-      return showToast("Please select location and date range", "error");
+      return showToast("Please select date range", "error");
     const reportPayload = {
       fromDate: date.from?.format("DD-MM-YYYY"),
       toDate: date.to?.format("DD-MM-YYYY"),
-      location: location?.id,
+      device: device?.deviceKey ?? device?.device_key ?? device?.key ?? device?.id,
     };
     emitDownloadReport(reportPayload);
     showToast("Start downloading ", "success");
@@ -53,15 +52,14 @@ const R4Report: React.FC = () => {
           fontWeight={400}
           className="text-center"
         >
-          This report provides consumption details based on date and
-          location. <br />
-          (If no location is selected, the data for all locations will be
-          displayed.)
+          This report provides consumption details based on date and device.
         </Typography>
-        <SelectLocation
-          value={location}
-          onChange={(e) => setLocation(e)}
-          label="-- Location --"
+        <SelectSku
+          varient="outlined"
+          skuType="soundBox"
+          value={device}
+          onChange={setDevice}
+          label="-- Device --"
         />
         <RangePicker
           className="w-full h-[50px] border-[2px] rounded-sm "

@@ -219,6 +219,14 @@ const MRProcessDrawer: React.FC<Props> = ({
     }
   }, [processRequestData]);
 
+  useEffect(() => {
+    if (itemDetail) {
+      const reqQty = Number(itemDetail[0]?.reqQty ?? 0);
+      const stock = Number(itemDetail[0]?.stock ?? 0);
+      setValue("issueQty", String(Math.min(reqQty, stock)));
+    }
+  }, [itemDetail, setValue]);
+
   return (
     <>
       <Dialog
@@ -613,62 +621,41 @@ const MRProcessDrawer: React.FC<Props> = ({
                           )}
                         />
                       </Grid>
-                      {/* <Grid size={6}>
+                      <Grid size={12}>
                         <Controller
                           name="issueQty"
                           control={control}
-                          rules={{ required: "Issue Qty is required" }}
-                          render={({ field }) => (
-                            <FormControl
-                              disabled={
-                                !itemDetail ||
-                                itemDetail[0]?.stock < 0 ||
-                                itemDetail[0]?.reqQty < 0
+                          rules={{
+                            required: "Issue Qty is required",
+                            validate: (value) => {
+                              if (!itemDetail) return true;
+                              const num = Number(value);
+                              if (!num || num <= 0) {
+                                return "Issue Qty must be greater than 0";
                               }
+                              if (num > Number(itemDetail[0]?.stock)) {
+                                return "Issue Qty can't be greater than Available Qty";
+                              }
+                              return true;
+                            },
+                          }}
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
                               fullWidth
-                            >
-                              <InputLabel>Issue Qty</InputLabel>
-                              <OutlinedInput
-                                disabled={
-                                  !itemDetail ||
-                                  itemDetail[0]?.stock < 0 ||
-                                  itemDetail[0]?.reqQty < 0
-                                }
-                                fullWidth
-                                error={!!errors.issueQty}
-                                {...field}
-                                value={field.value}
-                                type="number"
-                                label="Issue Qty"
-                                onChange={(e) => {
-                                  if (!/^\d*\.?\d*$/.test(e.target.value))
-                                    return;
-                                  if (itemDetail) {
-                                    if (
-                                      parseInt(e.target.value) >
-                                        itemDetail[0]?.stock ||
-                                      parseInt(e.target.value) >
-                                        itemDetail[0]?.reqQty
-                                    ) {
-                                      showToast(
-                                        "Issue Qty can't be greater than Available Qty or Requested Qty",
-                                        "error",
-                                      );
-                                    } else {
-                                      if (scanned && scanned?.length > 0) {
-                                        setConfirmIssueChange(true);
-                                      } else {
-                                        field.onChange(e);
-                                        setIsueeQty(e.target.value);
-                                      }
-                                    }
-                                  }
-                                }}
-                              />
-                            </FormControl>
+                              disabled={!itemDetail}
+                              error={!!errors.issueQty}
+                              helperText={errors.issueQty?.message}
+                              type="number"
+                              label="Issue Qty"
+                              onChange={(e) => {
+                                if (!/^\d*\.?\d*$/.test(e.target.value)) return;
+                                field.onChange(e.target.value);
+                              }}
+                            />
                           )}
                         />
-                      </Grid> */}
+                      </Grid>
                       <Grid size={12}>
                         <Controller
                           name="remarks"

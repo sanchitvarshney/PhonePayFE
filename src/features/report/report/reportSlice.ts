@@ -116,8 +116,7 @@ export const getr9Report = createAsyncThunk<
   R9ReportQueryParams
 >("report/getr9Report", async (query) => {
   const params = new URLSearchParams();
-  if (query.from) params.append("from", query.from);
-  if (query.to) params.append("to", query.to);
+  if (query.date) params.append("date", query.date);
   if (query.locationKey) params.append("location_key", query.locationKey);
   const response = await axiosInstance.get(
     `/report/device_stock/${query.deviceKey}?${params.toString()}`,

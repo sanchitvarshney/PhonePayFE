@@ -111,8 +111,7 @@ export type R6ReportQueryParams = {
 
 export type R9ReportQueryParams = {
   deviceKey: string;
-  from?: string;
-  to?: string;
+  date?: string;
   locationKey?: string;
 };
 
