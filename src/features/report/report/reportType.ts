@@ -109,6 +109,13 @@ export type R6ReportQueryParams = {
   limit?: number;
 };
 
+export type R9ReportQueryParams = {
+  deviceKey: string;
+  from?: string;
+  to?: string;
+  locationKey?: string;
+};
+
 export type ReportStateType = {
   r1Data: DocumentData | null;
   getR1DataLoading: boolean;
@@ -128,5 +135,11 @@ export type ReportStateType = {
   r5report: any;
   r6report: any;
   r6reportLoading: boolean;
+  r8Report: any;
+  r8ReportLoading: boolean;
+  r8ReportDetail: any;
+  r8ReportDetailLoading: boolean;
+  r9Report: any;
+  r9ReportLoading: boolean;
 };
 
