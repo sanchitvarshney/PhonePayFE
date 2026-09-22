@@ -51,14 +51,16 @@ const R8Report: React.FC = () => {
 
   const onBtExportDetail = useCallback(() => {
     const sheetData = [
-      ["Batch ID", "SKU", "SKU Name", "Transfer Qty", "From Location", "To Location"],
+      ["Batch ID", "SKU", "SKU Name", "Transfer Qty", "Rate", "From Location", "To Location", "Transfer Date"],
       [
         selectedBatch?.batchId,
         selectedBatch?.deviceSku,
         selectedBatch?.deviceName,
         selectedBatch?.transferQty,
+        selectedBatch?.rate ?? selectedBatch?.transferRate,
         selectedBatch?.fromLocation,
         selectedBatch?.toLocation,
+        selectedBatch?.transferDate,
       ],
       [],
       ["Serial No."],

@@ -164,6 +164,19 @@ const ManageBulkDeviceInward: React.FC = () => {
         valueGetter: (params) => params.data?.deviceSku ?? "",
       },
       {
+        headerName: "SKU Name",
+        flex: 1,
+        minWidth: 160,
+        valueGetter: (params) =>
+          params.data?.deviceName?? "",
+      },
+      {
+        headerName: "Inward Date",
+        minWidth: 130,
+        valueGetter: (params) =>
+          params.data?.insertDt ?? "",
+      },
+      {
         headerName: "Qty",
         width: 100,
         valueGetter: (params) => getChallanQty(params.data),

@@ -33,12 +33,26 @@ const R8ReportTable: React.FC<Props> = ({ gridRef, setOpen, setSelectedBatch }) 
         return formatNumber(params.value);
       },
     },
+    {
+      headerName: "Rate",
+      minWidth: 100,
+      sortable: true,
+      filter: true,
+      valueGetter: (params) => params.data?.rate ?? params.data?.transferRate ?? "",
+    },
     { headerName: "From Location", field: "fromLocation", sortable: true, filter: true, minWidth: 150 },
     { headerName: "To Location", field: "toLocation", sortable: true, filter: true, minWidth: 150 },
     { headerName: "Requested By", field: "requestedBy", sortable: true, filter: true, minWidth: 150 },
     { headerName: "Requested Date", field: "requestedDate", sortable: true, filter: true, minWidth: 130 },
     { headerName: "Transferred By", field: "transferredBy", sortable: true, filter: true, minWidth: 150 },
-    { headerName: "Transfer Date", field: "transferDate", sortable: true, filter: true, minWidth: 130 },
+    {
+      headerName: "Transfer Date",
+      field: "transferDate",
+      sortable: true,
+      filter: true,
+      minWidth: 130,
+      valueFormatter: (params: any) => params.value ?? "",
+    },
     {
       headerName: "",
       pinned: "right",
