@@ -34,7 +34,7 @@ import { Close, Save } from "@mui/icons-material";
 import AntSkuSelect from "@/components/reusable/antSelecters/AntSkuSelect";
 import SelectBom from "@/components/reusable/SelectBom";
 
-const FIXED_COLUMNS = ["Engg Id", "Serial NO", "Repair Date"];
+const FIXED_COLUMNS = ["Engg Id", "Serial NO", "Repair Date", "Repair Level"];
 
 const formatDateForDisplay = (d: Date): string => {
   const yyyy = d.getFullYear();
