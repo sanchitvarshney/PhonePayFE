@@ -337,7 +337,8 @@ const MaterialRequisition = () => {
                           error={!!errors.location}
                           helperText={errors.location?.message}
                           value={field.value}
-                                placeholder="Select Location"
+                          label="Drop Location"
+                          placeholder="Select Drop Location"
                           onChange={(e) => {
                             field.onChange(e);
                             setLocation(e);

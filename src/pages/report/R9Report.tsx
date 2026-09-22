@@ -13,12 +13,10 @@ import { getr9Report } from "@/features/report/report/reportSlice";
 import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import MuiTooltip from "@/components/reusable/MuiTooltip";
-import { rangePresets } from "@/utils/rangePresets";
 import SelectSku, { DeviceType } from "@/components/reusable/SelectSku";
 import SelectLocation, { LocationType } from "@/components/reusable/SelectLocation";
 
 dayjs.extend(customParseFormat);
-const { RangePicker } = DatePicker;
 
 import R9ReportTable from "@/table/report/R9ReportTable";
 
@@ -32,10 +30,9 @@ const R9Report: React.FC = () => {
   const [device, setDevice] = useState<DeviceType | null>(
     device_key ? { id: device_key, text: device_key, deviceKey: device_key } : null,
   );
-  const [date, setDate] = useState<{ from: Dayjs | null; to: Dayjs | null }>({
-    from: searchParams.get("from") ? dayjs(searchParams.get("from"), "DD-MM-YYYY") : null,
-    to: searchParams.get("to") ? dayjs(searchParams.get("to"), "DD-MM-YYYY") : null,
-  });
+  const [date, setDate] = useState<Dayjs | null>(
+    searchParams.get("date") ? dayjs(searchParams.get("date"), "DD-MM-YYYY") : null,
+  );
   const [location, setLocation] = useState<LocationType | null>(
     searchParams.get("location_key")
       ? { id: searchParams.get("location_key") as string, text: searchParams.get("location_key") as string }
@@ -43,14 +40,6 @@ const R9Report: React.FC = () => {
   );
 
   const gridRef = useRef<AgGridReact<any>>(null);
-
-  const handleDateChange = (range: [Dayjs | null, Dayjs | null] | null) => {
-    if (range) {
-      setDate({ from: range[0], to: range[1] });
-    } else {
-      setDate({ from: null, to: null });
-    }
-  };
 
   const onBtExport = useCallback(() => {
     gridRef.current!.api.exportDataAsExcel({
@@ -66,16 +55,14 @@ const R9Report: React.FC = () => {
     }
 
     const nextParams: Record<string, string> = {};
-    if (date.from) nextParams.from = dayjs(date.from).format("DD-MM-YYYY");
-    if (date.to) nextParams.to = dayjs(date.to).format("DD-MM-YYYY");
+    if (date) nextParams.date = dayjs(date).format("DD-MM-YYYY");
     if (location?.id) nextParams.location_key = location.id;
     setSearchParams(nextParams);
 
     dispatch(
       getr9Report({
         deviceKey,
-        from: date.from ? dayjs(date.from).format("DD-MM-YYYY") : undefined,
-        to: date.to ? dayjs(date.to).format("DD-MM-YYYY") : undefined,
+        date: date ? dayjs(date).format("DD-MM-YYYY") : undefined,
         locationKey: location?.id || undefined,
       }),
     );
@@ -119,13 +106,12 @@ const R9Report: React.FC = () => {
             value={device}
             onChange={setDevice}
           />
-          <RangePicker
+          <DatePicker
             className="w-full  h-[50px] border-2 rounded-lg border-neutral-300 rounded-0 "
-            presets={rangePresets}
-            onChange={handleDateChange}
+            value={date}
+            onChange={(value) => setDate(value)}
             disabledDate={(current) => current && current > dayjs()}
-            placeholder={["Start date", "End Date"]}
-            value={date.from && date.to ? [date.from, date.to] : null}
+            placeholder="Select date"
             format="DD-MM-YYYY"
           />
           <SelectLocation
