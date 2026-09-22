@@ -8,6 +8,7 @@ import type {
   R3ReportApiResponse,
   R5ReportQueryParams,
   R6ReportQueryParams,
+  R9ReportQueryParams,
 } from "./reportType";
 
 const initialState: ReportStateType = {
@@ -29,6 +30,12 @@ const initialState: ReportStateType = {
   r5reportLoading: false,
   r6report: null,
   r6reportLoading: false,
+  r8Report: null,
+  r8ReportLoading: false,
+  r8ReportDetail: null,
+  r8ReportDetailLoading: false,
+  r9Report: null,
+  r9ReportLoading: false,
 };
 
 export const getR1Data = createAsyncThunk<
@@ -74,6 +81,46 @@ export const getr2Report = createAsyncThunk<
 >("report/getr2Report", async (query) => {
   const response = await axiosInstance.get(
     `/report/r2?from=${query.from}&to=${query.to}&page=${query.page}&limit=${query.limit}&wise=${query.wise}&data=${query.data?.sku}`,
+  );
+  return response;
+});
+
+export const getr8Report = createAsyncThunk<
+  AxiosResponse<any>,
+  {
+    wise: string;
+    from?: string;
+    to?: string;
+    batchId?: string;
+  }
+>("report/getr8Report", async (query) => {
+  const response = await axiosInstance.get(
+    query.wise === "datewise" ? `/report/device-transfer-report?wise=${query.wise}&from=${query.from}&to=${query.to}` : `/report/device-transfer-report?wise=${query.wise}&batchId=${query.batchId}`
+  );
+  return response;
+});
+
+// TODO: backend endpoint not built yet - confirm path/params once available
+export const getr8ReportDetail = createAsyncThunk<
+  AxiosResponse<any>,
+  { batchId: string }
+>("report/getr8ReportDetail", async (query) => {
+  const response = await axiosInstance.get(
+    `/report/fetch_batch_serialno?batchId=${query.batchId}`,
+  );
+  return response;
+});
+
+export const getr9Report = createAsyncThunk<
+  AxiosResponse<any>,
+  R9ReportQueryParams
+>("report/getr9Report", async (query) => {
+  const params = new URLSearchParams();
+  if (query.from) params.append("from", query.from);
+  if (query.to) params.append("to", query.to);
+  if (query.locationKey) params.append("location_key", query.locationKey);
+  const response = await axiosInstance.get(
+    `/report/device_stock/${query.deviceKey}?${params.toString()}`,
   );
   return response;
 });
@@ -172,6 +219,32 @@ const reportSlice = createSlice({
       .addCase(getr2Report.rejected, (state) => {
         state.r2ReportLoading = false;
         // state.r5report = null;
+      })
+      .addCase(getr8Report.pending, (state) => {
+        state.r8ReportLoading = true;
+      })
+      .addCase(getr8Report.fulfilled, (state, action) => {
+        state.r8ReportLoading = false;
+        if (action.payload.data.success) {
+          state.r8Report = action.payload.data;
+        }
+      })
+      .addCase(getr8Report.rejected, (state) => {
+        state.r8ReportLoading = false;
+      })
+      .addCase(getr8ReportDetail.pending, (state) => {
+        state.r8ReportDetailLoading = true;
+        state.r8ReportDetail = null;
+      })
+      .addCase(getr8ReportDetail.fulfilled, (state, action) => {
+        state.r8ReportDetailLoading = false;
+        if (action.payload.data.success) {
+          state.r8ReportDetail = action.payload.data;
+        }
+      })
+      .addCase(getr8ReportDetail.rejected, (state) => {
+        state.r8ReportDetailLoading = false;
+        state.r8ReportDetail = null;
       })
       .addCase(getR1Data.pending, (state) => {
         state.getR1DataLoading = true;
@@ -287,6 +360,18 @@ const reportSlice = createSlice({
       .addCase(getr6Report.rejected, (state) => {
         state.r6reportLoading = false;
         state.r6report = null;
+      })
+      .addCase(getr9Report.pending, (state) => {
+        state.r9ReportLoading = true;
+      })
+      .addCase(getr9Report.fulfilled, (state, action) => {
+        state.r9ReportLoading = false;
+        if (action.payload.data.success) {
+          state.r9Report = action.payload.data;
+        }
+      })
+      .addCase(getr9Report.rejected, (state) => {
+        state.r9ReportLoading = false;
       });
   },
 });

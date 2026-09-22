@@ -6,6 +6,9 @@ import axiosInstance from "@/api/axiosInstance";
 export type DeviceType = {
   id: string;
   text: string;
+  device_key?: string;
+  deviceKey?: string;
+  key?: string;
 };
 type Props = {
   onChange: (value: DeviceType | null) => void;
@@ -18,9 +21,10 @@ type Props = {
   required?: boolean;
   size?: "small" | "medium";
   disabled?: boolean;
+  skuType?: string;
 };
 
-const SelectDevice: React.FC<Props> = ({ value, onChange, label = "Search Device", width = "100%", error, helperText, varient = "outlined", required = false, size = "medium", disabled = false }) => {
+const SelectDevice: React.FC<Props> = ({ value, onChange, label = "Search Device", width = "100%", error, helperText, varient = "outlined", required = false, size = "medium", disabled = false, skuType }) => {
   const [inputValue, setInputValue] = useState("");
   const debouncedInputValue = useDebounce(inputValue, 300);
   const [loading, setLoading] = useState<boolean>(false);
@@ -30,7 +34,9 @@ const SelectDevice: React.FC<Props> = ({ value, onChange, label = "Search Device
 
     setLoading(true);
     try {
-      const response = await axiosInstance.get(`/product/bySku/${query}`);
+      const response = await axiosInstance.get(
+        skuType ? `/product/bySku/${query}?type=${skuType}` : `/product/bySku/${query}`,
+      );
       setDeviceList(response.data.data);
     } catch (error) {
       console.error("Error fetching devices:", error);
