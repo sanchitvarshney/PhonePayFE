@@ -9,6 +9,7 @@ import R6Report from "./R6Report";
 import R7Report from "./R7Report";
 import R8Report from "@/pages/report/R8Report";
 import R9Report from "@/pages/report/R9Report";
+import R10Report from "@/pages/report/R10Report";
 
 const Report: React.FC = () => {
   const { id } = useParams();
@@ -39,6 +40,9 @@ const Report: React.FC = () => {
   }
   if(id === "R9") {
     return <R9Report />;
+  }
+  if (id === "R10") {
+    return <R10Report />;
   }
 
   return <div className="p-4">This is {id} Report</div>;

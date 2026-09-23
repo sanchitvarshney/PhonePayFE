@@ -1,51 +1,56 @@
-import React, { RefObject, useMemo } from "react";
-import { ColDef } from "@ag-grid-community/core";
-import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
-import { AgGridReact } from "@ag-grid-community/react";
-import CustomLoadingOverlay from "@/components/reusable/CustomLoadingOverlay";
+import React from "react";
+import { Button, Skeleton, Typography } from "@mui/material";
+import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import { useAppSelector } from "@/hooks/useReduxHook";
+import { formatNumber } from "@/utils/numberFormatUtils";
 
 type Props = {
-  gridRef: RefObject<AgGridReact<any>>;
+  onView: (stage: { stage: string; transaction_type: string; qty: string }) => void;
 };
 
-const R9ReportTable: React.FC<Props> = ({ gridRef }) => {
-  const columnDefs: ColDef[] = [
-    { headerName: "#", field: "id", sortable: true, filter: true, width: 100, valueGetter: "node.rowIndex+1" },
-    { headerName: "SKU", field: "deviceSku", sortable: true, filter: true, minWidth: 120 },
-    { headerName: "Serial No.", field: "serialNo", sortable: true, filter: true, minWidth: 180 },
-    { headerName: "Location", field: "locationName", sortable: true, filter: true, minWidth: 150 },
-    { headerName: "Date Sent To Location", field: "dateSentToLocation", sortable: true, filter: true, minWidth: 170 },
-    { headerName: "Serial Age", field: "serialAge", sortable: true, filter: true, minWidth: 120 },
-  ];
+const R9ReportTable: React.FC<Props> = ({ onView }) => {
   const { r9Report, r9ReportLoading } = useAppSelector((state) => state.report);
+  const deviceQty = r9Report?.data?.deviceQty || [];
 
-  const paginationPageSize = 20;
+  if (r9ReportLoading) {
+    return (
+      <div className="p-[20px] flex flex-wrap gap-[10px]">
+        {[1, 2, 3, 4].map((key) => (
+          <Skeleton key={key} className="w-[220px] min-h-[130px]" />
+        ))}
+      </div>
+    );
+  }
 
-  const defaultColDef = useMemo<ColDef>(() => {
-    return {
-      filter: true,
-      sortable: true,
-    };
-  }, []);
+  if (!r9Report) {
+    return (
+      <div className="flex items-center justify-center w-full h-full">
+        <img src="/search.webp" alt="" className="w-[300px] opacity-50" />
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="relative ag-theme-quartz h-[calc(100vh-160px)]">
-        <AgGridReact
-          ref={gridRef}
-          loadingOverlayComponent={CustomLoadingOverlay}
-          loading={r9ReportLoading}
-          overlayNoRowsTemplate={OverlayNoRowsTemplate}
-          suppressCellFocus={true}
-          rowData={r9Report?.data || []}
-          columnDefs={columnDefs}
-          defaultColDef={defaultColDef}
-          pagination={false}
-          paginationPageSize={paginationPageSize}
-          enableCellTextSelection
-        />
-      </div>
+    <div className="p-[20px] flex flex-wrap gap-[15px]">
+      {deviceQty.map((item: any) => (
+        <div
+          key={item.transaction_type}
+          className="w-[220px] min-h-[130px] rounded border bg-slate-50 flex flex-col gap-[10px] justify-center items-center p-[15px]"
+        >
+          <Typography fontWeight={500}>{item.stage}</Typography>
+          <Typography fontWeight={600} fontSize={24} className="text-slate-600">
+            {formatNumber(Number(item.qty))}
+          </Typography>
+          <Button
+            onClick={() => onView(item)}
+            variant="contained"
+            size="small"
+            startIcon={<FullscreenIcon fontSize="small" />}
+          >
+            View
+          </Button>
+        </div>
+      ))}
     </div>
   );
 };

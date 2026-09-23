@@ -9,6 +9,7 @@ import type {
   R5ReportQueryParams,
   R6ReportQueryParams,
   R9ReportQueryParams,
+  R9SerialAgeingQueryParams,
 } from "./reportType";
 
 const initialState: ReportStateType = {
@@ -36,6 +37,8 @@ const initialState: ReportStateType = {
   r8ReportDetailLoading: false,
   r9Report: null,
   r9ReportLoading: false,
+  r9SerialAgeing: null,
+  r9SerialAgeingLoading: false,
 };
 
 export const getR1Data = createAsyncThunk<
@@ -116,10 +119,24 @@ export const getr9Report = createAsyncThunk<
   R9ReportQueryParams
 >("report/getr9Report", async (query) => {
   const params = new URLSearchParams();
+  params.append("device_key", query.deviceKey);
   if (query.date) params.append("date", query.date);
-  if (query.locationKey) params.append("location_key", query.locationKey);
   const response = await axiosInstance.get(
-    `/report/device_stock/${query.deviceKey}?${params.toString()}`,
+    `/report/device_stock_summary?${params.toString()}`,
+  );
+  return response;
+});
+
+export const getr9SerialAgeing = createAsyncThunk<
+  AxiosResponse<any>,
+  R9SerialAgeingQueryParams
+>("report/getr9SerialAgeing", async (query) => {
+  const params = new URLSearchParams();
+  params.append("device_key", query.deviceKey);
+  if (query.date) params.append("date", query.date);
+  params.append("transaction_type", query.transactionType);
+  const response = await axiosInstance.get(
+    `/report/device_serial_ageing?${params.toString()}`,
   );
   return response;
 });
@@ -372,6 +389,20 @@ const reportSlice = createSlice({
       })
       .addCase(getr9Report.rejected, (state) => {
         state.r9ReportLoading = false;
+      })
+      .addCase(getr9SerialAgeing.pending, (state) => {
+        state.r9SerialAgeingLoading = true;
+        state.r9SerialAgeing = null;
+      })
+      .addCase(getr9SerialAgeing.fulfilled, (state, action) => {
+        state.r9SerialAgeingLoading = false;
+        if (action.payload.data.success) {
+          state.r9SerialAgeing = action.payload.data;
+        }
+      })
+      .addCase(getr9SerialAgeing.rejected, (state) => {
+        state.r9SerialAgeingLoading = false;
+        state.r9SerialAgeing = null;
       });
   },
 });
