@@ -16,7 +16,31 @@ export type NotificationData = {
   [key: string]: unknown;
 };
 
-const SocketContext = createContext<any>(null);
+const noop = () => {};
+
+// A safe fallback so consumers never crash destructuring this context - e.g. if a
+// component briefly reads a stale context reference during a dev HMR update, or is
+// ever rendered outside <SocketProvider> by mistake. Socket features just no-op then.
+const defaultSocketContextValue = {
+  isConnected: false,
+  isLoading: false,
+  refreshConnection: noop,
+  emitGetNotification: noop,
+  onnotification: noop,
+  onDownloadReport: noop,
+  emitDownloadReport: noop,
+  off: noop,
+  emitDownloadr2Report: noop,
+  emitDownloadR3Report: noop,
+  emitDownloadR5Report: noop,
+  emitDownloadQ3Report: noop,
+  emitDownloadR6Report: noop,
+  emitDownloadR10Report: noop,
+  emitDownloadR9Report: noop,
+  emitDownloadR8Report: noop,
+};
+
+const SocketContext = createContext<any>(defaultSocketContextValue);
 
 export const useSocketContext = () => useContext(SocketContext);
 
@@ -128,6 +152,10 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
     socketService.emit("generateDeviceStockExcel", payload);
   };
 
+  const emitDownloadR8Report = (payload: any) => {
+    socketService.emit("device_transfer_report", payload);
+  };
+
   const value = useMemo(
     () => ({
       isConnected,
@@ -144,7 +172,8 @@ export const SocketProvider: React.FC<Props> = ({ children }) => {
         emitDownloadQ3Report,
         emitDownloadR6Report,
         emitDownloadR10Report,
-        emitDownloadR9Report
+        emitDownloadR9Report,
+        emitDownloadR8Report
     }),
     [isConnected, isLoading, refreshConnection]
   );

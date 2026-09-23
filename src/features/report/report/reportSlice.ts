@@ -10,6 +10,7 @@ import type {
   R6ReportQueryParams,
   R9ReportQueryParams,
   R9SerialAgeingQueryParams,
+  R10ReportQueryParams,
 } from "./reportType";
 
 const initialState: ReportStateType = {
@@ -39,6 +40,8 @@ const initialState: ReportStateType = {
   r9ReportLoading: false,
   r9SerialAgeing: null,
   r9SerialAgeingLoading: false,
+  r10Report: null,
+  r10ReportLoading: false,
 };
 
 export const getR1Data = createAsyncThunk<
@@ -137,6 +140,17 @@ export const getr9SerialAgeing = createAsyncThunk<
   params.append("transaction_type", query.transactionType);
   const response = await axiosInstance.get(
     `/report/device_serial_ageing?${params.toString()}`,
+  );
+  return response;
+});
+
+// TODO: dummy endpoint - confirm real path/response shape once available
+export const getr10Report = createAsyncThunk<
+  AxiosResponse<any>,
+  R10ReportQueryParams
+>("report/getr10Report", async (query) => {
+  const response = await axiosInstance.get(
+    `/report/onDeviceLocation?startDate=${query.startDate}&endDate=${query.endDate}`,
   );
   return response;
 });
@@ -402,6 +416,18 @@ const reportSlice = createSlice({
       .addCase(getr9SerialAgeing.rejected, (state) => {
         state.r9SerialAgeingLoading = false;
         state.r9SerialAgeing = null;
+      })
+      .addCase(getr10Report.pending, (state) => {
+        state.r10ReportLoading = true;
+      })
+      .addCase(getr10Report.fulfilled, (state, action) => {
+        state.r10ReportLoading = false;
+        if (action.payload.data.success) {
+          state.r10Report = action.payload.data;
+        }
+      })
+      .addCase(getr10Report.rejected, (state) => {
+        state.r10ReportLoading = false;
       });
   },
 });
