@@ -121,7 +121,8 @@ const [component, setComponent] = useState<ComponentType | null>(null);
   };
   const onBtExport = useCallback(() => {
     gridRef.current!.api.exportDataAsExcel({
-      sheetName: "R3 Report", // Set your desired sheet name here
+      sheetName: "R3 Report",
+      fileName: `R3-Report-${dayjs().format("DD-MM-YYYY")}.xlsx`,
     });
   }, []);
 

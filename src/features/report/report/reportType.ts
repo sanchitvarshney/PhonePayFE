@@ -112,7 +112,12 @@ export type R6ReportQueryParams = {
 export type R9ReportQueryParams = {
   deviceKey: string;
   date?: string;
-  locationKey?: string;
+};
+
+export type R9SerialAgeingQueryParams = {
+  deviceKey: string;
+  date?: string;
+  transactionType: string;
 };
 
 export type ReportStateType = {
@@ -140,5 +145,7 @@ export type ReportStateType = {
   r8ReportDetailLoading: boolean;
   r9Report: any;
   r9ReportLoading: boolean;
+  r9SerialAgeing: any;
+  r9SerialAgeingLoading: boolean;
 };
 

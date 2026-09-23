@@ -59,7 +59,8 @@ const R5report: React.FC = () => {
   };
   const onBtExport = useCallback(() => {
     gridRef.current!.api.exportDataAsExcel({
-      sheetName: "R5 Report", // Set your desired sheet name here
+      sheetName: "R2 Report",
+      fileName: `R2-Report-${dayjs().format("DD-MM-YYYY")}.xlsx`,
     });
   }, []);
   // const onBtExportDetail = () => {

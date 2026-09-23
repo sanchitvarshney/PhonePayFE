@@ -69,7 +69,10 @@ const R8Report: React.FC = () => {
     const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "R8 Report Detail");
-    XLSX.writeFile(workbook, `R8-Report-Detail-${selectedBatch?.batchId ?? ""}.xlsx`);
+    XLSX.writeFile(
+      workbook,
+      `R8-Report-Detail-${selectedBatch?.batchId ?? ""}-${dayjs().format("DD-MM-YYYY")}.xlsx`,
+    );
   }, [selectedBatch, r8ReportDetail]);
 
   const handleDateChange = (range: [Dayjs | null, Dayjs | null] | null) => {
@@ -82,6 +85,7 @@ const R8Report: React.FC = () => {
   const onBtExport = useCallback(() => {
     gridRef.current!.api.exportDataAsExcel({
       sheetName: "R8 Report",
+      fileName: `R8-Report-${dayjs().format("DD-MM-YYYY")}.xlsx`,
     });
   }, []);
 
