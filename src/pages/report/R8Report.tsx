@@ -18,6 +18,7 @@ import {
 import LoadingButton from "@mui/lab/LoadingButton";
 import { showToast } from "@/utils/toasterContext";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
+import { useSocketContext } from "@/components/context/SocketContext";
 import { getr8Report } from "@/features/report/report/reportSlice";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
@@ -34,7 +35,8 @@ import R8ReportDetailTable from "@/table/report/R8ReportDetailTable";
 const R8Report: React.FC = () => {
   const [colapse, setcolapse] = useState<boolean>(false);
   const dispatch = useAppDispatch();
-  const { r8ReportLoading, r8Report, r8ReportDetail } = useAppSelector((state) => state.report);
+  const { r8ReportLoading, r8ReportDetail } = useAppSelector((state) => state.report);
+  const { emitDownloadR8Report, isConnected } = useSocketContext();
   const [wise, setWise] = useState<string>("datewise");
   const [batch, setBatch] = useState<string | null>(null);
   const [date, setDate] = useState<{ from: Dayjs | null; to: Dayjs | null }>({
@@ -82,12 +84,27 @@ const R8Report: React.FC = () => {
       setDate({ from: null, to: null });
     }
   };
-  const onBtExport = useCallback(() => {
-    gridRef.current!.api.exportDataAsExcel({
-      sheetName: "R8 Report",
-      fileName: `R8-Report-${dayjs().format("DD-MM-YYYY")}.xlsx`,
-    });
-  }, []);
+  const onBtExport = () => {
+    if (wise === "batchwise") {
+      if (!batch) {
+        showToast("Please select a batch", "error");
+        return;
+      }
+      emitDownloadR8Report({ wise, batchId: batch });
+    }
+    if (wise === "datewise") {
+      if (!date.from || !date.to) {
+        showToast("Please select a date", "error");
+        return;
+      }
+      emitDownloadR8Report({
+        wise,
+        from: dayjs(date.from).format("DD-MM-YYYY"),
+        to: dayjs(date.to).format("DD-MM-YYYY"),
+      });
+    }
+    showToast("Start downloading ", "success");
+  };
 
   const handleSearch = () => {
     if (wise === "batchwise") {
@@ -223,7 +240,7 @@ const R8Report: React.FC = () => {
               <MuiTooltip title="Download" placement="right">
                 <LoadingButton
                   variant="contained"
-                  disabled={!r8Report}
+                  disabled={!isConnected}
                   onClick={onBtExport}
                   color="primary"
                   style={{

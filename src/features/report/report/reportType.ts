@@ -120,6 +120,11 @@ export type R9SerialAgeingQueryParams = {
   transactionType: string;
 };
 
+export type R10ReportQueryParams = {
+  startDate: string;
+  endDate: string;
+};
+
 export type ReportStateType = {
   r1Data: DocumentData | null;
   getR1DataLoading: boolean;
@@ -147,5 +152,7 @@ export type ReportStateType = {
   r9ReportLoading: boolean;
   r9SerialAgeing: any;
   r9SerialAgeingLoading: boolean;
+  r10Report: any;
+  r10ReportLoading: boolean;
 };
 
