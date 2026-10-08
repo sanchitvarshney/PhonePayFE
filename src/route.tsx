@@ -63,6 +63,7 @@ import LocationAllot from "./pages/locationAllotement/LocationAllot";
 import LocationAllotedList from "./pages/locationAllotement/LocationAllotedList";
 import LocationAllotementLayout from "./layouts/LocationAllotementLayout";
 import ConsumptionLayout from "./layouts/ConsumptionLayout";
+import MasterCarton from "./pages/masterCarton/MasterCarton";
 
 export const router = createBrowserRouter([
   {
@@ -325,6 +326,14 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/warehouse/good-spare-inward",
+      },
+      {
+        element: (
+          <MainLayout>
+            <MasterCarton />
+          </MainLayout>
+        ),
+        path: "/warehouse/master-carton",
       },
       {
         element: (

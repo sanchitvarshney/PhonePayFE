@@ -287,6 +287,16 @@ const staticMenu: Menu[] = [
         description: "Goods Spare Inward",
       },
       {
+        menu_key: "warehouse-master-carton",
+        name: "Master Carton Sticker",
+        parent_menu_key: "warehouse",
+        url: "/warehouse/master-carton",
+        order: 5,
+        is_active: 1,
+        icon: "material",
+        description: "Master Carton Sticker",
+      },
+      {
         menu_key: "bulk-device-inward",
         name: "Bulk Device Inward",
         parent_menu_key: "procurement",
