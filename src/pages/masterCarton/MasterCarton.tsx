@@ -29,7 +29,6 @@ import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import TagOutlinedIcon from "@mui/icons-material/TagOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import TimerOutlinedIcon from "@mui/icons-material/TimerOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { showToast } from "@/utils/toasterContext";
 import MasterCartonSticker from "@/components/masterCarton/MasterCartonSticker";
@@ -43,14 +42,17 @@ import {
   reprintMasterCarton,
 } from "@/features/masterCarton/masterCartonService";
 import {
+  MAX_STICKER_RANGE,
   MFG_DATE_FORMAT,
   REPRINT_EXPIRED_MESSAGE,
   getApiErrorMessage,
   getDefaultCartonValues,
   parseMfgDate,
+  validateStickerRange,
 } from "@/features/masterCarton/masterCartonHelpers";
 import {
   LatestCartonInfo,
+  MasterCartonBatch,
   MasterCartonDetails,
   MasterCartonFormValues,
   MasterCartonMode,
@@ -62,8 +64,6 @@ type LatestState = {
   info: LatestCartonInfo | null;
   error: string;
 };
-
-const REPRINT_WINDOW_SECONDS = 5 * 60;
 
 const STICKER_PX_WIDTH = (100 * 96) / 25.4;
 const STICKER_PX_HEIGHT = (75 * 96) / 25.4;
@@ -127,7 +127,10 @@ const InfoTile: React.FC<{
         {label}
         {hint && (
           <Tooltip title={hint} arrow>
-            <InfoOutlinedIcon sx={{ fontSize: 13 }} className="text-slate-400" />
+            <InfoOutlinedIcon
+              sx={{ fontSize: 13 }}
+              className="text-slate-400"
+            />
           </Tooltip>
         )}
       </p>
@@ -137,31 +140,6 @@ const InfoTile: React.FC<{
     </div>
   </div>
 );
-
-/** Live mm:ss countdown for the 5-minute reprint window. */
-const ReprintCountdown: React.FC<{ expiresAt: number }> = ({ expiresAt }) => {
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const secondsLeft = Math.max(0, Math.ceil((expiresAt - now) / 1000));
-  if (secondsLeft === 0) {
-    return <Chip size="small" color="error" label="Reprint window expired" />;
-  }
-  const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
-  const ss = String(secondsLeft % 60).padStart(2, "0");
-  return (
-    <Chip
-      size="small"
-      icon={<TimerOutlinedIcon />}
-      color={secondsLeft <= 60 ? "warning" : "default"}
-      label={`Reprint window ${mm}:${ss}`}
-    />
-  );
-};
 
 const ScaledPreview: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -187,7 +165,10 @@ const ScaledPreview: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <div ref={containerRef} className="w-full h-full flex items-center justify-center">
+    <div
+      ref={containerRef}
+      className="w-full h-full flex items-center justify-center"
+    >
       <div
         className="bg-white rounded-sm shadow-[0_10px_30px_rgba(15,23,42,0.18)] ring-1 ring-black/5"
         style={{
@@ -205,19 +186,37 @@ const ScaledPreview: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
+const formatCartonRange = (cartonIds: string[]) =>
+  cartonIds.length > 1
+    ? `${cartonIds[0]} – ${cartonIds[cartonIds.length - 1]} (${cartonIds.length})`
+    : (cartonIds[0] ?? "");
+
+const NewCartonPreviewNote: React.FC<{
+  control: Control<MasterCartonFormValues>;
+}> = ({ control }) => {
+  const range = Number(useWatch({ control, name: "range" })) || 1;
+  return (
+    <Alert severity="info" variant="outlined" sx={{ py: 0 }}>
+      <strong>Preview only</strong> — this is how one sticker will look.{" "}
+      {range > 1
+        ? `When you click Print, ${range} stickers will print, each with its own Carton ID and barcode.`
+        : "The Carton ID and barcode are added when you click Print."}
+    </Alert>
+  );
+};
+
 const StickerOutput: React.FC<{
   control: Control<MasterCartonFormValues>;
-  cartonId: string;
-}> = ({ control, cartonId }) => {
+  cartonIds: string[];
+}> = ({ control, cartonIds }) => {
   const values = useWatch({ control });
-  const details = useMemo<MasterCartonDetails>(
+  const base = useMemo<Omit<MasterCartonDetails, "cartonId">>(
     () => ({
       product: values.product?.trim() ?? "",
       color: values.color?.trim() ?? "",
       mfgDate: values.mfgDate ?? "",
       quantity: values.quantity ?? "",
       grossWeight: values.grossWeight ?? "",
-      cartonId,
     }),
     [
       values.product,
@@ -225,17 +224,21 @@ const StickerOutput: React.FC<{
       values.mfgDate,
       values.quantity,
       values.grossWeight,
-      cartonId,
     ],
   );
+  const printIds = cartonIds.length ? cartonIds : [""];
 
   return (
     <>
       <ScaledPreview>
-        <MasterCartonSticker details={details} />
+        <MasterCartonSticker details={{ ...base, cartonId: printIds[0] }} />
       </ScaledPreview>
       <StickerPrintPortal>
-        <MasterCartonSticker details={details} />
+        {printIds.map((id, index) => (
+          <div key={id || index} className="mc-print-page">
+            <MasterCartonSticker details={{ ...base, cartonId: id }} />
+          </div>
+        ))}
       </StickerPrintPortal>
     </>
   );
@@ -253,13 +256,12 @@ const MasterCarton: React.FC = () => {
   });
 
   const [mode, setMode] = useState<MasterCartonMode>("new");
-  const [cartonId, setCartonId] = useState("");
+  const [cartonIds, setCartonIds] = useState<string[]>([]);
   const [latest, setLatest] = useState<LatestState>({
     status: "loading",
     info: null,
     error: "",
   });
-  const [reprintExpiresAt, setReprintExpiresAt] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [reprintOpen, setReprintOpen] = useState(false);
   const [printRequest, setPrintRequest] = useState(0);
@@ -288,7 +290,6 @@ const MasterCarton: React.FC = () => {
     loadLatest();
   }, [loadLatest]);
 
-  // Print after the issued carton number has been rendered into the sticker.
   useEffect(() => {
     if (!printRequest) return;
     const frame = requestAnimationFrame(() => printSticker());
@@ -296,24 +297,18 @@ const MasterCarton: React.FC = () => {
   }, [printRequest]);
 
   const applyAndPrint = (
-    details: MasterCartonDetails,
+    { values, cartonIds: issuedIds }: MasterCartonBatch,
     nextMode: MasterCartonMode,
-    secondsLeft: number | null,
   ) => {
-    const { cartonId: issuedId, ...values } = details;
     reset(values);
-    setCartonId(issuedId);
+    setCartonIds(issuedIds);
     setMode(nextMode);
-    setReprintExpiresAt(
-      secondsLeft === null ? null : Date.now() + secondsLeft * 1000,
-    );
     setPrintRequest((n) => n + 1);
   };
 
   const startNewCarton = () => {
     reset(getDefaultCartonValues());
-    setCartonId("");
-    setReprintExpiresAt(null);
+    setCartonIds([]);
     setMode("new");
     loadLatest();
   };
@@ -322,9 +317,12 @@ const MasterCarton: React.FC = () => {
     async (values) => {
       setSaving(true);
       try {
-        const details = await createMasterCarton(values);
-        applyAndPrint(details, "saved", REPRINT_WINDOW_SECONDS);
-        showToast(`Carton ${details.cartonId} created`, "success");
+        const batch = await createMasterCarton(values);
+        applyAndPrint(batch, "saved");
+        showToast(
+          `${batch.cartonIds.length > 1 ? "Cartons" : "Carton"} ${formatCartonRange(batch.cartonIds)} created`,
+          "success",
+        );
       } catch (error) {
         showToast(
           getApiErrorMessage(error, "Unable to create the master carton."),
@@ -340,8 +338,11 @@ const MasterCarton: React.FC = () => {
   const reprintCurrent = async () => {
     setSaving(true);
     try {
-      const { details, secondsLeft } = await reprintMasterCarton(cartonId);
-      applyAndPrint(details, mode, secondsLeft);
+      const batch = await reprintMasterCarton(
+        cartonIds[0],
+        cartonIds.length,
+      );
+      applyAndPrint(batch, mode);
     } catch (error) {
       showToast(
         getApiErrorMessage(error, "Unable to reprint this carton.", {
@@ -360,7 +361,6 @@ const MasterCarton: React.FC = () => {
     else reprintCurrent();
   };
 
-  // Ctrl/Cmd+P runs the real print flow instead of printing an unissued sticker.
   const shortcutPrintRef = useRef<() => void>(() => {});
   shortcutPrintRef.current = () => {
     if (!reprintOpen) handlePrint();
@@ -376,10 +376,13 @@ const MasterCarton: React.FC = () => {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const handleReprintLoaded = ({ details, secondsLeft }: ReprintResult) => {
+  const handleReprintLoaded = (batch: ReprintResult) => {
     setReprintOpen(false);
-    applyAndPrint(details, "reprint", secondsLeft);
-    showToast(`Reprinting carton ${details.cartonId}`, "success");
+    applyAndPrint(batch, "reprint");
+    showToast(
+      `Reprinting ${batch.cartonIds.length > 1 ? "cartons" : "carton"} ${formatCartonRange(batch.cartonIds)}`,
+      "success",
+    );
   };
 
   const locked = mode !== "new";
@@ -514,19 +517,13 @@ const MasterCarton: React.FC = () => {
                     </span>
                     <div className="min-w-0">
                       <p className="text-[11px] uppercase tracking-wider text-slate-500">
-                        Carton ID
+                        {cartonIds.length > 1 ? "Carton IDs" : "Carton ID"}
                       </p>
                       <p className="text-lg font-bold text-slate-800 break-all leading-tight">
-                        {cartonId}
+                        {formatCartonRange(cartonIds)}
                       </p>
                     </div>
                   </div>
-                  {reprintExpiresAt && (
-                    <ReprintCountdown
-                      key={reprintExpiresAt}
-                      expiresAt={reprintExpiresAt}
-                    />
-                  )}
                 </div>
               )}
             </div>
@@ -684,6 +681,32 @@ const MasterCarton: React.FC = () => {
                   />
                 )}
               />
+              <Controller
+                name="range"
+                control={control}
+                rules={{ validate: validateStickerRange }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    onChange={(e) =>
+                      field.onChange(e.target.value.replace(/\D/g, ""))
+                    }
+                    label="No. of Stickers"
+                    variant="filled"
+                    required
+                    fullWidth
+                    error={!!errors.range}
+                    helperText={
+                      errors.range?.message ??
+                      `1 – ${MAX_STICKER_RANGE}, one carton ID per sticker`
+                    }
+                    slotProps={{
+                      input: { readOnly: locked },
+                      htmlInput: { inputMode: "numeric", maxLength: 3 },
+                    }}
+                  />
+                )}
+              />
             </FieldGroup>
           </div>
 
@@ -722,22 +745,28 @@ const MasterCarton: React.FC = () => {
               step={2}
               title="Sticker Preview"
               subtitle="Updates live as you type — this is exactly what prints"
-              extra={<Chip size="small" label="100 × 75 mm" variant="outlined" />}
+              extra={
+                <Chip size="small" label="100 × 75 mm" variant="outlined" />
+              }
             />
           </div>
 
           <div className="flex-1 min-h-[280px] m-[16px] md:m-[22px] rounded-lg border border-dashed border-neutral-300 bg-neutral-50 bg-[radial-gradient(#d4d4d8_1px,transparent_1px)] [background-size:16px_16px] flex p-[16px] md:p-[28px] overflow-hidden">
-            <StickerOutput control={control} cartonId={cartonId} />
+            <StickerOutput control={control} cartonIds={cartonIds} />
           </div>
 
           <div className="shrink-0 px-[16px] md:px-[22px] pb-[16px] md:pb-[22px] flex flex-col gap-[10px]">
-            {mode === "new" && (
+            {mode === "new" && <NewCartonPreviewNote control={control} />}
+            {cartonIds.length > 1 && (
               <Alert severity="info" variant="outlined" sx={{ py: 0 }}>
-                The Carton ID and barcode are added when you click PRINT.
+                Showing the first sticker — {cartonIds.length} stickers will
+                print ({formatCartonRange(cartonIds)}).
               </Alert>
             )}
             <div className="flex flex-wrap gap-[8px] text-xs text-slate-500">
-              <span className="font-medium text-slate-600">Printer settings:</span>
+              <span className="font-medium text-slate-600">
+                Printer settings:
+              </span>
               <span className="rounded-full bg-neutral-100 px-[10px] py-[2px]">
                 Paper 100 × 75 mm
               </span>

@@ -7,15 +7,15 @@ const PRINT_CSS = `
 @media print {
   html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
   body > *:not(.mc-print-root) { display: none !important; }
-  .mc-print-root {
-    display: block !important;
-    position: fixed;
-    top: 0;
-    left: 0;
+  .mc-print-root { display: block !important; width: 100mm; }
+  .mc-print-page {
     width: 100mm;
     height: 75mm;
     overflow: hidden;
+    break-after: page;
+    page-break-after: always;
   }
+  .mc-print-page:last-child { break-after: auto; page-break-after: auto; }
 }
 `;
 
@@ -40,7 +40,6 @@ const waitForImage = (img: HTMLImageElement) =>
         img.addEventListener("error", () => resolve(), { once: true });
       });
 
-/** Waits for sticker images (logo/barcode) to load so they are not missing from the print. */
 export const printSticker = async () => {
   const images = Array.from(document.querySelectorAll<HTMLImageElement>(".mc-print-root img"));
   await Promise.all(images.map(waitForImage));

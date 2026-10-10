@@ -10,6 +10,18 @@ const API_MONTH_FORMAT = "YYYY-MM";
 
 export const CARTON_ID_PATTERN = /^[A-Za-z0-9\-_/]{1,40}$/;
 
+export const MIN_STICKER_RANGE = 1;
+export const MAX_STICKER_RANGE = 100;
+
+export const validateStickerRange = (value: string): true | string => {
+  const n = Number(value);
+  if (!value || !Number.isInteger(n)) return "No. of Stickers is required";
+  return (
+    (n >= MIN_STICKER_RANGE && n <= MAX_STICKER_RANGE) ||
+    `Enter a value between ${MIN_STICKER_RANGE} and ${MAX_STICKER_RANGE}`
+  );
+};
+
 export const REPRINT_EXPIRED_MESSAGE = "Reprint window expired";
 
 export const getDefaultCartonValues = (): MasterCartonFormValues => ({
@@ -18,6 +30,7 @@ export const getDefaultCartonValues = (): MasterCartonFormValues => ({
   mfgDate: dayjs().format(MFG_DATE_FORMAT),
   quantity: "100",
   grossWeight: "",
+  range: "1",
 });
 
 export const parseMfgDate = (value: string) => {

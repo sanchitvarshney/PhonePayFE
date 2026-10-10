@@ -2,7 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress, TextField } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import { reprintMasterCarton } from "@/features/masterCarton/masterCartonService";
-import { CARTON_ID_PATTERN, REPRINT_EXPIRED_MESSAGE, getApiErrorMessage } from "@/features/masterCarton/masterCartonHelpers";
+import {
+  CARTON_ID_PATTERN,
+  MAX_STICKER_RANGE,
+  REPRINT_EXPIRED_MESSAGE,
+  getApiErrorMessage,
+  validateStickerRange,
+} from "@/features/masterCarton/masterCartonHelpers";
 import { ReprintResult } from "@/features/masterCarton/masterCartonType";
 
 type Props = {
@@ -13,6 +19,8 @@ type Props = {
 
 const ReprintCartonDialog: React.FC<Props> = ({ open, onClose, onLoaded }) => {
   const [cartonId, setCartonId] = useState("");
+  const [range, setRange] = useState("1");
+  const [rangeError, setRangeError] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const requestRef = useRef(0);
@@ -20,6 +28,8 @@ const ReprintCartonDialog: React.FC<Props> = ({ open, onClose, onLoaded }) => {
   useEffect(() => {
     if (open) {
       setCartonId("");
+      setRange("1");
+      setRangeError("");
       setError("");
       setLoading(false);
     }
@@ -43,12 +53,17 @@ const ReprintCartonDialog: React.FC<Props> = ({ open, onClose, onLoaded }) => {
       setError("Invalid Carton ID. Use letters, numbers, '-', '_' or '/' only.");
       return;
     }
+    const rangeCheck = validateStickerRange(range);
+    if (rangeCheck !== true) {
+      setRangeError(rangeCheck);
+      return;
+    }
 
     const requestId = ++requestRef.current;
     setError("");
     setLoading(true);
     try {
-      const result = await reprintMasterCarton(id);
+      const result = await reprintMasterCarton(id, Number(range));
       if (requestId !== requestRef.current) return;
       onLoaded(result);
     } catch (err) {
@@ -77,7 +92,8 @@ const ReprintCartonDialog: React.FC<Props> = ({ open, onClose, onLoaded }) => {
         </DialogTitle>
         <DialogContent className="flex flex-col gap-[16px]">
           <p className="text-sm text-slate-500">
-            Enter the carton number to reprint. Reprint is allowed only within 5 minutes of creation.
+            Enter the first carton number and how many stickers to reprint from it. Reprint is allowed only within 5
+            minutes of creation.
           </p>
           <TextField
             label="Carton ID"
@@ -94,6 +110,21 @@ const ReprintCartonDialog: React.FC<Props> = ({ open, onClose, onLoaded }) => {
               if (error) setError("");
             }}
             inputProps={{ maxLength: 40, autoComplete: "off" }}
+          />
+          <TextField
+            label="No. of Stickers"
+            variant="filled"
+            required
+            fullWidth
+            value={range}
+            disabled={loading}
+            error={!!rangeError}
+            helperText={rangeError || `1 – ${MAX_STICKER_RANGE}`}
+            onChange={(e) => {
+              setRange(e.target.value.replace(/\D/g, ""));
+              if (rangeError) setRangeError("");
+            }}
+            inputProps={{ inputMode: "numeric", maxLength: 3, autoComplete: "off" }}
           />
           {error && <Alert severity="error">{error}</Alert>}
         </DialogContent>

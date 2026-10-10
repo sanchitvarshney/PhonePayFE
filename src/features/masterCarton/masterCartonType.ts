@@ -1,16 +1,21 @@
 export type MasterCartonFormValues = {
   product: string;
   color: string;
-  mfgDate: string; // "MMM YYYY", e.g. "Oct 2026"
+  mfgDate: string; 
   quantity: string;
-  grossWeight: string; // KG
+  grossWeight: string; 
+  range: string; 
 };
 
-export type MasterCartonDetails = MasterCartonFormValues & {
+export type MasterCartonDetails = Omit<MasterCartonFormValues, "range"> & {
   cartonId: string;
 };
 
-/** "new" = not yet issued; "saved" = issued by POST /masterCarton; "reprint" = loaded via reprint API. */
+export type MasterCartonBatch = {
+  values: MasterCartonFormValues;
+  cartonIds: string[];
+};
+
 export type MasterCartonMode = "new" | "saved" | "reprint";
 
 export type ApiEnvelope<T> = {
@@ -22,7 +27,7 @@ export type ApiEnvelope<T> = {
 };
 
 export type MasterCartonRecord = {
-  carton_no: string;
+  carton_no: string | string[];
   product: string | null;
   color: string | null;
   mfg_month: string | null; // "YYYY-MM"
@@ -43,7 +48,6 @@ export type LatestCartonInfo = {
   nextCartonNo: string;
 };
 
-export type ReprintResult = {
-  details: MasterCartonDetails;
+export type ReprintResult = MasterCartonBatch & {
   secondsLeft: number | null;
 };
