@@ -64,6 +64,9 @@ import LocationAllotedList from "./pages/locationAllotement/LocationAllotedList"
 import LocationAllotementLayout from "./layouts/LocationAllotementLayout";
 import ConsumptionLayout from "./layouts/ConsumptionLayout";
 import MasterCarton from "./pages/masterCarton/MasterCarton";
+import DeliveryVideoPage from "./pages/delivery/DeliveryVideoPage";
+import WrongDeviceReport from "./pages/delivery/WrongDeviceReport";
+import WrongDeviceLayout from "./layouts/WrongDeviceLayout";
 
 export const router = createBrowserRouter([
   {
@@ -81,6 +84,20 @@ export const router = createBrowserRouter([
           </MainLayout>
         ),
         path: "/",
+      },
+      {
+        element: <DeliveryVideoPage />,
+        path: "/wrong-device",
+      },
+      {
+        element: (
+          <MainLayout>
+            <WrongDeviceLayout>
+              <WrongDeviceReport />
+            </WrongDeviceLayout>
+          </MainLayout>
+        ),
+        path: "/wrong-device/reports",
       },
       {
         element: (
