@@ -18,27 +18,8 @@ export const DELIVERY_PARTNERS = [
   { value: "Trackon", text: "TrackOn" },
 ];
 
-const AWB_LENGTH_RANGES: Record<string, { min: number; max: number }> = {
-  eCOM: { min: 9, max: 12 },
-  eKart: { min: 10, max: 16 },
-  dVery: { min: 12, max: 14 },
-  DTDC: { min: 8, max: 14 },
-  F1: { min: 3, max: 10 },
-  PLADA: { min: 8, max: 10 },
-  BILLBOX: { min: 8, max: 10 },
-  XPRESSBEES: { min: 14, max: 15 },
-  DARTX: { min: 8, max: 10 },
-  NANDAN: { min: 8, max: 13 },
-  DSKCargo: { min: 7, max: 13 },
-  ShipRocket: { min: 7, max: 13 },
-  ShadowFox: { min: 12, max: 18 },
-  GMS: { min: 9, max: 10 },
-  BLUEDART: { min: 11, max: 13 },
-  Trackon: { min: 12, max: 14 },
-};
-
-export const getAWBLengthRange = (partnerId: string): { min: number; max: number } | null =>
-  AWB_LENGTH_RANGES[partnerId] ?? null;
+export const getPartnerName = (code: string) =>
+  DELIVERY_PARTNERS.find((p) => p.value === code)?.text ?? code;
 
 export const fieldSx = {
   "& .MuiOutlinedInput-root": {

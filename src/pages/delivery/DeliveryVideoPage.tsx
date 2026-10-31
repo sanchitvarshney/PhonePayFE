@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
@@ -22,8 +22,15 @@ import { CheckCircle, QrCodeScanner } from "@mui/icons-material";
 import { Icons } from "@/components/icons";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { showToast } from "@/utils/toasterContext";
-import { resetDeliveryState } from "@/features/delivery/deliverySlice";
-import { DELIVERY_PARTNERS, fieldSx, getAWBLengthRange, selectSx } from "./delivery.constants";
+import {
+  checkWrongDeviceAwb,
+  clearAwbCheck,
+  getWrongDeviceLocations,
+  resetDeliveryState,
+} from "@/features/delivery/deliverySlice";
+import { isAwbLimitReached, normalizeAwb } from "@/features/delivery/delivery.utils";
+import type { AwbCheckResult } from "@/features/delivery/deliveryType";
+import { fieldSx, getPartnerName, selectSx } from "./delivery.constants";
 import ConfirmDialog from "./ConfirmDialog";
 import FullScreenVideoRecorder from "./video/FullScreenVideoRecorder";
 import VideoPreview from "./video/VideoPreview";
@@ -36,20 +43,28 @@ import AWBScannerDialog, { isBarcodeScanSupported } from "./AWBScannerDialog";
 
 type DeliveryFormValues = {
   awb: string;
-  deliveryPartner: string;
+  location: string;
+  itemName: string;
+  qty: string;
   remark: string;
   video: RecordedVideo | null;
 };
 
 const defaultValues: DeliveryFormValues = {
   awb: "",
-  deliveryPartner: "",
+  location: "",
+  itemName: "",
+  qty: "1",
   remark: "",
   video: null,
 };
 
 const REMARK_MAX_LENGTH = 200;
+const ITEM_NAME_MAX_LENGTH = 100;
+const QTY_MAX = 9999;
 const CAN_SCAN = isBarcodeScanSupported();
+
+type SubmittedEntry = { awb: string; itemName: string; qty: number };
 
 const FieldLabel = ({ children, required }: { children: string; required?: boolean }) => (
   <Typography variant="subtitle1" className="text-slate-600 font-medium">
@@ -60,29 +75,86 @@ const FieldLabel = ({ children, required }: { children: string; required?: boole
   </Typography>
 );
 
+const formatEntries = (info: AwbCheckResult) =>
+  info.limit == null ? `${info.entered} (no limit)` : `${info.entered} of ${info.limit}`;
+
+const AwbInfoCard = ({ info }: { info: AwbCheckResult }) => {
+  const limitReached = isAwbLimitReached(info);
+  return (
+    <div
+      className={`grid grid-cols-2 gap-x-3 gap-y-1 rounded-md border px-3 py-2 text-xs ${
+        limitReached ? "border-red-300 bg-red-50" : "border-green-300 bg-green-50"
+      }`}
+    >
+      <span className="text-slate-500">Partner</span>
+      <span className="font-medium text-slate-800">{getPartnerName(info.deliveryPartner)}</span>
+      <span className="text-slate-500">Scan type</span>
+      <span className="font-medium text-slate-800">{info.scanType}</span>
+      <span className="text-slate-500">Scan ID</span>
+      <span className="font-medium text-slate-800 break-all">{info.scanId}</span>
+      <span className="text-slate-500">Entries</span>
+      <span className={`font-medium ${limitReached ? "text-red-600" : "text-slate-800"}`}>
+        {formatEntries(info)}
+      </span>
+      {limitReached && (
+        <span className="col-span-2 pt-1 font-medium text-red-600">
+          Entry limit for this AWB is reached.
+        </span>
+      )}
+    </div>
+  );
+};
+
 const DeliveryVideoContent = () => {
   const dispatch = useAppDispatch();
-  const submitError = useAppSelector((state) => state.delivery.submitError);
+  const { submitError, awbInfo, awbChecking, awbError, locations, locationsLoading } =
+    useAppSelector((state) => state.delivery);
   const { phase, progress, isBusy, submit } = useDeliverySubmit();
 
   const [recorderOpen, setRecorderOpen] = useState(false);
   const [retakeConfirmOpen, setRetakeConfirmOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [submittedAwb, setSubmittedAwb] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState<SubmittedEntry | null>(null);
+  // Shares one request when blur, Enter and submit all ask to check the same AWB.
+  const pendingCheckRef = useRef<{ awb: string; promise: Promise<AwbCheckResult | null> } | null>(
+    null
+  );
 
   const {
     control,
     handleSubmit,
     reset,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<DeliveryFormValues>({ defaultValues, mode: "onTouched" });
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    dispatch(getWrongDeviceLocations());
+    return () => {
       dispatch(resetDeliveryState());
+      dispatch(clearAwbCheck());
+    };
+  }, [dispatch]);
+
+  const runAwbCheck = useCallback(
+    (raw: string): Promise<AwbCheckResult | null> => {
+      const awb = normalizeAwb(raw);
+      if (!awb) return Promise.resolve(null);
+      if (awbInfo?.awb === awb) return Promise.resolve(awbInfo);
+      if (pendingCheckRef.current?.awb === awb) return pendingCheckRef.current.promise;
+
+      setValue("awb", awb);
+      const promise = dispatch(checkWrongDeviceAwb(awb)).then((result) =>
+        checkWrongDeviceAwb.fulfilled.match(result) ? result.payload : null
+      );
+      pendingCheckRef.current = { awb, promise };
+      promise.finally(() => {
+        if (pendingCheckRef.current?.promise === promise) pendingCheckRef.current = null;
+      });
+      return promise;
     },
-    [dispatch]
+    [awbInfo, dispatch, setValue]
   );
 
   const openRecorder = useCallback(() => setRecorderOpen(true), []);
@@ -101,9 +173,9 @@ const DeliveryVideoContent = () => {
     (value: string) => {
       setValue("awb", value, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
       setScannerOpen(false);
-      showToast(`AWB scanned: ${value}`, "success");
+      runAwbCheck(value);
     },
-    [setValue]
+    [setValue, runAwbCheck]
   );
 
   const handleTooShort = useCallback(() => {
@@ -117,21 +189,39 @@ const DeliveryVideoContent = () => {
 
   const onSubmit = async (values: DeliveryFormValues) => {
     if (!values.video) return;
-    const awb = values.awb.trim();
+    const info = await runAwbCheck(values.awb);
+    if (!info) return;
+    if (isAwbLimitReached(info)) {
+      showToast("Entry limit for this AWB is reached", "error");
+      return;
+    }
+
+    const entry: SubmittedEntry = {
+      awb: info.awb,
+      itemName: values.itemName.trim(),
+      qty: Number(values.qty),
+    };
     const ok = await submit(
-      { awb, deliveryPartner: values.deliveryPartner, remark: values.remark.trim() },
+      { ...entry, remark: values.remark.trim(), location: values.location },
       values.video
     );
-    if (ok) {
-      reset(defaultValues);
-      setSubmittedAwb(awb);
-    }
+    if (ok) setSubmitted(entry);
   };
 
-  const handleNewEntry = () => {
+  // Same AWB keeps the AWB and location for the next item on that parcel.
+  const handleNext = (sameAwb: boolean) => {
+    const location = getValues("location");
     dispatch(resetDeliveryState());
-    setSubmittedAwb(null);
+    if (sameAwb && submitted) {
+      reset({ ...defaultValues, awb: submitted.awb, location });
+    } else {
+      dispatch(clearAwbCheck());
+      reset({ ...defaultValues, location });
+    }
+    setSubmitted(null);
   };
+
+  const limitReached = isAwbLimitReached(awbInfo);
 
   return (
     <div className="min-h-[100dvh] w-full bg-slate-100">
@@ -142,31 +232,41 @@ const DeliveryVideoContent = () => {
           </span>
           <div className="flex flex-col">
             <h1 className="text-base font-semibold text-slate-800">Wrong Device</h1>
-            <p className="text-xs text-slate-500">Scan AWB, record and submit video</p>
+            <p className="text-xs text-slate-500">Save an item without serial, with a video</p>
           </div>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-[560px] p-3 sm:p-6">
-        {submittedAwb ? (
+        {submitted ? (
           <Card elevation={0} className="border border-slate-200">
             <CardContent className="flex flex-col items-center gap-3 !py-10 text-center">
               <CheckCircle sx={{ fontSize: 64 }} className="text-green-600" />
               <Typography variant="h6" className="!font-semibold text-slate-800">
-                Submitted successfully
+                Saved successfully
               </Typography>
               <Typography variant="body2" className="text-slate-500">
-                Wrong device video for AWB <span className="font-semibold">{submittedAwb}</span> has
-                been uploaded.
+                <span className="font-semibold">{submitted.itemName}</span> (qty {submitted.qty})
+                saved on AWB <span className="font-semibold">{submitted.awb}</span>.
               </Typography>
-              <Button
-                variant="contained"
-                startIcon={<Icons.add />}
-                onClick={handleNewEntry}
-                className="!mt-3"
-              >
-                Submit Another
-              </Button>
+              {awbInfo?.awb === submitted.awb && (
+                <Typography variant="body2" className="text-slate-500">
+                  Entries on this AWB: {formatEntries(awbInfo)}
+                </Typography>
+              )}
+              <div className="!mt-3 flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
+                <Button
+                  variant="contained"
+                  startIcon={<Icons.add />}
+                  onClick={() => handleNext(true)}
+                  disabled={limitReached}
+                >
+                  Add Item (Same AWB)
+                </Button>
+                <Button variant="outlined" onClick={() => handleNext(false)}>
+                  New AWB
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -178,32 +278,34 @@ const DeliveryVideoContent = () => {
                 className="flex flex-col gap-[20px]"
               >
                 <div className="flex flex-col gap-[10px]">
-                  <FieldLabel required>AWB</FieldLabel>
+                  <FieldLabel required>AWB / Challan No.</FieldLabel>
                   <Controller
                     name="awb"
                     control={control}
-                    rules={{
-                      validate: (value, formValues) => {
-                        const awb = value.trim();
-                        if (!awb) return "AWB is required";
-                        const range = getAWBLengthRange(formValues.deliveryPartner);
-                        if (range && (awb.length < range.min || awb.length > range.max)) {
-                          return `AWB must be ${range.min}–${range.max} characters for the selected partner`;
-                        }
-                        return true;
-                      },
-                    }}
+                    rules={{ validate: (value) => !!value.trim() || "AWB is required" }}
                     render={({ field }) => (
                       <TextField
                         {...field}
                         fullWidth
-                        placeholder="Enter or scan AWB number"
+                        placeholder="Enter or scan AWB / challan number"
                         disabled={isBusy}
-                        error={!!errors.awb}
-                        helperText={errors.awb?.message}
+                        error={!!errors.awb || !!awbError}
+                        helperText={errors.awb?.message ?? awbError}
                         sx={fieldSx}
-                        // Scanners send Enter after the code; don't submit the form.
-                        onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          if (awbInfo || awbError) dispatch(clearAwbCheck());
+                        }}
+                        onBlur={() => {
+                          field.onBlur();
+                          runAwbCheck(field.value);
+                        }}
+                        // Scanners send Enter after the code: check the AWB instead of submitting.
+                        onKeyDown={(e) => {
+                          if (e.key !== "Enter") return;
+                          e.preventDefault();
+                          runAwbCheck(field.value);
+                        }}
                         slotProps={{
                           htmlInput: {
                             autoComplete: "off",
@@ -211,16 +313,20 @@ const DeliveryVideoContent = () => {
                             spellCheck: false,
                           },
                           input: {
-                            endAdornment: CAN_SCAN && (
+                            endAdornment: (awbChecking || CAN_SCAN) && (
                               <InputAdornment position="end">
-                                <IconButton
-                                  edge="end"
-                                  aria-label="Scan AWB barcode"
-                                  onClick={() => setScannerOpen(true)}
-                                  disabled={isBusy}
-                                >
-                                  <QrCodeScanner className="text-cyan-700" />
-                                </IconButton>
+                                {awbChecking ? (
+                                  <CircularProgress size={22} />
+                                ) : (
+                                  <IconButton
+                                    edge="end"
+                                    aria-label="Scan AWB barcode"
+                                    onClick={() => setScannerOpen(true)}
+                                    disabled={isBusy}
+                                  >
+                                    <QrCodeScanner className="text-cyan-700" />
+                                  </IconButton>
+                                )}
                               </InputAdornment>
                             ),
                           },
@@ -228,16 +334,21 @@ const DeliveryVideoContent = () => {
                       />
                     )}
                   />
+                  {awbInfo && <AwbInfoCard info={awbInfo} />}
                 </div>
 
                 <div className="flex flex-col gap-[10px]">
-                  <FieldLabel required>Delivery Partner</FieldLabel>
+                  <FieldLabel required>Location</FieldLabel>
                   <Controller
-                    name="deliveryPartner"
+                    name="location"
                     control={control}
-                    rules={{ required: "Delivery partner is required", deps: ["awb"] }}
+                    rules={{ required: "Location is required" }}
                     render={({ field }) => (
-                      <FormControl fullWidth error={!!errors.deliveryPartner} disabled={isBusy}>
+                      <FormControl
+                        fullWidth
+                        error={!!errors.location}
+                        disabled={isBusy || locationsLoading}
+                      >
                         <Select
                           {...field}
                           displayEmpty
@@ -245,22 +356,91 @@ const DeliveryVideoContent = () => {
                           MenuProps={{ PaperProps: { sx: { maxHeight: 320 } } }}
                           renderValue={(value) =>
                             value ? (
-                              DELIVERY_PARTNERS.find((p) => p.value === value)?.text ?? value
+                              locations.find((l) => l.key === value)?.name ?? value
                             ) : (
-                              <span className="text-slate-400">Select delivery partner</span>
+                              <span className="text-slate-400">
+                                {locationsLoading ? "Loading locations..." : "Select location"}
+                              </span>
                             )
                           }
                         >
-                          {DELIVERY_PARTNERS.map((item) => (
-                            <MenuItem key={item.value} value={item.value}>
-                              {item.text}
+                          {locations.map((item) => (
+                            <MenuItem key={item.key} value={item.key}>
+                              {item.name}
                             </MenuItem>
                           ))}
                         </Select>
-                        {errors.deliveryPartner && (
-                          <FormHelperText>{errors.deliveryPartner.message}</FormHelperText>
+                        {errors.location ? (
+                          <FormHelperText>{errors.location.message}</FormHelperText>
+                        ) : (
+                          !locationsLoading &&
+                          locations.length === 0 && (
+                            <FormHelperText>
+                              No locations are allotted for this module.
+                            </FormHelperText>
+                          )
                         )}
                       </FormControl>
+                    )}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-[10px]">
+                  <FieldLabel required>Item Name</FieldLabel>
+                  <Controller
+                    name="itemName"
+                    control={control}
+                    rules={{
+                      validate: (value) => {
+                        const name = value.trim();
+                        if (!name) return "Item name is required";
+                        if (name.length < 2) return "Item name must be at least 2 characters";
+                        return true;
+                      },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        placeholder="e.g. Blue shirt"
+                        disabled={isBusy}
+                        error={!!errors.itemName}
+                        helperText={errors.itemName?.message}
+                        sx={fieldSx}
+                        slotProps={{ htmlInput: { maxLength: ITEM_NAME_MAX_LENGTH } }}
+                      />
+                    )}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-[10px]">
+                  <FieldLabel required>Quantity</FieldLabel>
+                  <Controller
+                    name="qty"
+                    control={control}
+                    rules={{
+                      validate: (value) => {
+                        const qty = Number(value);
+                        return (
+                          (Number.isInteger(qty) && qty >= 1 && qty <= QTY_MAX) ||
+                          `Enter a whole number from 1 to ${QTY_MAX}`
+                        );
+                      },
+                    }}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        fullWidth
+                        type="number"
+                        disabled={isBusy}
+                        error={!!errors.qty}
+                        helperText={errors.qty?.message}
+                        sx={fieldSx}
+                        onChange={(e) => field.onChange(e.target.value.replace(/\D/g, ""))}
+                        slotProps={{
+                          htmlInput: { inputMode: "numeric", min: 1, max: QTY_MAX, step: 1 },
+                        }}
+                      />
                     )}
                   />
                 </div>
@@ -277,7 +457,7 @@ const DeliveryVideoContent = () => {
                         multiline
                         minRows={3}
                         maxRows={6}
-                        placeholder="Add a note about this delivery"
+                        placeholder="Add a note about this item"
                         disabled={isBusy}
                         sx={fieldSx}
                         helperText={
@@ -296,7 +476,7 @@ const DeliveryVideoContent = () => {
                   <Controller
                     name="video"
                     control={control}
-                    rules={{ validate: (value) => !!value || "Please record a delivery video" }}
+                    rules={{ validate: (value) => !!value || "Please record a video" }}
                     render={({ field }) => (
                       <VideoPreview
                         video={field.value}
@@ -329,7 +509,7 @@ const DeliveryVideoContent = () => {
                   loading={isBusy}
                   loadingPosition="start"
                   startIcon={<Icons.uploadfile />}
-                  disabled={isBusy}
+                  disabled={isBusy || awbChecking || limitReached}
                 >
                   {phase === "processing"
                     ? "Optimizing video..."

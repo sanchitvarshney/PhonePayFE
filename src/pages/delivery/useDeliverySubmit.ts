@@ -6,14 +6,11 @@ import { getDeliverySubmitResult } from "@/features/delivery/delivery.utils";
 import { prepareVideoForUpload } from "./video/compressVideo";
 import { VIDEO_CONFIG, formatBytes } from "./video/video.config";
 import type { RecordedVideo } from "./video/video.types";
+import type { SubmitDeliveryPayload } from "@/features/delivery/deliveryType";
 
 export type SubmitPhase = "idle" | "processing" | "uploading";
 
-type DeliveryDetails = {
-  awb: string;
-  deliveryPartner: string;
-  remark: string;
-};
+type DeliveryDetails = Omit<SubmitDeliveryPayload, "video" | "onUploadProgress">;
 
 const toFileSafe = (value: string) => value.replace(/[^a-zA-Z0-9_-]/g, "") || "awb";
 
@@ -78,7 +75,6 @@ export const useDeliverySubmit = () => {
           submitDelivery({
             ...details,
             video: file,
-            durationMs: video.durationMs,
             onUploadProgress: (e) => {
               if (e.total) updateProgress(e.loaded / e.total);
             },

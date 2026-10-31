@@ -8,6 +8,7 @@ import { ModuleRegistry } from "@ag-grid-community/core";
 import { ExcelExportModule } from "@ag-grid-enterprise/excel-export";
 import LoadingButton from "@mui/lab/LoadingButton";
 import { VisibilityOutlined } from "@mui/icons-material";
+import { TextField } from "@mui/material";
 import { showToast } from "@/utils/toasterContext";
 import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHook";
 import { rangePresets } from "@/utils/rangePresets";
@@ -16,10 +17,10 @@ import { Icons } from "@/components/icons";
 import MuiTooltip from "@/components/reusable/MuiTooltip";
 import CustomLoadingOverlay from "@/components/reusable/CustomLoadingOverlay";
 import { OverlayNoRowsTemplate } from "@/components/reusable/OverlayNoRowsTemplate";
-import { getWrongDeviceVideoReport } from "@/features/delivery/deliverySlice";
+import { fetchFreshVideoUrl, getWrongDeviceVideoReport } from "@/features/delivery/deliverySlice";
+import { normalizeAwb } from "@/features/delivery/delivery.utils";
 import type { WrongDeviceRow } from "@/features/delivery/deliveryType";
 import { centerAlignedColumn, leftAlignedColumn } from "@/utils/agGridAlignUtils";
-import { DELIVERY_PARTNERS } from "./delivery.constants";
 
 ModuleRegistry.registerModules([ExcelExportModule]);
 
@@ -30,11 +31,28 @@ const defaultColDef: ColDef<WrongDeviceRow> = {
   sortable: true,
   filter: true,
   flex: 1,
+  minWidth: 150,
   wrapText: true,
   autoHeight: true,
   wrapHeaderText: true,
   autoHeaderHeight: true,
   ...leftAlignedColumn,
+};
+
+
+const openVideo = async (row: WrongDeviceRow) => {
+  const tab = window.open("", "_blank");
+  try {
+    const url = (await fetchFreshVideoUrl(row)) ?? row.videoUrl;
+    if (tab) {
+      tab.opener = null;
+      tab.location.href = url;
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  } catch {
+    tab?.close();
+  }
 };
 
 const columnDefs: ColDef<WrongDeviceRow>[] = [
@@ -45,27 +63,21 @@ const columnDefs: ColDef<WrongDeviceRow>[] = [
     valueGetter: "node.rowIndex+1",
     ...centerAlignedColumn,
   },
-  { headerName: "AWB", field: "awb" },
-  {
-    headerName: "Partner",
-    field: "deliveryPartner",
-    valueFormatter: (params) =>
-      DELIVERY_PARTNERS.find((p) => p.value === params.value)?.text ?? params.value ?? "",
-  },
-  {
-    headerName: "Duration",
-    field: "videoDuration",
-    valueFormatter: (params) => (params.value != null ? `${params.value}s` : ""),
-  },
+  { headerName: "AWB / Challan No.", field: "awb_no" },
+  { headerName: "Method", field: "method" },
+  { headerName: "Scan ID", field: "scan_id" },
+  { headerName: "Item Name", field: "item_name", flex: 1.5 },
+  { headerName: "Qty", field: "qty", flex: 0, width: 90, ...centerAlignedColumn },
+  { headerName: "Remark", field: "remark", flex: 2 },
+  { headerName: "Insert By", field: "insert_by" },
   {
     headerName: "Insert Date",
-    field: "insertDate",
-    valueFormatter: (params) =>
-      params.value ? dayjs(params.value).format("DD-MM-YYYY hh:mm A") : "",
+    field: "insert_dt",
+    valueFormatter: (params) => {
+      const d = dayjs(params.value);
+      return d.isValid() ? d.format("DD-MM-YYYY hh:mm A") : params.value ?? "";
+    },
   },
-  { headerName: "URL", field: "videoUrl", hide: true },
-  { headerName: "Insert By", field: "insertedBy" },
-  { headerName: "Remark", field: "remark", flex: 2 },
   {
     headerName: "Action",
     sortable: false,
@@ -76,11 +88,7 @@ const columnDefs: ColDef<WrongDeviceRow>[] = [
         <Button
           variant="secondary"
           disabled={!params.data?.videoUrl}
-          onClick={() => {
-            if (params.data?.videoUrl) {
-              window.open(params.data.videoUrl, "_blank", "noopener,noreferrer");
-            }
-          }}
+          onClick={() => params.data && openVideo(params.data)}
         >
           <VisibilityOutlined fontSize="small" />
           <span className="ml-1">View Video</span>
@@ -99,6 +107,8 @@ const WrongDeviceReport: React.FC = () => {
     from: null,
     to: null,
   });
+
+  const [awb, setAwb] = useState("");
 
   const gridRef = useRef<AgGridReact<WrongDeviceRow>>(null);
 
@@ -125,8 +135,9 @@ const WrongDeviceReport: React.FC = () => {
     }
     dispatch(
       getWrongDeviceVideoReport({
-        fromDate: date.from.format("YYYY-MM-DD"),
-        toDate: date.to.format("YYYY-MM-DD"),
+        from: date.from.format("YYYY-MM-DD"),
+        to: date.to.format("YYYY-MM-DD"),
+        ...(normalizeAwb(awb) ? { awb: normalizeAwb(awb) } : {}),
       })
     );
   };
@@ -159,6 +170,16 @@ const WrongDeviceReport: React.FC = () => {
             placeholder={["Start date", "End Date"]}
             value={date.from && date.to ? [date.from, date.to] : null}
             format="DD/MM/YYYY"
+          />
+
+          <TextField
+            fullWidth
+            size="small"
+            label="AWB / Challan No. (optional)"
+            value={awb}
+            onChange={(e) => setAwb(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            slotProps={{ htmlInput: { autoComplete: "off" } }}
           />
 
           <div className="flex justify-between items-center">

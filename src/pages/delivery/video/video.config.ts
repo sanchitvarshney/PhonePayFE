@@ -8,7 +8,7 @@ export const VIDEO_CONFIG = {
   maxBitrate: 3_000_000,
   compressMinBytes: 4 * 1024 * 1024,
   bitrateTolerance: 1.5,
-  maxUploadBytes: 100 * 1024 * 1024,
+  maxUploadBytes: 200 * 1024 * 1024,
 };
 
 const MIME_CANDIDATES = [
