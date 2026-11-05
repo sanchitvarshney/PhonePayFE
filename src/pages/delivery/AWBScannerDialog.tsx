@@ -23,8 +23,9 @@ const getBarcodeDetector = (): BarcodeDetectorCtor | undefined =>
     ? (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector
     : undefined;
 
+// Native BarcodeDetector is used when available; otherwise ZXing (iOS Safari, Firefox, desktop Chrome on Windows).
 export const isBarcodeScanSupported = (): boolean =>
-  !!getBarcodeDetector() && !!navigator.mediaDevices?.getUserMedia;
+  typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
 
 const FORMATS = [
   "code_128",
@@ -38,6 +39,55 @@ const FORMATS = [
 ];
 
 const SCAN_INTERVAL_MS = 150;
+
+// Reads one frame from the video; resolves to the decoded text, or undefined if nothing was found.
+type FrameScanner = (video: HTMLVideoElement) => Promise<string | undefined>;
+
+const createNativeScanner = async (): Promise<FrameScanner | null> => {
+  const Detector = getBarcodeDetector();
+  if (!Detector) return null;
+  const supported = (await Detector.getSupportedFormats?.().catch(() => [])) ?? FORMATS;
+  const formats = FORMATS.filter((f) => supported.includes(f));
+  if (!formats.length) return null;
+  const detector = new Detector({ formats });
+  return async (video) => {
+    const codes = await detector.detect(video);
+    return codes.find((c) => c.rawValue?.trim())?.rawValue.trim();
+  };
+};
+
+const createZxingScanner = async (): Promise<FrameScanner> => {
+  // Loaded only when needed, so devices with native support don't download it.
+  const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] = await Promise.all([
+    import("@zxing/browser"),
+    import("@zxing/library"),
+  ]);
+  const hints = new Map();
+  hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+    BarcodeFormat.CODE_128,
+    BarcodeFormat.CODE_39,
+    BarcodeFormat.CODE_93,
+    BarcodeFormat.CODABAR,
+    BarcodeFormat.EAN_13,
+    BarcodeFormat.ITF,
+    BarcodeFormat.QR_CODE,
+    BarcodeFormat.DATA_MATRIX,
+  ]);
+  const reader = new BrowserMultiFormatReader(hints);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  return async (video) => {
+    if (!ctx || !video.videoWidth || !video.videoHeight) return undefined;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    try {
+      return reader.decodeFromCanvas(canvas).getText().trim() || undefined;
+    } catch {
+      return undefined; // No barcode in this frame.
+    }
+  };
+};
 
 const getErrorMessage = (err: unknown) => {
   const name = (err as DOMException)?.name;
@@ -69,12 +119,6 @@ const AWBScannerDialog = ({ open, onClose, onScan }: Props) => {
   useEffect(() => {
     if (!open || !video) return;
 
-    const Detector = getBarcodeDetector();
-    if (!Detector) {
-      setError("Barcode scanning isn't supported on this browser. Please enter the AWB manually.");
-      return;
-    }
-
     let stream: MediaStream | null = null;
     let timer = 0;
     let cancelled = false;
@@ -82,9 +126,8 @@ const AWBScannerDialog = ({ open, onClose, onScan }: Props) => {
     setError(null);
 
     const start = async () => {
-      const supported = (await Detector.getSupportedFormats?.().catch(() => [])) ?? [];
-      const formats = supported.length ? FORMATS.filter((f) => supported.includes(f)) : FORMATS;
-      const detector = new Detector({ formats });
+      const scanFrame = (await createNativeScanner().catch(() => null)) ?? (await createZxingScanner());
+      if (cancelled) return;
 
       stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
@@ -104,8 +147,7 @@ const AWBScannerDialog = ({ open, onClose, onScan }: Props) => {
         if (cancelled) return;
         if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
           try {
-            const codes = await detector.detect(video);
-            const text = codes.find((c) => c.rawValue?.trim())?.rawValue.trim();
+            const text = await scanFrame(video);
             if (text && !cancelled) {
               cancelled = true;
               navigator.vibrate?.(80);
