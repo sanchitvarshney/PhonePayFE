@@ -31,7 +31,7 @@ export const navSliderData: NavSliderData[] = [
   { path: "/report/R8", name: "R8", content: <p>Device Transfer Report</p> },
   { path: "/report/R9", name: "R9", content: <p>Device Stock Report</p> },
   { path: "/report/R10", name: "R10", content: <p>On Device Location Report</p> },
-  // { path: "/report/R11", name: "R11", content: <p>BPe Issue Report</p> },
+  { path: "/report/R11", name: "R11", content: <p>Store Reports</p> },
   // { path: "/report/R12", name: "R12", content: <p>TRC Assembly Report</p> },
   // { path: "/report/R13", name: "R13", content: <p>Device Analysis Report</p> },
   // { path: "/report/R14", name: "R14", content: <p>BER Component Report</p> },

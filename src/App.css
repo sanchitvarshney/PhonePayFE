@@ -358,3 +358,32 @@ input:-webkit-autofill {
   background: #5F259F;
 }
 
+
+/* R11 store report grids */
+.ag-theme-quartz.store-grid {
+  --ag-font-family: inherit;
+  --ag-font-size: 13px;
+  --ag-header-background-color: #f8fafc;
+  --ag-header-foreground-color: #334155;
+  --ag-border-color: #e2e8f0;
+  --ag-row-border-color: #f1f5f9;
+  --ag-row-hover-color: #f5f0fb;
+  --ag-selected-row-background-color: #ede4f7;
+  --ag-header-column-resize-handle-color: #cbd5e1;
+  --ag-wrapper-border-radius: 0;
+  --ag-borders: none;
+}
+.ag-theme-quartz.store-grid .ag-header-cell {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+.ag-theme-quartz.store-grid .ag-cell {
+  font-variant-numeric: tabular-nums;
+}
+.ag-theme-quartz.store-grid .ag-row.store-total-row .ag-cell {
+  font-weight: 700;
+  color: #0f172a;
+  background-color: #f1f5f9 !important;
+  border-top: 2px solid #5f259f;
+}
